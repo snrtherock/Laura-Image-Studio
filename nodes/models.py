@@ -7,7 +7,6 @@ import torch
 from PIL import Image
 import numpy as np
 import folder_paths
-from nodes import LoadImage, EmptyLatentImage, KSampler, VAEDecode, VAEEncode, CLIPTextEncode, LoraLoader
 
 NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
@@ -153,8 +152,9 @@ class UniversalModelLoader:
         width, height = resolution_map.get(model_type, (1024, 1024))
 
         # Load model using ComfyUI's built-in
-        from nodes import CheckpointLoader
-        model, clip, vae = CheckpointLoader.load_checkpoint(model_name)
+        from nodes import CheckpointLoaderSimple
+        result = CheckpointLoaderSimple().load_checkpoint(model_name)
+        model, clip, vae = result[0], result[1], result[2]
 
         return (model, clip, vae, model_type)
 
@@ -191,13 +191,14 @@ class LoraManager:
             return (model, clip)
 
         if lora_name:
-            # Use named LoRA
             lora_file = lora_name
         else:
             lora_file = lora_path
 
         try:
-            model, clip = LoraLoader.load_lora(model, clip, lora_file, strength_model, strength_clip)
+            from nodes import LoraLoader
+            result = LoraLoader().load_lora(model, clip, lora_file, strength_model, strength_clip)
+            model, clip = result[0], result[1]
         except Exception as e:
             print(f"LoRA loading error: {e}")
 
@@ -231,17 +232,23 @@ class MultiLoraStack:
 
     def apply_loras(self, model, clip, lora_1, lora_1_strength, lora_2, lora_2_strength, lora_3, lora_3_strength):
 
+        from nodes import LoraLoader
+        loader = LoraLoader()
+
         # Apply LoRA 1 (typically character - Zoriana/Laura)
         if lora_1 and lora_1 != "None":
-            model, clip = LoraLoader.load_lora(model, clip, lora_1, lora_1_strength, lora_1_strength)
+            result = loader.load_lora(model, clip, lora_1, lora_1_strength, lora_1_strength)
+            model, clip = result[0], result[1]
 
         # Apply LoRA 2 (typically style)
         if lora_2 and lora_2 != "None":
-            model, clip = LoraLoader.load_lora(model, clip, lora_2, lora_2_strength, lora_2_strength)
+            result = loader.load_lora(model, clip, lora_2, lora_2_strength, lora_2_strength)
+            model, clip = result[0], result[1]
 
         # Apply LoRA 3 (typically additional)
         if lora_3 and lora_3 != "None":
-            model, clip = LoraLoader.load_lora(model, clip, lora_3, lora_3_strength, lora_3_strength)
+            result = loader.load_lora(model, clip, lora_3, lora_3_strength, lora_3_strength)
+            model, clip = result[0], result[1]
 
         return (model, clip)
 
@@ -312,27 +319,29 @@ class UniversalGenerator:
             if height > max_r:
                 height = max_r
 
+        from nodes import CLIPTextEncode, VAEEncode, EmptyLatentImage, KSampler, VAEDecode
+
         # Encode prompts
-        positive = CLIPTextEncode.encode(clip, positive_prompt)[0]
-        negative = CLIPTextEncode.encode(clip, negative_prompt)[0]
+        positive = CLIPTextEncode().encode(clip, positive_prompt)[0]
+        negative = CLIPTextEncode().encode(clip, negative_prompt)[0]
 
         # Create or encode latent
         if image_to_image is not None:
             # Image to image
-            encoded = VAEEncode.encode(vae, image_to_image)[0]
+            encoded = VAEEncode().encode(vae, image_to_image)[0]
             latent = {"samples": encoded["samples"]}
         else:
             # Text to image
-            latent = EmptyLatentImage.generate(width, height, batch_size)[0]
+            latent = EmptyLatentImage().generate(width, height, batch_size)[0]
 
         # Sample
-        sampled = KSampler.sample(
+        sampled = KSampler().sample(
             model, seed, steps, cfg, sampler_name, scheduler,
             positive, negative, latent, denoise=denoise
-        )
+        )[0]
 
         # Decode
-        decoded = VAEDecode.decode(vae, sampled)[0]
+        decoded = VAEDecode().decode(vae, sampled)[0]
 
         return (decoded, sampled)
 
@@ -367,8 +376,8 @@ class UniversalImg2Img:
     def img2img(self, model, clip, vae, image, model_type, positive_prompt, negative_prompt,
                 denoise, seed, steps, cfg):
 
-        return UniversalGenerator.generate(
-            self, model, clip, vae, model_type, positive_prompt, negative_prompt,
+        return UniversalGenerator().generate(
+            model, clip, vae, model_type, positive_prompt, negative_prompt,
             image.shape[3], image.shape[2], seed, steps, cfg, "euler", "normal",
             image_to_image=image, denoise=denoise
         )
@@ -404,8 +413,10 @@ class UniversalInpainter:
     def inpaint(self, model, clip, vae, image, mask, positive_prompt, negative_prompt,
                 seed, steps, cfg, denoise):
 
+        from nodes import VAEEncode, CLIPTextEncode, KSampler, VAEDecode
+
         # Encode image
-        encoded = VAEEncode.encode(vae, image)[0]
+        encoded = VAEEncode().encode(vae, image)[0]
 
         # Process mask
         if mask.dim() == 2:
@@ -421,20 +432,20 @@ class UniversalInpainter:
         mask_latent = (mask_latent > 0.5).float()
 
         # Encode prompts
-        positive = CLIPTextEncode.encode(clip, positive_prompt)[0]
-        negative = CLIPTextEncode.encode(clip, negative_prompt)[0]
+        positive = CLIPTextEncode().encode(clip, positive_prompt)[0]
+        negative = CLIPTextEncode().encode(clip, negative_prompt)[0]
 
         # Create latent
         latent = {"samples": encoded["samples"], "mask": mask_latent, "noise_mask": mask_latent}
 
         # Sample
-        sampled = KSampler.sample(
+        sampled = KSampler().sample(
             model, seed, steps, cfg, "dpmpp_2m", "karras",
             positive, negative, latent, denoise=denoise
-        )
+        )[0]
 
         # Decode
-        result = VAEDecode.decode(vae, sampled)[0]
+        result = VAEDecode().decode(vae, sampled)[0]
 
         return (result,)
 
@@ -458,8 +469,8 @@ class ControlNetLoader:
 
     def load_controlnet(self, control_net_name):
         from nodes import ControlNetLoader as CNLoader
-        cn = CNLoader.load_controlnet(control_net_name)
-        return (cn,)
+        result = CNLoader().load_controlnet(control_net_name)
+        return result
 
 
 # ============== CONTROL NET APPLY ==============
@@ -483,9 +494,13 @@ class ApplyControlNet:
     DESCRIPTION = "Apply ControlNet"
 
     def apply_controlnet(self, conditioning, control_net, image, strength):
-        from nodes import ApplyControlNet as CNApply
-        result = CNApply.apply_controlnet(conditioning, control_net, image, strength)
-        return result
+        try:
+            from comfy_extras.nodes_controlnet import ControlNetApplyAdvanced
+            result = ControlNetApplyAdvanced().apply_controlnet(conditioning, conditioning, control_net, image, strength, 0.0, 1.0)
+            return (result[0],)
+        except Exception:
+            # Fallback: return conditioning unchanged
+            return (conditioning,)
 
 
 # Register all nodes

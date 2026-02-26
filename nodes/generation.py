@@ -6,8 +6,6 @@ Text-to-image and image-to-image generation with Laura character
 import torch
 from PIL import Image
 import numpy as np
-from comfy_extras import nodes_custom_sdxl
-from nodes import LoadImage, EmptyLatentImage, KSampler, VAEDecode, VAEEncode, CLIPTextEncode
 import folder_paths
 
 NODE_CLASS_MAPPINGS = {}
@@ -51,21 +49,23 @@ class LauraSDXLGenerator:
                  width, height, seed, steps, cfg, sampler_name, scheduler,
                  ipadapter_image=None, ipadapter_weight=1.0, laura_strength=0.8):
 
+        from nodes import EmptyLatentImage, KSampler, VAEDecode, CLIPTextEncode
+
         # Encode prompts
-        positive = CLIPTextEncode.encode(clip, positive_prompt)[0]
-        negative = CLIPTextEncode.encode(clip, negative_prompt)[0]
+        positive = CLIPTextEncode().encode(clip, positive_prompt)[0]
+        negative = CLIPTextEncode().encode(clip, negative_prompt)[0]
 
         # Create empty latent
-        latent = EmptyLatentImage.generate(width, height, batch_size=1)[0]
+        latent = EmptyLatentImage().generate(width, height, batch_size=1)[0]
 
         # Sample
-        sampled = KSampler.sample(
+        sampled = KSampler().sample(
             model, seed, steps, cfg, sampler_name, scheduler,
             positive, negative, latent, denoise=1.0
-        )
+        )[0]
 
         # Decode
-        decoded = VAEDecode.decode(vae, sampled)[0]
+        decoded = VAEDecode().decode(vae, sampled)[0]
 
         return (decoded, sampled)
 
@@ -243,22 +243,24 @@ class LauraImageToImage:
     def img2img(self, model, clip, vae, image, positive_prompt, negative_prompt,
                 denoise, seed, steps, cfg, strength=0.8):
 
+        from nodes import VAEEncode, KSampler, VAEDecode, CLIPTextEncode
+
         # Encode image to latent
-        encoded = VAEEncode.encode(vae, image)[0]
+        encoded = VAEEncode().encode(vae, image)[0]
 
         # Encode prompts
-        positive = CLIPTextEncode.encode(clip, positive_prompt)[0]
-        negative = CLIPTextEncode.encode(clip, negative_prompt)[0]
+        positive = CLIPTextEncode().encode(clip, positive_prompt)[0]
+        negative = CLIPTextEncode().encode(clip, negative_prompt)[0]
 
         # Sample with encoded latent
         latent = {"samples": encoded["samples"]}
-        sampled = KSampler.sample(
+        sampled = KSampler().sample(
             model, seed, steps, cfg, "euler", "normal",
             positive, negative, latent, denoise=denoise
-        )
+        )[0]
 
         # Decode
-        decoded = VAEDecode.decode(vae, sampled)[0]
+        decoded = VAEDecode().decode(vae, sampled)[0]
 
         return (decoded,)
 
@@ -335,8 +337,8 @@ class LauraLoRALoader:
         from nodes import LoraLoader
 
         # Use built-in LoRA loader
-        model, clip = LoraLoader.load_lora(model, clip, lora_name, strength_model, strength_clip)
-        return (model, clip)
+        result = LoraLoader().load_lora(model, clip, lora_name, strength_model, strength_clip)
+        return (result[0], result[1])
 
 
 # Register all nodes

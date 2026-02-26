@@ -7,7 +7,6 @@ import torch
 import numpy as np
 import os
 from PIL import Image
-from nodes import KSampler, VAEDecode, VAEEncode, CLIPTextEncode, EmptyLatentImage
 import folder_paths
 
 NODE_CLASS_MAPPINGS = {}
@@ -52,12 +51,14 @@ class ImageToVideo:
                        video_length, fps, seed, steps, cfg, motion_strength,
                        video_model, motion_lora="", end_image=None):
 
+        from nodes import CLIPTextEncode, VAEEncode, KSampler, VAEDecode
+
         # Encode prompts
-        positive = CLIPTextEncode.encode(clip, prompt)[0]
-        negative = CLIPTextEncode.encode(clip, negative_prompt)[0]
+        positive = CLIPTextEncode().encode(clip, prompt)[0]
+        negative = CLIPTextEncode().encode(clip, negative_prompt)[0]
 
         # Encode source image to latent
-        source_latent = VAEEncode.encode(vae, image)[0]
+        source_latent = VAEEncode().encode(vae, image)[0]
 
         # Generate frames by creating a batch of latents with temporal noise
         torch.manual_seed(seed)
@@ -77,7 +78,7 @@ class ImageToVideo:
 
         # If end_image provided, interpolate latents toward it
         if end_image is not None:
-            end_latent = VAEEncode.encode(vae, end_image)[0]
+            end_latent = VAEEncode().encode(vae, end_image)[0]
             for i in range(batch_size):
                 t = i / max(batch_size - 1, 1)
                 frames_latent[i] = (1 - t) * source_latent["samples"][0] + t * end_latent["samples"][0]
@@ -92,13 +93,13 @@ class ImageToVideo:
 
             # Sample each sub-batch
             denoise = 0.6 + (motion_strength * 0.2)
-            sampled = KSampler.sample(
+            sampled = KSampler().sample(
                 model, seed + start, steps, cfg, "euler", "normal",
                 positive, negative, sub_latent, denoise=min(denoise, 1.0)
-            )
+            )[0]
 
             # Decode to images
-            decoded = VAEDecode.decode(vae, sampled)[0]
+            decoded = VAEDecode().decode(vae, sampled)[0]
             decoded_frames.append(decoded)
 
         # Concatenate all frames
@@ -143,9 +144,11 @@ class VideoToVideo:
                       denoise, seed, steps, cfg, temporal_consistency,
                       style_image=None, style_strength=0.6):
 
+        from nodes import CLIPTextEncode, VAEEncode, KSampler, VAEDecode
+
         # Encode prompts
-        positive = CLIPTextEncode.encode(clip, prompt)[0]
-        negative = CLIPTextEncode.encode(clip, negative_prompt)[0]
+        positive = CLIPTextEncode().encode(clip, prompt)[0]
+        negative = CLIPTextEncode().encode(clip, negative_prompt)[0]
 
         num_frames = frames.shape[0]
         sub_batch_size = 4
@@ -153,15 +156,19 @@ class VideoToVideo:
 
         # Generate shared base noise for temporal consistency
         torch.manual_seed(seed)
-        first_frame_latent = VAEEncode.encode(vae, frames[0:1])[0]
+        first_frame_latent = VAEEncode().encode(vae, frames[0:1])[0]
         base_noise = torch.randn_like(first_frame_latent["samples"])
+
+        vae_encoder = VAEEncode()
+        sampler = KSampler()
+        vae_decoder = VAEDecode()
 
         for start in range(0, num_frames, sub_batch_size):
             end = min(start + sub_batch_size, num_frames)
             sub_frames = frames[start:end]
 
             # Encode frames to latent
-            encoded = VAEEncode.encode(vae, sub_frames)[0]
+            encoded = vae_encoder.encode(vae, sub_frames)[0]
 
             # Apply temporally correlated noise
             frame_noise = torch.randn_like(encoded["samples"])
@@ -173,13 +180,13 @@ class VideoToVideo:
             noisy_latent = {"samples": encoded["samples"]}
 
             # Sample
-            sampled = KSampler.sample(
+            sampled = sampler.sample(
                 model, seed + start, steps, cfg, "euler", "normal",
                 positive, negative, noisy_latent, denoise=denoise
-            )
+            )[0]
 
             # Decode
-            decoded = VAEDecode.decode(vae, sampled)[0]
+            decoded = vae_decoder.decode(vae, sampled)[0]
             processed_frames.append(decoded)
 
         return (torch.cat(processed_frames, dim=0),)
@@ -549,6 +556,7 @@ class VideoUpscaler:
 
         num_frames = frames.shape[0]
         scale = {"2x": 2, "4x": 4}[target]
+        upscaler = ImageUpscaleWithModel()
         upscaled = []
         prev_frame = None
 
@@ -556,7 +564,7 @@ class VideoUpscaler:
             frame = frames[i:i + 1]
 
             # Upscale using model
-            result = ImageUpscaleWithModel.upscale(upscale_model, frame)[0]
+            result = upscaler.upscale(upscale_model, frame)[0]
 
             # If target is 2x but model is 4x, resize down
             if scale == 2:
