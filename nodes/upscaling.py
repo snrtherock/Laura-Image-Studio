@@ -416,6 +416,55 @@ class ImageToSquare:
         return (image,)
 
 
+# ============== LAURA UPSCALER ==============
+class LauraUpscaler:
+    """General-purpose image upscaler using model-based or Lanczos scaling"""
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "scale_factor": (["1.5x", "2x", "3x", "4x"],),
+                "method": (["lanczos", "model"],),
+            },
+            "optional": {
+                "upscale_model": ("UPSCALE_MODEL",),
+            }
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "upscale"
+    CATEGORY = "Laura Studio/Upscaling"
+    DESCRIPTION = "General-purpose image upscaler"
+
+    def upscale(self, image, scale_factor, method, upscale_model=None):
+        scale = {"1.5x": 1.5, "2x": 2.0, "3x": 3.0, "4x": 4.0}[scale_factor]
+        b, h, w, c = image.shape
+        new_h = int(h * scale)
+        new_w = int(w * scale)
+
+        if method == "model" and upscale_model is not None:
+            try:
+                from comfy_extras.nodes_upscale_model import ImageUpscaleWithModel
+                upscaled = ImageUpscaleWithModel().upscale(upscale_model, image)[0]
+                # Resize to exact target if model output differs
+                if upscaled.shape[1] != new_h or upscaled.shape[2] != new_w:
+                    upscaled = upscaled.permute(0, 3, 1, 2)
+                    upscaled = torch.nn.functional.interpolate(upscaled, size=(new_h, new_w), mode="bilinear", align_corners=False)
+                    upscaled = upscaled.permute(0, 2, 3, 1)
+                return (upscaled,)
+            except Exception:
+                pass
+
+        # Lanczos fallback
+        result = image.permute(0, 3, 1, 2)
+        result = torch.nn.functional.interpolate(result, size=(new_h, new_w), mode="bilinear", align_corners=False)
+        result = result.permute(0, 2, 3, 1)
+        return (result,)
+
+
 # Register all upscaling nodes
 NODE_CLASS_MAPPINGS.update({
     "Upscale2K": Upscale2K,
@@ -425,6 +474,7 @@ NODE_CLASS_MAPPINGS.update({
     "DetailEnhancer": DetailEnhancer,
     "ResolutionConstrainer": ResolutionConstrainer,
     "ImageToSquare": ImageToSquare,
+    "LauraUpscaler": LauraUpscaler,
 })
 
 NODE_DISPLAY_NAME_MAPPINGS.update({
@@ -435,4 +485,5 @@ NODE_DISPLAY_NAME_MAPPINGS.update({
     "DetailEnhancer": "Detail Enhancer",
     "ResolutionConstrainer": "Resolution Constrainer",
     "ImageToSquare": "Image to Square",
+    "LauraUpscaler": "LAURA Upscaler",
 })
