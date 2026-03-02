@@ -1,0 +1,470 @@
+{
+  "last_node_id": 100,
+  "last_link_id": 200,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LauraSDXLGenerator",
+      "pos": [50, 100],
+      "size": [400, 200],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {"name": "image", "type": "IMAGE", "slot_index": 0},
+        {"name": "latent", "type": "LATENT", "slot_index": 1}
+      ],
+      "properties": {"Node name for S&R": "LauraSDXLGenerator"},
+      "widgets_values": [
+        "photo of laura, detailed face, professional lighting, studio background",
+        "deformed, blurry, bad anatomy, extra limbs, poorly drawn face, mutation, ugly",
+        1024,
+        1024,
+        42,
+        25,
+        5.0,
+        "euler",
+        "normal"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "FaceDetector",
+      "pos": [500, 100],
+      "size": [300, 100],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {"name": "image", "type": "IMAGE", "link": 201}
+      ],
+      "outputs": [
+        {"name": "face_crop", "type": "IMAGE", "slot_index": 0},
+        {"name": "face_mask", "type": "MASK", "slot_index": 1},
+        {"name": "face_info", "type": "STRING", "slot_index": 2}
+      ],
+      "properties": {"Node name for S&R": "FaceDetector"},
+      "widgets_values": [0.5]
+    },
+    {
+      "id": 3,
+      "type": "SmartMaskGenerator",
+      "pos": [850, 100],
+      "size": [300, 150],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {"name": "image", "type": "IMAGE", "link": 202}
+      ],
+      "outputs": [
+        {"name": "mask", "type": "MASK", "slot_index": 0},
+        {"name": "preview", "type": "IMAGE", "slot_index": 1}
+      ],
+      "properties": {"Node name for S&R": "SmartMaskGenerator"},
+      "widgets_values": ["auto", "", "", 0.5, 0]
+    },
+    {
+      "id": 4,
+      "type": "LauraInpainter",
+      "pos": [1200, 100],
+      "size": [400, 250],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {"name": "model", "type": "MODEL", "link": 203},
+        {"name": "clip", "type": "CLIP", "link": 204},
+        {"name": "vae", "type": "VAE", "link": 205},
+        {"name": "image", "type": "IMAGE", "link": 206},
+        {"name": "mask", "type": "MASK", "link": 207}
+      ],
+      "outputs": [
+        {"name": "image", "type": "IMAGE", "slot_index": 0}
+      ],
+      "properties": {"Node name for S&R": "LauraInpainter"},
+      "widgets_values": [
+        "photo of laura wearing elegant dress, detailed, professional lighting",
+        "deformed, blurry, bad anatomy",
+        42,
+        30,
+        7.0,
+        1.0,
+        "whole",
+        "gaussian",
+        0,
+        8
+      ]
+    },
+    {
+      "id": 5,
+      "type": "LauraOutpainter",
+      "pos": [50, 450],
+      "size": [400, 250],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {"name": "model", "type": "MODEL", "link": 208},
+        {"name": "clip", "type": "CLIP", "link": 209},
+        {"name": "vae", "type": "VAE", "link": 210},
+        {"name": "image", "type": "IMAGE", "link": 211}
+      ],
+      "outputs": [
+        {"name": "image", "type": "IMAGE", "slot_index": 0},
+        {"name": "new_width", "type": "INT", "slot_index": 1},
+        {"name": "new_height", "type": "INT", "slot_index": 2}
+      ],
+      "properties": {"Node name for S&R": "LauraOutpainter"},
+      "widgets_values": [
+        "all",
+        256,
+        "photo of woman, detailed background, professional studio",
+        "deformed, blurry, artifacts",
+        42,
+        35,
+        7.0,
+        "gaussian",
+        64,
+        ""
+      ]
+    },
+    {
+      "id": 6,
+      "type": "BackgroundRemover",
+      "pos": [500, 450],
+      "size": [300, 100],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {"name": "image", "type": "IMAGE", "link": 212}
+      ],
+      "outputs": [
+        {"name": "image", "type": "IMAGE", "slot_index": 0},
+        {"name": "mask", "type": "MASK", "slot_index": 1}
+      ],
+      "properties": {"Node name for S&R": "BackgroundRemover"},
+      "widgets_values": [0.5, 0]
+    },
+    {
+      "id": 7,
+      "type": "BackgroundReplacer",
+      "pos": [850, 450],
+      "size": [300, 150],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {"name": "subject", "type": "IMAGE", "link": 213},
+        {"name": "mask", "type": "MASK", "link": 214},
+        {"name": "background_source", "type": "IMAGE", "link": 215}
+      ],
+      "outputs": [
+        {"name": "image", "type": "IMAGE", "slot_index": 0}
+      ],
+      "properties": {"Node name for S&R": "BackgroundReplacer"},
+      "widgets_values": ["alpha_composite", 4]
+    },
+    {
+      "id": 8,
+      "type": "Upscale2K",
+      "pos": [1200, 450],
+      "size": [300, 150],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {"name": "image", "type": "IMAGE", "link": 216}
+      ],
+      "outputs": [
+        {"name": "image", "type": "IMAGE", "slot_index": 0}
+      ],
+      "properties": {"Node name for S&R": "Upscale2K"},
+      "widgets_values": ["ultrasharp", 0.2, 512, 32]
+    },
+    {
+      "id": 9,
+      "type": "Upscale4K",
+      "pos": [50, 750],
+      "size": [300, 150],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {"name": "image", "type": "IMAGE", "link": 217}
+      ],
+      "outputs": [
+        {"name": "image", "type": "IMAGE", "slot_index": 0}
+      ],
+      "properties": {"Node name for S&R": "Upscale4K"},
+      "widgets_values": ["ultrasharp", 0.15, 512, 32, true]
+    },
+    {
+      "id": 10,
+      "type": "Upscale8K",
+      "pos": [400, 750],
+      "size": [300, 150],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {"name": "image", "type": "IMAGE", "link": 218}
+      ],
+      "outputs": [
+        {"name": "image", "type": "IMAGE", "slot_index": 0}
+      ],
+      "properties": {"Node name for S&R": "Upscale8K"},
+      "widgets_values": ["chain_8x", 0.1, 512, 64, 3]
+    },
+    {
+      "id": 11,
+      "type": "VirtualDresser",
+      "pos": [750, 750],
+      "size": [400, 200],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {"name": "model", "type": "MODEL", "link": 219},
+        {"name": "clip", "type": "CLIP", "link": 220},
+        {"name": "vae", "type": "VAE", "link": 221},
+        {"name": "source_image", "type": "IMAGE", "link": 222},
+        {"name": "inpaint_mask", "type": "MASK", "link": 223}
+      ],
+      "outputs": [
+        {"name": "image", "type": "IMAGE", "slot_index": 0}
+      ],
+      "properties": {"Node name for S&R": "VirtualDresser"},
+      "widgets_values": [
+        "top",
+        "elegant designer blouse, silk, professional",
+        42,
+        30,
+        7.0,
+        0.8,
+        true,
+        true
+      ]
+    },
+    {
+      "id": 12,
+      "type": "HairStylist",
+      "pos": [1200, 750],
+      "size": [400, 200],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {"name": "model", "type": "MODEL", "link": 224},
+        {"name": "clip", "type": "CLIP", "link": 225},
+        {"name": "vae", "type": "VAE", "link": 226},
+        {"name": "source_image", "type": "IMAGE", "link": 227},
+        {"name": "reference_image", "type": "IMAGE", "link": 228}
+      ],
+      "outputs": [
+        {"name": "image", "type": "IMAGE", "slot_index": 0}
+      ],
+      "properties": {"Node name for S&R": "HairStylist"},
+      "widgets_values": [
+        "long",
+        "natural brown",
+        "",
+        42,
+        30,
+        7.0,
+        0.75,
+        "none",
+        ""
+      ]
+    },
+    {
+      "id": 13,
+      "type": "FaceSwapper",
+      "pos": [50, 1000],
+      "size": [300, 150],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {"name": "face_image", "type": "IMAGE", "link": 229},
+        {"name": "target_image", "type": "IMAGE", "link": 230}
+      ],
+      "outputs": [
+        {"name": "image", "type": "IMAGE", "slot_index": 0}
+      ],
+      "properties": {"Node name for S&R": "FaceSwapper"},
+      "widgets_values": ["swap", 0]
+    },
+    {
+      "id": 14,
+      "type": "IPAdapterFace",
+      "pos": [400, 1000],
+      "size": [300, 150],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {"name": "model", "type": "MODEL", "link": 231},
+        {"name": "face_image", "type": "IMAGE", "link": 232}
+      ],
+      "outputs": [
+        {"name": "model", "type": "MODEL", "slot_index": 0}
+      ],
+      "properties": {"Node name for S&R": "IPAdapterFace"},
+      "widgets_values": [1.0, 0.0]
+    },
+    {
+      "id": 15,
+      "type": "MakeupArtist",
+      "pos": [750, 1000],
+      "size": [350, 180],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {"name": "model", "type": "MODEL", "link": 233},
+        {"name": "clip", "type": "CLIP", "link": 234},
+        {"name": "vae", "type": "VAE", "link": 235},
+        {"name": "source_image", "type": "IMAGE", "link": 236}
+      ],
+      "outputs": [
+        {"name": "image", "type": "IMAGE", "slot_index": 0}
+      ],
+      "properties": {"Node name for S&R": "MakeupArtist"},
+      "widgets_values": [
+        "glam",
+        "",
+        42,
+        25,
+        6.0,
+        0.5,
+        "",
+        ""
+      ]
+    },
+    {
+      "id": 16,
+      "type": "AccessoryEditor",
+      "pos": [1150, 1000],
+      "size": [350, 180],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {"name": "model", "type": "MODEL", "link": 237},
+        {"name": "clip", "type": "CLIP", "link": 238},
+        {"name": "vae", "type": "VAE", "link": 239},
+        {"name": "source_image", "type": "IMAGE", "link": 240},
+        {"name": "reference_image", "type": "IMAGE", "link": 241}
+      ],
+      "outputs": [
+        {"name": "image", "type": "IMAGE", "slot_index": 0}
+      ],
+      "properties": {"Node name for S&R": "AccessoryEditor"},
+      "widgets_values": [
+        "watch",
+        "luxury rolex style",
+        42,
+        25,
+        7.0,
+        0.6
+      ]
+    },
+    {
+      "id": 17,
+      "type": "DetailEnhancer",
+      "pos": [50, 1250],
+      "size": [350, 180],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {"name": "image", "type": "IMAGE", "link": 242},
+        {"name": "model", "type": "MODEL", "link": 243},
+        {"name": "clip", "type": "CLIP", "link": 244},
+        {"name": "vae", "type": "VAE", "link": 245}
+      ],
+      "outputs": [
+        {"name": "image", "type": "IMAGE", "slot_index": 0}
+      ],
+      "properties": {"Node name for S&R": "DetailEnhancer"},
+      "widgets_values": [0.3, 42, "both", 5.0]
+    },
+    {
+      "id": 18,
+      "type": "ObjectRemover",
+      "pos": [450, 1250],
+      "size": [350, 180],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {"name": "model", "type": "MODEL", "link": 246},
+        {"name": "clip", "type": "CLIP", "link": 247},
+        {"name": "vae", "type": "VAE", "link": 248},
+        {"name": "image", "type": "IMAGE", "link": 249}
+      ],
+      "outputs": [
+        {"name": "image", "type": "IMAGE", "slot_index": 0}
+      ],
+      "properties": {"Node name for S&R": "ObjectRemover"},
+      "widgets_values": ["unwanted object", 42, 30, 7.0]
+    },
+    {
+      "id": 19,
+      "type": "PortraitBokeh",
+      "pos": [850, 1250],
+      "size": [300, 120],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {"name": "image", "type": "IMAGE", "link": 250},
+        {"name": "mask", "type": "MASK", "link": 251}
+      ],
+      "outputs": [
+        {"name": "image", "type": "IMAGE", "slot_index": 0}
+      ],
+      "properties": {"Node name for S&R": "PortraitBokeh"},
+      "widgets_values": [20, "circle", "high"]
+    },
+    {
+      "id": 20,
+      "type": "SaveImage",
+      "pos": [1200, 1250],
+      "size": [315, 270],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {"name": "images", "type": "IMAGE", "link": 252}
+      ],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": ["laura_output"]
+    }
+  ],
+  "links": [
+    [1, 2, 0, 201, "IMAGE"],
+    [2, 3, 0, 202, "IMAGE"],
+    [3, 4, 0, 207, "MASK"],
+    [5, 6, 0, 212, "IMAGE"],
+    [6, 7, 0, 213, "IMAGE"],
+    [6, 7, 1, 214, "MASK"],
+    [4, 8, 0, 216, "IMAGE"],
+    [4, 9, 0, 217, "IMAGE"],
+    [4, 10, 0, 218, "IMAGE"],
+    [11, 20, 0, 252, "IMAGE"]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1.0,
+      "offset": [0, 0]
+    }
+  },
+  "version": 0.4
+}

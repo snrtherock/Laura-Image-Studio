@@ -1,0 +1,16 @@
+{
+    "name": "Laura Image Studio",
+    "description": "Professional-grade custom node suite for AI Influencers and Viral Video. Optimized for Wan 2.2, Flux.1, and LivePortrait with advanced VRAM management.",
+    "version": "0.8.0",
+    "author": "snrtherock",
+    "project_url": "https://github.com/snrtherock/Laura_Image_Studio",
+    "category": "generation/video",
+    "nodes": [
+        "LauraUniversalLoader",
+        "LauraVRAMCleaner",
+        "LauraResolutionScaler",
+        "LauraWanMotion",
+        "LauraFaceDrive",
+        "LauraIdentityInjector"
+    ]
+}

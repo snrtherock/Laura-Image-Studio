@@ -22,7 +22,7 @@ class ToggleImageSwitch:
             },
             "optional": {
                 "processed_image": ("IMAGE",),
-            }
+            },
         }
 
     RETURN_TYPES = ("IMAGE",)
@@ -50,7 +50,7 @@ class ToggleLatentSwitch:
             },
             "optional": {
                 "processed_latent": ("LATENT",),
-            }
+            },
         }
 
     RETURN_TYPES = ("LATENT",)
@@ -78,7 +78,7 @@ class ToggleMaskSwitch:
             },
             "optional": {
                 "processed_mask": ("MASK",),
-            }
+            },
         }
 
     RETURN_TYPES = ("MASK",)
@@ -106,7 +106,7 @@ class ToggleModelSwitch:
             },
             "optional": {
                 "processed_model": ("MODEL",),
-            }
+            },
         }
 
     RETURN_TYPES = ("MODEL",)
@@ -134,7 +134,7 @@ class ToggleClipSwitch:
             },
             "optional": {
                 "processed_clip": ("CLIP",),
-            }
+            },
         }
 
     RETURN_TYPES = ("CLIP",)
@@ -162,7 +162,7 @@ class ToggleConditioningSwitch:
             },
             "optional": {
                 "processed_conditioning": ("CONDITIONING",),
-            }
+            },
         }
 
     RETURN_TYPES = ("CONDITIONING",)
@@ -195,7 +195,7 @@ class PipelineToggle:
                 "processed_latent": ("LATENT",),
                 "input_mask": ("MASK",),
                 "processed_mask": ("MASK",),
-            }
+            },
         }
 
     RETURN_TYPES = ("IMAGE", "LATENT", "MASK", "BOOLEAN", "STRING")
@@ -204,14 +204,22 @@ class PipelineToggle:
     CATEGORY = "Laura Studio/Toggle"
     DESCRIPTION = "Toggle entire pipeline stage on/off"
 
-    def toggle_pipeline(self, enabled, stage_name,
-                        input_image=None, processed_image=None,
-                        input_latent=None, processed_latent=None,
-                        input_mask=None, processed_mask=None):
-
+    def toggle_pipeline(
+        self,
+        enabled,
+        stage_name,
+        input_image=None,
+        processed_image=None,
+        input_latent=None,
+        processed_latent=None,
+        input_mask=None,
+        processed_mask=None,
+    ):
         if enabled:
             out_image = processed_image if processed_image is not None else input_image
-            out_latent = processed_latent if processed_latent is not None else input_latent
+            out_latent = (
+                processed_latent if processed_latent is not None else input_latent
+            )
             out_mask = processed_mask if processed_mask is not None else input_mask
         else:
             out_image = input_image
@@ -234,7 +242,7 @@ class ToggleVAESwitch:
             },
             "optional": {
                 "processed_vae": ("VAE",),
-            }
+            },
         }
 
     RETURN_TYPES = ("VAE",)
@@ -267,19 +275,62 @@ class WorkflowTogglePanel:
                 "enable_outpainting": ("BOOLEAN", {"default": False}),
                 "enable_detail_enhance": ("BOOLEAN", {"default": True}),
                 "enable_video": ("BOOLEAN", {"default": False}),
+                "enable_cinema_video": ("BOOLEAN", {"default": False}),
+                "enable_directed_motion": ("BOOLEAN", {"default": False}),
+                "enable_face_drive": ("BOOLEAN", {"default": False}),
             }
         }
 
-    RETURN_TYPES = ("BOOLEAN", "BOOLEAN", "BOOLEAN", "BOOLEAN", "BOOLEAN", "BOOLEAN", "BOOLEAN", "BOOLEAN", "BOOLEAN", "BOOLEAN")
-    RETURN_NAMES = ("upscaling", "face_ops", "background", "dressing", "virtual_tryon", "dressing_room", "inpainting", "outpainting", "detail_enhance", "video")
+    RETURN_TYPES = (
+        "BOOLEAN",
+        "BOOLEAN",
+        "BOOLEAN",
+        "BOOLEAN",
+        "BOOLEAN",
+        "BOOLEAN",
+        "BOOLEAN",
+        "BOOLEAN",
+        "BOOLEAN",
+        "BOOLEAN",
+        "BOOLEAN",
+        "BOOLEAN",
+        "BOOLEAN",
+    )
+    RETURN_NAMES = (
+        "upscaling",
+        "face_ops",
+        "background",
+        "dressing",
+        "virtual_tryon",
+        "dressing_room",
+        "inpainting",
+        "outpainting",
+        "detail_enhance",
+        "video",
+        "cinema_video",
+        "directed_motion",
+        "face_drive",
+    )
     FUNCTION = "get_toggles"
     CATEGORY = "Laura Studio/Toggle"
     DESCRIPTION = "Master control panel for all workflow stage toggles"
 
-    def get_toggles(self, enable_upscaling, enable_face_ops, enable_background,
-                    enable_dressing, enable_virtual_tryon, enable_dressing_room,
-                    enable_inpainting, enable_outpainting,
-                    enable_detail_enhance, enable_video):
+    def get_toggles(
+        self,
+        enable_upscaling,
+        enable_face_ops,
+        enable_background,
+        enable_dressing,
+        enable_virtual_tryon,
+        enable_dressing_room,
+        enable_inpainting,
+        enable_outpainting,
+        enable_detail_enhance,
+        enable_video,
+        enable_cinema_video,
+        enable_directed_motion,
+        enable_face_drive,
+    ):
         return (
             enable_upscaling,
             enable_face_ops,
@@ -291,30 +342,37 @@ class WorkflowTogglePanel:
             enable_outpainting,
             enable_detail_enhance,
             enable_video,
+            enable_cinema_video,
+            enable_directed_motion,
+            enable_face_drive,
         )
 
 
 # Register all nodes
-NODE_CLASS_MAPPINGS.update({
-    "ToggleImageSwitch": ToggleImageSwitch,
-    "ToggleLatentSwitch": ToggleLatentSwitch,
-    "ToggleMaskSwitch": ToggleMaskSwitch,
-    "ToggleModelSwitch": ToggleModelSwitch,
-    "ToggleClipSwitch": ToggleClipSwitch,
-    "ToggleConditioningSwitch": ToggleConditioningSwitch,
-    "ToggleVAESwitch": ToggleVAESwitch,
-    "PipelineToggle": PipelineToggle,
-    "WorkflowTogglePanel": WorkflowTogglePanel,
-})
+NODE_CLASS_MAPPINGS.update(
+    {
+        "ToggleImageSwitch": ToggleImageSwitch,
+        "ToggleLatentSwitch": ToggleLatentSwitch,
+        "ToggleMaskSwitch": ToggleMaskSwitch,
+        "ToggleModelSwitch": ToggleModelSwitch,
+        "ToggleClipSwitch": ToggleClipSwitch,
+        "ToggleConditioningSwitch": ToggleConditioningSwitch,
+        "ToggleVAESwitch": ToggleVAESwitch,
+        "PipelineToggle": PipelineToggle,
+        "WorkflowTogglePanel": WorkflowTogglePanel,
+    }
+)
 
-NODE_DISPLAY_NAME_MAPPINGS.update({
-    "ToggleImageSwitch": "Toggle Switch (Image)",
-    "ToggleLatentSwitch": "Toggle Switch (Latent)",
-    "ToggleMaskSwitch": "Toggle Switch (Mask)",
-    "ToggleModelSwitch": "Toggle Switch (Model)",
-    "ToggleClipSwitch": "Toggle Switch (CLIP)",
-    "ToggleConditioningSwitch": "Toggle Switch (Conditioning)",
-    "ToggleVAESwitch": "Toggle Switch (VAE)",
-    "PipelineToggle": "Pipeline Stage Toggle",
-    "WorkflowTogglePanel": "Workflow Toggle Panel (Master)",
-})
+NODE_DISPLAY_NAME_MAPPINGS.update(
+    {
+        "ToggleImageSwitch": "Toggle Switch (Image)",
+        "ToggleLatentSwitch": "Toggle Switch (Latent)",
+        "ToggleMaskSwitch": "Toggle Switch (Mask)",
+        "ToggleModelSwitch": "Toggle Switch (Model)",
+        "ToggleClipSwitch": "Toggle Switch (CLIP)",
+        "ToggleConditioningSwitch": "Toggle Switch (Conditioning)",
+        "ToggleVAESwitch": "Toggle Switch (VAE)",
+        "PipelineToggle": "Pipeline Stage Toggle",
+        "WorkflowTogglePanel": "Workflow Toggle Panel (Master)",
+    }
+)

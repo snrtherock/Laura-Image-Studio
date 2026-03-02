@@ -1,0 +1,51 @@
+[
+  {
+    "name": "flux1-dev.safetensors",
+    "type": "checkpoints",
+    "base": "Flux.1 Dev",
+    "description": "High-quality base model for Flux generation",
+    "url": "https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors"
+  },
+  {
+    "name": "flux1-schnell.safetensors",
+    "type": "checkpoints",
+    "base": "Flux.1 Schnell",
+    "description": "Fast 4-step generation model",
+    "url": "https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/flux1-schnell.safetensors"
+  },
+  {
+    "name": "wan2.1_t2v_14b_720p.safetensors",
+    "type": "checkpoints",
+    "base": "Wan 2.1 14B T2V",
+    "description": "Wan 2.1 14B Text-to-Video Model",
+    "url": "https://huggingface.co/Wan-AI/Wan2.1-T2V-14B/resolve/main/wan2.1_t2v_14b_720p.safetensors"
+  },
+  {
+    "name": "wan2.1_i2v_14b_720p.safetensors",
+    "type": "checkpoints",
+    "base": "Wan 2.1 14B I2V",
+    "description": "Wan 2.1 14B Image-to-Video Model",
+    "url": "https://huggingface.co/Wan-AI/Wan2.1-I2V-14B-720P/resolve/main/wan2.1_i2v_14b_720p.safetensors"
+  },
+  {
+    "name": "wan2.1_t2v_1.3b_480p.safetensors",
+    "type": "checkpoints",
+    "base": "Wan 2.1 1.3B T2V",
+    "description": "Wan 2.1 1.3B Text-to-Video Model (Low VRAM)",
+    "url": "https://huggingface.co/Wan-AI/Wan2.1-T2V-1.3B/resolve/main/wan2.1_t2v_1.3b_480p.safetensors"
+  },
+  {
+    "name": "liveportrait_model.safetensors",
+    "type": "checkpoints",
+    "base": "LivePortrait",
+    "description": "LivePortrait base model for video driving",
+    "url": "https://huggingface.co/Kijai/LivePortrait_safetensors/resolve/main/liveportrait_model.safetensors"
+  },
+  {
+    "name": "supir_v0.safetensors",
+    "type": "checkpoints",
+    "base": "SUPIR",
+    "description": "SUPIR image/video upscaler model",
+    "url": "https://huggingface.co/Kijai/SUPIR_safetensors/resolve/main/SUPIR_v0.safetensors"
+  }
+]

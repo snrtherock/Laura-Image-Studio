@@ -25,11 +25,26 @@ class ImageToVideo:
                 "model": ("MODEL",),
                 "clip": ("CLIP",),
                 "vae": ("VAE",),
-                "prompt": ("STRING", {"multiline": True, "default": "smooth camera pan, gentle movement"}),
-                "negative_prompt": ("STRING", {"multiline": True, "default": "static, frozen, jittery, flickering"}),
-                "video_length": ("INT", {"default": 16, "min": 4, "max": 64, "step": 4}),
+                "prompt": (
+                    "STRING",
+                    {
+                        "multiline": True,
+                        "default": "smooth camera pan, gentle movement",
+                    },
+                ),
+                "negative_prompt": (
+                    "STRING",
+                    {
+                        "multiline": True,
+                        "default": "static, frozen, jittery, flickering",
+                    },
+                ),
+                "video_length": (
+                    "INT",
+                    {"default": 16, "min": 4, "max": 64, "step": 4},
+                ),
                 "fps": ("INT", {"default": 8, "min": 1, "max": 30}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
                 "steps": ("INT", {"default": 25, "min": 1, "max": 100}),
                 "cfg": ("FLOAT", {"default": 5.0, "min": 0.0, "max": 20.0}),
                 "motion_strength": ("FLOAT", {"default": 0.7, "min": 0.0, "max": 2.0}),
@@ -38,7 +53,7 @@ class ImageToVideo:
             "optional": {
                 "motion_lora": ("STRING", {"default": ""}),
                 "end_image": ("IMAGE",),
-            }
+            },
         }
 
     RETURN_TYPES = ("IMAGE", "INT", "INT")
@@ -47,10 +62,24 @@ class ImageToVideo:
     CATEGORY = "Laura Studio/Video"
     DESCRIPTION = "Generate video from static image"
 
-    def generate_video(self, image, model, clip, vae, prompt, negative_prompt,
-                       video_length, fps, seed, steps, cfg, motion_strength,
-                       video_model, motion_lora="", end_image=None):
-
+    def generate_video(
+        self,
+        image,
+        model,
+        clip,
+        vae,
+        prompt,
+        negative_prompt,
+        video_length,
+        fps,
+        seed,
+        steps,
+        cfg,
+        motion_strength,
+        video_model,
+        motion_lora="",
+        end_image=None,
+    ):
         from nodes import CLIPTextEncode, VAEEncode, KSampler, VAEDecode
 
         # Encode prompts
@@ -81,7 +110,9 @@ class ImageToVideo:
             end_latent = VAEEncode().encode(vae, end_image)[0]
             for i in range(batch_size):
                 t = i / max(batch_size - 1, 1)
-                frames_latent[i] = (1 - t) * source_latent["samples"][0] + t * end_latent["samples"][0]
+                frames_latent[i] = (1 - t) * source_latent["samples"][
+                    0
+                ] + t * end_latent["samples"][0]
 
         # Process in sub-batches to manage VRAM
         sub_batch_size = 4
@@ -94,8 +125,16 @@ class ImageToVideo:
             # Sample each sub-batch
             denoise = 0.6 + (motion_strength * 0.2)
             sampled = KSampler().sample(
-                model, seed + start, steps, cfg, "euler", "normal",
-                positive, negative, sub_latent, denoise=min(denoise, 1.0)
+                model,
+                seed + start,
+                steps,
+                cfg,
+                "euler",
+                "normal",
+                positive,
+                negative,
+                sub_latent,
+                denoise=min(denoise, 1.0),
             )[0]
 
             # Decode to images
@@ -121,17 +160,23 @@ class VideoToVideo:
                 "clip": ("CLIP",),
                 "vae": ("VAE",),
                 "prompt": ("STRING", {"multiline": True, "default": ""}),
-                "negative_prompt": ("STRING", {"multiline": True, "default": "deformed, blurry, flickering"}),
+                "negative_prompt": (
+                    "STRING",
+                    {"multiline": True, "default": "deformed, blurry, flickering"},
+                ),
                 "denoise": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 1.0}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
                 "steps": ("INT", {"default": 20, "min": 1, "max": 100}),
                 "cfg": ("FLOAT", {"default": 5.0, "min": 0.0, "max": 20.0}),
-                "temporal_consistency": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 1.0}),
+                "temporal_consistency": (
+                    "FLOAT",
+                    {"default": 0.8, "min": 0.0, "max": 1.0},
+                ),
             },
             "optional": {
                 "style_image": ("IMAGE",),
                 "style_strength": ("FLOAT", {"default": 0.6, "min": 0.0, "max": 1.0}),
-            }
+            },
         }
 
     RETURN_TYPES = ("IMAGE",)
@@ -140,10 +185,22 @@ class VideoToVideo:
     CATEGORY = "Laura Studio/Video"
     DESCRIPTION = "Style transfer and processing on video frames"
 
-    def process_video(self, frames, model, clip, vae, prompt, negative_prompt,
-                      denoise, seed, steps, cfg, temporal_consistency,
-                      style_image=None, style_strength=0.6):
-
+    def process_video(
+        self,
+        frames,
+        model,
+        clip,
+        vae,
+        prompt,
+        negative_prompt,
+        denoise,
+        seed,
+        steps,
+        cfg,
+        temporal_consistency,
+        style_image=None,
+        style_strength=0.6,
+    ):
         from nodes import CLIPTextEncode, VAEEncode, KSampler, VAEDecode
 
         # Encode prompts
@@ -173,16 +230,26 @@ class VideoToVideo:
             # Apply temporally correlated noise
             frame_noise = torch.randn_like(encoded["samples"])
             # Blend between shared base noise and random noise
-            blended_noise = temporal_consistency * base_noise.expand_as(frame_noise) + \
-                           (1 - temporal_consistency) * frame_noise
+            blended_noise = (
+                temporal_consistency * base_noise.expand_as(frame_noise)
+                + (1 - temporal_consistency) * frame_noise
+            )
 
             # Add blended noise to latent at denoise level
             noisy_latent = {"samples": encoded["samples"]}
 
             # Sample
             sampled = sampler.sample(
-                model, seed + start, steps, cfg, "euler", "normal",
-                positive, negative, noisy_latent, denoise=denoise
+                model,
+                seed + start,
+                steps,
+                cfg,
+                "euler",
+                "normal",
+                positive,
+                negative,
+                noisy_latent,
+                denoise=denoise,
             )[0]
 
             # Decode
@@ -207,7 +274,7 @@ class FrameInterpolator:
             "optional": {
                 "scene_detect": ("BOOLEAN", {"default": True}),
                 "scene_threshold": ("FLOAT", {"default": 0.3, "min": 0.1, "max": 0.9}),
-            }
+            },
         }
 
     RETURN_TYPES = ("IMAGE", "INT")
@@ -216,9 +283,9 @@ class FrameInterpolator:
     CATEGORY = "Laura Studio/Video"
     DESCRIPTION = "Increase video FPS with frame interpolation"
 
-    def interpolate(self, frames, multiplier, method,
-                    scene_detect=True, scene_threshold=0.3):
-
+    def interpolate(
+        self, frames, multiplier, method, scene_detect=True, scene_threshold=0.3
+    ):
         mult = {"2x": 2, "4x": 4, "8x": 8}[multiplier]
         num_frames = frames.shape[0]
 
@@ -292,7 +359,7 @@ class VideoSaver:
             },
             "optional": {
                 "loop": ("BOOLEAN", {"default": False}),
-            }
+            },
         }
 
     RETURN_TYPES = ("STRING",)
@@ -336,6 +403,7 @@ class VideoSaver:
             output_path = os.path.join(video_dir, f"{filename}.{format}")
             try:
                 import cv2
+
                 quality_map = {"low": 30, "medium": 23, "high": 18, "maximum": 10}
                 fourcc_map = {"mp4": "mp4v", "webm": "VP90"}
                 fourcc = cv2.VideoWriter_fourcc(*fourcc_map.get(format, "mp4v"))
@@ -437,7 +505,9 @@ class VideoFrameSelector:
         return {
             "required": {
                 "frames": ("IMAGE",),
-                "mode": (["first", "last", "middle", "specific", "every_nth", "range"],),
+                "mode": (
+                    ["first", "last", "middle", "specific", "every_nth", "range"],
+                ),
                 "index": ("INT", {"default": 0, "min": 0, "max": 255}),
                 "nth": ("INT", {"default": 2, "min": 1, "max": 32}),
                 "range_start": ("INT", {"default": 0, "min": 0, "max": 255}),
@@ -460,10 +530,10 @@ class VideoFrameSelector:
             selected = frames[-1:]
         elif mode == "middle":
             mid = num_frames // 2
-            selected = frames[mid:mid + 1]
+            selected = frames[mid : mid + 1]
         elif mode == "specific":
             idx = min(index, num_frames - 1)
-            selected = frames[idx:idx + 1]
+            selected = frames[idx : idx + 1]
         elif mode == "every_nth":
             indices = list(range(0, num_frames, nth))
             selected = frames[indices]
@@ -479,7 +549,7 @@ class VideoFrameSelector:
 
 # ============== VIDEO FACE SWAPPER ==============
 class VideoFaceSwapper:
-    """Apply face swap consistently across all video frames"""
+    """Apply face swap consistently across all video frames using ReActor delegation"""
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -491,35 +561,62 @@ class VideoFaceSwapper:
             },
             "optional": {
                 "face_model_name": ("STRING", {"default": "inswapper_128.onnx"}),
-            }
+            },
         }
 
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("frames",)
     FUNCTION = "swap_video_face"
     CATEGORY = "Laura Studio/Video"
-    DESCRIPTION = "Face swap across video frames with consistency"
+    DESCRIPTION = "Face swap across video frames with temporal consistency"
 
-    def swap_video_face(self, frames, face_image, consistency, face_model_name="inswapper_128.onnx"):
-        # Process frames with temporal smoothing for consistent face swap
+    def swap_video_face(
+        self, frames, face_image, consistency, face_model_name="inswapper_128.onnx"
+    ):
+        from .face import _try_import_reactor
+        from .models import LauraLogger
+
+        ReActorNode = _try_import_reactor()
         num_frames = frames.shape[0]
         processed = []
         prev_result = None
 
-        for i in range(num_frames):
-            frame = frames[i:i + 1]
+        if ReActorNode is None:
+            LauraLogger.warn("ReActor not installed. Video face swap will be a bypass.")
+            return (frames,)
 
-            # Apply face swap per frame (uses ReActor when available)
+        LauraLogger.info(f"Processing Video Face Swap for {num_frames} frames...")
+        reactor = ReActorNode()
+
+        for i in range(num_frames):
+            frame = frames[i : i + 1]
+
+            # Use ReActor for high-quality face swap
             try:
-                from reactor_utils import face_swap
-                swapped = face_swap(frame, face_image, face_model_name)
-            except ImportError:
-                # Fallback: blend face region (simplified swap)
+                result = reactor.execute(
+                    enabled=True,
+                    input_image=frame,
+                    source_image=face_image,
+                    swap_model=face_model_name,
+                    facedetection="retinaface_resnet50",
+                    face_restore_model="none",
+                    face_restore_visibility=1.0,
+                    codeformer_weight=0.5,
+                    detect_gender_source="no",
+                    detect_gender_input="no",
+                    source_faces_index="0",
+                    input_faces_index="0",
+                    console_log_level=0,
+                )
+                swapped = result[0]
+            except Exception as e:
+                LauraLogger.error(f"Frame {i} face swap failed: {e}")
                 swapped = frame.clone()
 
-            # Temporal smoothing with previous frame for consistency
+            # Temporal smoothing for flickering reduction
             if prev_result is not None and consistency > 0:
-                swapped = consistency * prev_result + (1 - consistency) * swapped
+                # Simple linear blend for the whole frame (can be masked in future)
+                swapped = (1.0 - consistency) * swapped + consistency * prev_result
                 swapped = torch.clamp(swapped, 0, 1)
 
             processed.append(swapped)
@@ -542,7 +639,7 @@ class VideoUpscaler:
             },
             "optional": {
                 "temporal_smooth": ("FLOAT", {"default": 0.3, "min": 0.0, "max": 1.0}),
-            }
+            },
         }
 
     RETURN_TYPES = ("IMAGE",)
@@ -561,7 +658,7 @@ class VideoUpscaler:
         prev_frame = None
 
         for i in range(num_frames):
-            frame = frames[i:i + 1]
+            frame = frames[i : i + 1]
 
             # Upscale using model
             result = upscaler.upscale(upscale_model, frame)[0]
@@ -571,9 +668,12 @@ class VideoUpscaler:
                 h, w = result.shape[1] // 2, result.shape[2] // 2
                 result_np = result[0].cpu().numpy()
                 from PIL import Image as PILImage
+
                 img = PILImage.fromarray((result_np * 255).astype(np.uint8))
                 img = img.resize((w, h), PILImage.LANCZOS)
-                result = torch.from_numpy(np.array(img).astype(np.float32) / 255.0).unsqueeze(0)
+                result = torch.from_numpy(
+                    np.array(img).astype(np.float32) / 255.0
+                ).unsqueeze(0)
 
             # Temporal smoothing
             if prev_frame is not None and temporal_smooth > 0:
@@ -587,24 +687,28 @@ class VideoUpscaler:
 
 
 # Register all nodes
-NODE_CLASS_MAPPINGS.update({
-    "ImageToVideo": ImageToVideo,
-    "VideoToVideo": VideoToVideo,
-    "FrameInterpolator": FrameInterpolator,
-    "VideoSaver": VideoSaver,
-    "VideoLoader": VideoLoader,
-    "VideoFrameSelector": VideoFrameSelector,
-    "VideoFaceSwapper": VideoFaceSwapper,
-    "VideoUpscaler": VideoUpscaler,
-})
+NODE_CLASS_MAPPINGS.update(
+    {
+        "ImageToVideo": ImageToVideo,
+        "VideoToVideo": VideoToVideo,
+        "FrameInterpolator": FrameInterpolator,
+        "VideoSaver": VideoSaver,
+        "VideoLoader": VideoLoader,
+        "VideoFrameSelector": VideoFrameSelector,
+        "VideoFaceSwapper": VideoFaceSwapper,
+        "VideoUpscaler": VideoUpscaler,
+    }
+)
 
-NODE_DISPLAY_NAME_MAPPINGS.update({
-    "ImageToVideo": "Image to Video",
-    "VideoToVideo": "Video to Video (Style)",
-    "FrameInterpolator": "Frame Interpolator (FPS Up)",
-    "VideoSaver": "Video Saver",
-    "VideoLoader": "Video Loader",
-    "VideoFrameSelector": "Video Frame Selector",
-    "VideoFaceSwapper": "Video Face Swapper",
-    "VideoUpscaler": "Video Upscaler",
-})
+NODE_DISPLAY_NAME_MAPPINGS.update(
+    {
+        "ImageToVideo": "Image to Video",
+        "VideoToVideo": "Video to Video (Style)",
+        "FrameInterpolator": "Frame Interpolator (FPS Up)",
+        "VideoSaver": "Video Saver",
+        "VideoLoader": "Video Loader",
+        "VideoFrameSelector": "Video Frame Selector",
+        "VideoFaceSwapper": "Video Face Swapper",
+        "VideoUpscaler": "Video Upscaler",
+    }
+)

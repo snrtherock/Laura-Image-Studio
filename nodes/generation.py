@@ -11,6 +11,7 @@ import folder_paths
 NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
 
+
 # ============== LAURA SDXL GENERATOR ==============
 class LauraSDXLGenerator:
     """Main image generation node for Laura character"""
@@ -22,21 +23,47 @@ class LauraSDXLGenerator:
                 "model": ("MODEL",),
                 "clip": ("CLIP",),
                 "vae": ("VAE",),
-                "positive_prompt": ("STRING", {"multiline": True, "default": "photo of laura, detailed face, professional lighting"}),
-                "negative_prompt": ("STRING", {"multiline": True, "default": "deformed, blurry, bad anatomy, extra limbs, poorly drawn face"}),
+                "positive_prompt": (
+                    "STRING",
+                    {
+                        "multiline": True,
+                        "default": "photo of laura, detailed face, professional lighting",
+                    },
+                ),
+                "negative_prompt": (
+                    "STRING",
+                    {
+                        "multiline": True,
+                        "default": "deformed, blurry, bad anatomy, extra limbs, poorly drawn face",
+                    },
+                ),
                 "width": ("INT", {"default": 1024, "min": 512, "max": 2048, "step": 8}),
-                "height": ("INT", {"default": 1024, "min": 512, "max": 2048, "step": 8}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "height": (
+                    "INT",
+                    {"default": 1024, "min": 512, "max": 2048, "step": 8},
+                ),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
                 "steps": ("INT", {"default": 25, "min": 1, "max": 100}),
                 "cfg": ("FLOAT", {"default": 5.0, "min": 0.0, "max": 20.0}),
-                "sampler_name": (["euler", "euler_ancestral", "dpm_2", "dpm_2_ancestral", "dpmpp_2m", "ddpm", "uni_pc", "uni_pc_bh2"],),
+                "sampler_name": (
+                    [
+                        "euler",
+                        "euler_ancestral",
+                        "dpm_2",
+                        "dpm_2_ancestral",
+                        "dpmpp_2m",
+                        "ddpm",
+                        "uni_pc",
+                        "uni_pc_bh2",
+                    ],
+                ),
                 "scheduler": (["normal", "karras", "exponential", "simple"],),
             },
             "optional": {
                 "ipadapter_image": ("IMAGE",),
                 "ipadapter_weight": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 2.0}),
                 "laura_strength": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 1.0}),
-            }
+            },
         }
 
     RETURN_TYPES = ("IMAGE", "LATENT")
@@ -45,11 +72,32 @@ class LauraSDXLGenerator:
     CATEGORY = "Laura Studio/Generation"
     DESCRIPTION = "Generate images of Laura using SDXL"
 
-    def generate(self, model, clip, vae, positive_prompt, negative_prompt,
-                 width, height, seed, steps, cfg, sampler_name, scheduler,
-                 ipadapter_image=None, ipadapter_weight=1.0, laura_strength=0.8):
-
+    def generate(
+        self,
+        model,
+        clip,
+        vae,
+        positive_prompt,
+        negative_prompt,
+        width,
+        height,
+        seed,
+        steps,
+        cfg,
+        sampler_name,
+        scheduler,
+        ipadapter_image=None,
+        ipadapter_weight=1.0,
+        laura_strength=0.8,
+    ):
         from nodes import EmptyLatentImage, KSampler, VAEDecode, CLIPTextEncode
+        from .models import LauraLogger
+
+        # 🎀 CHARACTER IDENTITY INJECTION (Influencer Logic)
+        if laura_strength > 0 and "laura" not in positive_prompt.lower():
+            trigger = "photo of laura influencer, professional lighting, detailed skin"
+            positive_prompt = f"{trigger}, {positive_prompt}"
+            LauraLogger.info(f"Auto-Injected character identity ({laura_strength})")
 
         # Encode prompts
         positive = CLIPTextEncode().encode(clip, positive_prompt)[0]
@@ -60,8 +108,16 @@ class LauraSDXLGenerator:
 
         # Sample
         sampled = KSampler().sample(
-            model, seed, steps, cfg, sampler_name, scheduler,
-            positive, negative, latent, denoise=1.0
+            model,
+            seed,
+            steps,
+            cfg,
+            sampler_name,
+            scheduler,
+            positive,
+            negative,
+            latent,
+            denoise=1.0,
         )[0]
 
         # Decode
@@ -78,17 +134,48 @@ class LauraPromptBuilder:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "base_prompt": ("STRING", {"multiline": True, "default": "photo of a woman"}),
-                "pose": (["standing", "sitting", "walking", "dynamic", "formal", "casual"],),
-                "lighting": (["natural", "studio", "golden hour", "blue hour", "dramatic", "soft"],),
-                "camera_angle": (["eye level", "low angle", "high angle", "worm's eye", "bird's eye"],),
-                "style": (["portrait", "full body", "fashion", "commercial", "cinematic", "documentary"],),
+                "base_prompt": (
+                    "STRING",
+                    {"multiline": True, "default": "photo of a woman"},
+                ),
+                "pose": (
+                    ["standing", "sitting", "walking", "dynamic", "formal", "casual"],
+                ),
+                "lighting": (
+                    [
+                        "natural",
+                        "studio",
+                        "golden hour",
+                        "blue hour",
+                        "dramatic",
+                        "soft",
+                    ],
+                ),
+                "camera_angle": (
+                    [
+                        "eye level",
+                        "low angle",
+                        "high angle",
+                        "worm's eye",
+                        "bird's eye",
+                    ],
+                ),
+                "style": (
+                    [
+                        "portrait",
+                        "full body",
+                        "fashion",
+                        "commercial",
+                        "cinematic",
+                        "documentary",
+                    ],
+                ),
             },
             "optional": {
                 "clothing_description": ("STRING", {"default": ""}),
                 "accessories": ("STRING", {"default": ""}),
                 "mood": ("STRING", {"default": ""}),
-            }
+            },
         }
 
     RETURN_TYPES = ("STRING",)
@@ -96,9 +183,17 @@ class LauraPromptBuilder:
     CATEGORY = "Laura Studio/Generation"
     DESCRIPTION = "Build optimized prompts for Laura generation"
 
-    def build_prompt(self, base_prompt, pose, lighting, camera_angle, style,
-                     clothing_description="", accessories="", mood=""):
-
+    def build_prompt(
+        self,
+        base_prompt,
+        pose,
+        lighting,
+        camera_angle,
+        style,
+        clothing_description="",
+        accessories="",
+        mood="",
+    ):
         # Construct positive prompt
         parts = [base_prompt]
 
@@ -109,7 +204,7 @@ class LauraPromptBuilder:
             "walking": "walking motion, dynamic",
             "dynamic": "dynamic pose, movement",
             "formal": "formal pose, professional",
-            "casual": "casual pose, relaxed"
+            "casual": "casual pose, relaxed",
         }
         parts.append(pose_map.get(pose, pose))
 
@@ -120,7 +215,7 @@ class LauraPromptBuilder:
             "golden hour": "golden hour, warm light, sunset",
             "blue hour": "blue hour, cool light, dusk",
             "dramatic": "dramatic lighting, chiaroscuro",
-            "soft": "soft lighting, diffused"
+            "soft": "soft lighting, diffused",
         }
         parts.append(lighting_map.get(lighting, lighting))
 
@@ -130,7 +225,7 @@ class LauraPromptBuilder:
             "low angle": "low angle shot, looking up",
             "high angle": "high angle shot, looking down",
             "worm's eye": "worm's eye view, from below",
-            "bird's eye": "bird's eye view, from above"
+            "bird's eye": "bird's eye view, from above",
         }
         parts.append(camera_map.get(camera_angle, camera_angle))
 
@@ -141,7 +236,7 @@ class LauraPromptBuilder:
             "fashion": "fashion photography, editorial",
             "commercial": "commercial photography, professional",
             "cinematic": "cinematic lighting, film grain",
-            "documentary": "documentary style, candid"
+            "documentary": "documentary style, candid",
         }
         parts.append(style_map.get(style, style))
 
@@ -154,15 +249,17 @@ class LauraPromptBuilder:
             parts.append(mood)
 
         # Add quality tags
-        parts.extend([
-            "professional quality",
-            "detailed",
-            "sharp focus",
-            "8k uhd",
-            "dslr",
-            "soft lighting",
-            "high detail"
-        ])
+        parts.extend(
+            [
+                "professional quality",
+                "detailed",
+                "sharp focus",
+                "8k uhd",
+                "dslr",
+                "soft lighting",
+                "high detail",
+            ]
+        )
 
         positive = ", ".join(parts)
 
@@ -187,7 +284,7 @@ class SeedControl:
         return {
             "required": {
                 "mode": (["random", "fixed", "increment", "decrement"],),
-                "seed": ("INT", {"default": 42, "min": 0, "max": 0xffffffffffffffff}),
+                "seed": ("INT", {"default": 42, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
             }
         }
 
@@ -200,7 +297,7 @@ class SeedControl:
         import random
 
         if mode == "random":
-            result = random.randint(0, 0xffffffffffffffff)
+            result = random.randint(0, 0xFFFFFFFFFFFFFFFF)
         elif mode == "increment":
             result = seed + 1
         elif mode == "decrement":
@@ -223,16 +320,22 @@ class LauraImageToImage:
                 "clip": ("CLIP",),
                 "vae": ("VAE",),
                 "image": ("IMAGE",),
-                "positive_prompt": ("STRING", {"multiline": True, "default": "photo of laura"}),
-                "negative_prompt": ("STRING", {"multiline": True, "default": "deformed, blurry"}),
+                "positive_prompt": (
+                    "STRING",
+                    {"multiline": True, "default": "photo of laura"},
+                ),
+                "negative_prompt": (
+                    "STRING",
+                    {"multiline": True, "default": "deformed, blurry"},
+                ),
                 "denoise": ("FLOAT", {"default": 0.7, "min": 0.0, "max": 1.0}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
                 "steps": ("INT", {"default": 25, "min": 1, "max": 100}),
                 "cfg": ("FLOAT", {"default": 5.0, "min": 0.0, "max": 20.0}),
             },
             "optional": {
                 "strength": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 1.0}),
-            }
+            },
         }
 
     RETURN_TYPES = ("IMAGE",)
@@ -240,9 +343,20 @@ class LauraImageToImage:
     CATEGORY = "Laura Studio/Generation"
     DESCRIPTION = "Image to image with Laura preservation"
 
-    def img2img(self, model, clip, vae, image, positive_prompt, negative_prompt,
-                denoise, seed, steps, cfg, strength=0.8):
-
+    def img2img(
+        self,
+        model,
+        clip,
+        vae,
+        image,
+        positive_prompt,
+        negative_prompt,
+        denoise,
+        seed,
+        steps,
+        cfg,
+        strength=0.8,
+    ):
         from nodes import VAEEncode, KSampler, VAEDecode, CLIPTextEncode
 
         # Encode image to latent
@@ -255,8 +369,16 @@ class LauraImageToImage:
         # Sample with encoded latent
         latent = {"samples": encoded["samples"]}
         sampled = KSampler().sample(
-            model, seed, steps, cfg, "euler", "normal",
-            positive, negative, latent, denoise=denoise
+            model,
+            seed,
+            steps,
+            cfg,
+            "euler",
+            "normal",
+            positive,
+            negative,
+            latent,
+            denoise=denoise,
         )[0]
 
         # Decode
@@ -284,7 +406,6 @@ class LauraNegativePrompts:
     DESCRIPTION = "Get quality negative prompts"
 
     def get_negative(self, preset, custom=""):
-
         presets = {
             "maximum": (
                 "deformed, blurry, bad anatomy, extra limbs, poorly drawn face, "
@@ -300,9 +421,7 @@ class LauraNegativePrompts:
                 "mutation, ugly, disfigured, blur, out of focus, low quality, "
                 "worst quality, jpeg artifacts"
             ),
-            "minimal": (
-                "deformed, blurry, bad anatomy, low quality, worst quality"
-            ),
+            "minimal": ("deformed, blurry, bad anatomy, low quality, worst quality"),
         }
 
         if preset == "custom":
@@ -337,25 +456,31 @@ class LauraLoRALoader:
         from nodes import LoraLoader
 
         # Use built-in LoRA loader
-        result = LoraLoader().load_lora(model, clip, lora_name, strength_model, strength_clip)
+        result = LoraLoader().load_lora(
+            model, clip, lora_name, strength_model, strength_clip
+        )
         return (result[0], result[1])
 
 
 # Register all nodes
-NODE_CLASS_MAPPINGS.update({
-    "LauraSDXLGenerator": LauraSDXLGenerator,
-    "LauraPromptBuilder": LauraPromptBuilder,
-    "SeedControl": SeedControl,
-    "LauraImageToImage": LauraImageToImage,
-    "LauraNegativePrompts": LauraNegativePrompts,
-    "LauraLoRALoader": LauraLoRALoader,
-})
+NODE_CLASS_MAPPINGS.update(
+    {
+        "LauraSDXLGenerator": LauraSDXLGenerator,
+        "LauraPromptBuilder": LauraPromptBuilder,
+        "SeedControl": SeedControl,
+        "LauraImageToImage": LauraImageToImage,
+        "LauraNegativePrompts": LauraNegativePrompts,
+        "LauraLoRALoader": LauraLoRALoader,
+    }
+)
 
-NODE_DISPLAY_NAME_MAPPINGS.update({
-    "LauraSDXLGenerator": "LAURA SDXL Generator",
-    "LauraPromptBuilder": "LAURA Prompt Builder",
-    "SeedControl": "Seed Control",
-    "LauraImageToImage": "LAURA Image to Image",
-    "LauraNegativePrompts": "LAURA Negative Prompts",
-    "LauraLoRALoader": "LAURA LoRA Loader",
-})
+NODE_DISPLAY_NAME_MAPPINGS.update(
+    {
+        "LauraSDXLGenerator": "LAURA SDXL Generator",
+        "LauraPromptBuilder": "LAURA Prompt Builder",
+        "SeedControl": "Seed Control",
+        "LauraImageToImage": "LAURA Image to Image",
+        "LauraNegativePrompts": "LAURA Negative Prompts",
+        "LauraLoRALoader": "LAURA LoRA Loader",
+    }
+)

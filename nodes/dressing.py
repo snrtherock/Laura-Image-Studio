@@ -17,6 +17,7 @@ def _try_import_rmbg_clothes():
     """Try to import RMBG ClothesSegment node"""
     try:
         from custom_nodes import ComfyUI_RMBG
+
         mappings = ComfyUI_RMBG.NODE_CLASS_MAPPINGS
         if "ClothesSegment" in mappings:
             return mappings["ClothesSegment"]
@@ -25,6 +26,7 @@ def _try_import_rmbg_clothes():
     # Try alternative import path
     try:
         import importlib
+
         mod = importlib.import_module("custom_nodes.ComfyUI-RMBG")
         mappings = mod.NODE_CLASS_MAPPINGS
         if "ClothesSegment" in mappings:
@@ -38,6 +40,7 @@ def _try_import_rmbg_fashion():
     """Try to import RMBG FashionSegmentation node"""
     try:
         from custom_nodes import ComfyUI_RMBG
+
         mappings = ComfyUI_RMBG.NODE_CLASS_MAPPINGS
         if "FashionSegmentation" in mappings:
             return mappings["FashionSegmentation"]
@@ -45,6 +48,7 @@ def _try_import_rmbg_fashion():
         pass
     try:
         import importlib
+
         mod = importlib.import_module("custom_nodes.ComfyUI-RMBG")
         mappings = mod.NODE_CLASS_MAPPINGS
         if "FashionSegmentation" in mappings:
@@ -54,25 +58,59 @@ def _try_import_rmbg_fashion():
     return None
 
 
+def _try_import_ipadapter():
+    """Try to import IPAdapter Plus nodes"""
+    try:
+        from custom_nodes import ComfyUI_IPAdapter_plus
+
+        mappings = ComfyUI_IPAdapter_plus.NODE_CLASS_MAPPINGS
+        loader = mappings.get("IPAdapterUnifiedLoader") or mappings.get(
+            "IPAdapterUnifiedLoaderFaceID"
+        )
+        apply_node = mappings.get("IPAdapterAdvanced") or mappings.get("IPAdapter")
+        return loader, apply_node
+    except Exception:
+        pass
+    try:
+        import importlib
+
+        mod = importlib.import_module("custom_nodes.ComfyUI_IPAdapter_plus")
+        mappings = mod.NODE_CLASS_MAPPINGS
+        loader = mappings.get("IPAdapterUnifiedLoader") or mappings.get(
+            "IPAdapterUnifiedLoaderFaceID"
+        )
+        apply_node = mappings.get("IPAdapterAdvanced") or mappings.get("IPAdapter")
+        return loader, apply_node
+    except Exception:
+        pass
+    return None, None
+
+
 # RMBG ClothesSegment category mapping (18 categories)
 # 0: Background, 1: Hat, 2: Hair, 3: Sunglasses, 4: Upper-clothes,
 # 5: Skirt, 6: Pants, 7: Dress, 8: Belt, 9: Left-shoe, 10: Right-shoe,
 # 11: Face, 12: Left-leg, 13: Right-leg, 14: Left-arm, 15: Right-arm,
 # 16: Bag, 17: Scarf
 RMBG_CATEGORY_MAP = {
-    "top": [4],           # Upper-clothes
-    "bottom": [5, 6],     # Skirt + Pants
-    "dress": [7],         # Dress
-    "skirt": [5],         # Skirt only
-    "pants": [6],         # Pants only
-    "shoes": [9, 10],     # Left-shoe + Right-shoe
-    "hat": [1],           # Hat
-    "sunglasses": [3],    # Sunglasses
-    "belt": [8],          # Belt
-    "bag": [16],          # Bag
-    "scarf": [17],        # Scarf
-    "hair": [2],          # Hair
-    "face": [11],         # Face
+    "top": [4],  # Upper-clothes
+    "bottom": [5, 6],  # Skirt + Pants
+    "dress": [7],  # Dress
+    "skirt": [5],  # Skirt only
+    "pants": [6],  # Pants only
+    "shoes": [9, 10],  # Left-shoe + Right-shoe
+    "left_shoe": [9],  # Left shoe only
+    "right_shoe": [10],  # Right shoe only
+    "hat": [1],  # Hat
+    "sunglasses": [3],  # Sunglasses
+    "belt": [8],  # Belt
+    "bag": [16],  # Bag
+    "scarf": [17],  # Scarf
+    "hair": [2],  # Hair
+    "face": [11],  # Face
+    "left_leg": [12],  # Left leg only
+    "right_leg": [13],  # Right leg only
+    "left_arm": [14],  # Left arm only
+    "right_arm": [15],  # Right arm only
     "full_body": [4, 5, 6, 7, 9, 10],  # All clothing
 }
 
@@ -102,29 +140,59 @@ def _region_fallback_mask(image, category):
     mask = torch.zeros((B, H, W), dtype=torch.float32, device=image.device)
 
     region_map = {
-        "top":        (0.15, 0.50),   # Upper body region
-        "bottom":     (0.45, 0.80),   # Lower body
-        "dress":      (0.15, 0.80),   # Full torso
-        "skirt":      (0.45, 0.70),
-        "pants":      (0.45, 0.85),
-        "shoes":      (0.85, 1.00),   # Feet area
-        "hat":        (0.00, 0.12),   # Head top
-        "sunglasses": (0.10, 0.18),   # Eyes area
-        "belt":       (0.42, 0.50),
-        "bag":        (0.30, 0.60),
-        "scarf":      (0.12, 0.25),
-        "hair":       (0.00, 0.20),   # Head area
-        "face":       (0.08, 0.25),   # Face area
-        "full_body":  (0.15, 0.85),
+        "top": (0.15, 0.50),  # Upper body region
+        "bottom": (0.45, 0.80),  # Lower body
+        "dress": (0.15, 0.80),  # Full torso
+        "skirt": (0.45, 0.70),
+        "pants": (0.45, 0.85),
+        "shoes": (0.85, 1.00),  # Feet area
+        "left_shoe": (0.85, 1.00, "left"),
+        "right_shoe": (0.85, 1.00, "right"),
+        "hat": (0.00, 0.12),  # Head top
+        "sunglasses": (0.10, 0.18),  # Eyes area
+        "belt": (0.42, 0.50),
+        "bag": (0.30, 0.60),
+        "scarf": (0.12, 0.25),
+        "hair": (0.00, 0.20),  # Head area
+        "face": (0.08, 0.25),  # Face area
+        "full_body": (0.15, 0.85),
+        "left_leg": (0.65, 0.90, "left"),
+        "right_leg": (0.65, 0.90, "right"),
+        "left_arm": (0.20, 0.55, "left"),
+        "right_arm": (0.20, 0.55, "right"),
+        # Hand regions - approximate positions
+        "left_hand": (0.30, 0.55, "left_hand"),
+        "right_hand": (0.30, 0.55, "right_hand"),
     }
 
-    y_start_pct, y_end_pct = region_map.get(category, (0.15, 0.50))
+    region = region_map.get(category, (0.15, 0.50))
+    y_start_pct, y_end_pct = region[0], region[1]
     y_start = int(H * y_start_pct)
     y_end = int(H * y_end_pct)
 
-    # Horizontal: center 60% of image for most items
-    x_margin = int(W * 0.20)
-    mask[:, y_start:y_end, x_margin:W - x_margin] = 1.0
+    # Handle left/right specific regions
+    if len(region) == 3:
+        side = region[2]
+        if side == "left":
+            # Left side of image (viewer's left = subject's right)
+            x_margin = int(W * 0.50)
+            mask[:, y_start:y_end, x_margin:W] = 1.0
+        elif side == "right":
+            # Right side of image (viewer's right = subject's left)
+            x_margin = int(W * 0.50)
+            mask[:, y_start:y_end, 0:x_margin] = 1.0
+        elif side == "left_hand":
+            # Lower left quadrant - arm extended
+            x_margin = int(W * 0.60)
+            mask[:, int(H * 0.35) : int(H * 0.55), int(W * 0.40) : x_margin] = 1.0
+        elif side == "right_hand":
+            # Lower right quadrant - arm extended
+            x_margin = int(W * 0.40)
+            mask[:, int(H * 0.35) : int(H * 0.55), x_margin : int(W * 0.60)] = 1.0
+    else:
+        # Center region for most items
+        x_margin = int(W * 0.20)
+        mask[:, y_start:y_end, x_margin : W - x_margin] = 1.0
 
     return mask
 
@@ -138,14 +206,29 @@ class ClothingSegmentor:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "category": (["top", "bottom", "dress", "skirt", "pants", "shoes",
-                              "hat", "sunglasses", "belt", "bag", "scarf",
-                              "hair", "face", "full_body"],),
+                "category": (
+                    [
+                        "top",
+                        "bottom",
+                        "dress",
+                        "skirt",
+                        "pants",
+                        "shoes",
+                        "hat",
+                        "sunglasses",
+                        "belt",
+                        "bag",
+                        "scarf",
+                        "hair",
+                        "face",
+                        "full_body",
+                    ],
+                ),
             },
             "optional": {
                 "expand_mask": ("INT", {"default": 4, "min": 0, "max": 50}),
                 "feather": ("INT", {"default": 2, "min": 0, "max": 20}),
-            }
+            },
         }
 
     RETURN_TYPES = ("MASK", "IMAGE")
@@ -166,7 +249,9 @@ class ClothingSegmentor:
                 seg_map = seg_result[0]
                 mask = _extract_category_mask(seg_map, category)
             except Exception as e:
-                print(f"[Laura Studio] RMBG ClothesSegment failed: {e}, using region fallback")
+                print(
+                    f"[Laura Studio] RMBG ClothesSegment failed: {e}, using region fallback"
+                )
                 mask = _region_fallback_mask(image, category)
         else:
             print("[Laura Studio] RMBG not found, using region-based fallback mask")
@@ -175,6 +260,7 @@ class ClothingSegmentor:
         # Expand mask if requested
         if expand_mask > 0:
             import torch.nn.functional as F
+
             k = expand_mask * 2 + 1
             if mask.dim() == 2:
                 mask = mask.unsqueeze(0).unsqueeze(0)
@@ -186,6 +272,7 @@ class ClothingSegmentor:
         # Feather edges
         if feather > 0:
             import torch.nn.functional as F
+
             k = feather * 2 + 1
             if mask.dim() == 2:
                 mask = mask.unsqueeze(0).unsqueeze(0)
@@ -219,12 +306,22 @@ class AccessoryDetector:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "accessory": (["shoes", "watch", "bag", "belt", "sunglasses",
-                               "hat", "scarf", "jewelry"],),
+                "accessory": (
+                    [
+                        "shoes",
+                        "watch",
+                        "bag",
+                        "belt",
+                        "sunglasses",
+                        "hat",
+                        "scarf",
+                        "jewelry",
+                    ],
+                ),
             },
             "optional": {
                 "expand_mask": ("INT", {"default": 4, "min": 0, "max": 50}),
-            }
+            },
         }
 
     RETURN_TYPES = ("MASK", "IMAGE")
@@ -239,13 +336,13 @@ class AccessoryDetector:
         # Map our accessory names to RMBG categories
         accessory_to_rmbg = {
             "shoes": "shoes",
-            "watch": "belt",       # closest available
+            "watch": "belt",  # closest available
             "bag": "bag",
             "belt": "belt",
             "sunglasses": "sunglasses",
             "hat": "hat",
             "scarf": "scarf",
-            "jewelry": "belt",     # closest available
+            "jewelry": "belt",  # closest available
         }
         rmbg_cat = accessory_to_rmbg.get(accessory, "bag")
 
@@ -256,7 +353,9 @@ class AccessoryDetector:
                 seg_map = seg_result[0]
                 mask = _extract_category_mask(seg_map, rmbg_cat)
             except Exception as e:
-                print(f"[Laura Studio] RMBG FashionSegmentation failed: {e}, using region fallback")
+                print(
+                    f"[Laura Studio] RMBG FashionSegmentation failed: {e}, using region fallback"
+                )
                 mask = _region_fallback_mask(image, rmbg_cat)
         else:
             print("[Laura Studio] RMBG not found, using region-based fallback mask")
@@ -265,6 +364,7 @@ class AccessoryDetector:
         # Expand mask
         if expand_mask > 0:
             import torch.nn.functional as F
+
             k = expand_mask * 2 + 1
             if mask.dim() == 2:
                 mask = mask.unsqueeze(0).unsqueeze(0)
@@ -300,15 +400,27 @@ class VirtualDresser:
                 "vae": ("VAE",),
                 "source_image": ("IMAGE",),
                 "clothing_mask": ("MASK",),
-                "clothing_prompt": ("STRING", {"multiline": True, "default": "elegant white blouse, professional"}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "clothing_prompt": (
+                    "STRING",
+                    {
+                        "multiline": True,
+                        "default": "elegant white blouse, professional",
+                    },
+                ),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
                 "steps": ("INT", {"default": 30, "min": 1, "max": 100}),
                 "cfg": ("FLOAT", {"default": 7.0, "min": 0.0, "max": 20.0}),
                 "denoise": ("FLOAT", {"default": 0.85, "min": 0.0, "max": 1.0}),
             },
             "optional": {
-                "negative_prompt": ("STRING", {"multiline": True, "default": "deformed, blurry, bad anatomy, wrong clothes, low quality"}),
-            }
+                "negative_prompt": (
+                    "STRING",
+                    {
+                        "multiline": True,
+                        "default": "deformed, blurry, bad anatomy, wrong clothes, low quality",
+                    },
+                ),
+            },
         }
 
     RETURN_TYPES = ("IMAGE",)
@@ -316,10 +428,20 @@ class VirtualDresser:
     CATEGORY = "Laura Studio/Dressing"
     DESCRIPTION = "Replace clothing via mask-based inpainting"
 
-    def dress(self, model, clip, vae, source_image, clothing_mask, clothing_prompt,
-              seed, steps, cfg, denoise,
-              negative_prompt="deformed, blurry, bad anatomy, wrong clothes, low quality"):
-
+    def dress(
+        self,
+        model,
+        clip,
+        vae,
+        source_image,
+        clothing_mask,
+        clothing_prompt,
+        seed,
+        steps,
+        cfg,
+        denoise,
+        negative_prompt="deformed, blurry, bad anatomy, wrong clothes, low quality",
+    ):
         from nodes import VAEEncode, KSampler, VAEDecode, CLIPTextEncode
         import torch.nn.functional as F
 
@@ -335,7 +457,12 @@ class VirtualDresser:
 
         latent_h = encoded["samples"].shape[2]
         latent_w = encoded["samples"].shape[3]
-        mask_latent = F.interpolate(mask.float(), size=(latent_h, latent_w), mode="bilinear", align_corners=False)
+        mask_latent = F.interpolate(
+            mask.float(),
+            size=(latent_h, latent_w),
+            mode="bilinear",
+            align_corners=False,
+        )
 
         # Build prompt with quality tags
         full_prompt = f"photo of person wearing {clothing_prompt}, same pose, same body, detailed, professional lighting, 8k"
@@ -352,8 +479,16 @@ class VirtualDresser:
 
         # Sample
         sampled = KSampler().sample(
-            model, seed, steps, cfg, "dpmpp_2m", "karras",
-            positive, negative, latent, denoise=denoise
+            model,
+            seed,
+            steps,
+            cfg,
+            "dpmpp_2m",
+            "karras",
+            positive,
+            negative,
+            latent,
+            denoise=denoise,
         )[0]
 
         # Decode
@@ -370,7 +505,8 @@ class VirtualDresser:
             mask_rgb = F.interpolate(
                 mask_rgb.permute(0, 3, 1, 2),
                 size=(result.shape[1], result.shape[2]),
-                mode="bilinear", align_corners=False
+                mode="bilinear",
+                align_corners=False,
             ).permute(0, 2, 3, 1)
 
         final = result * mask_rgb + source_image * (1 - mask_rgb)
@@ -403,7 +539,7 @@ class DressingRoomCompositor:
                 "item_6_mask": ("MASK",),
                 "blend_mode": (["alpha", "feathered"],),
                 "feather_amount": ("INT", {"default": 4, "min": 0, "max": 20}),
-            }
+            },
         }
 
     RETURN_TYPES = ("IMAGE",)
@@ -411,14 +547,24 @@ class DressingRoomCompositor:
     CATEGORY = "Laura Studio/Dressing"
     DESCRIPTION = "Composite up to 6 individually modified items onto base image"
 
-    def composite(self, base_image, blend_mode="alpha", feather_amount=4,
-                  item_1_image=None, item_1_mask=None,
-                  item_2_image=None, item_2_mask=None,
-                  item_3_image=None, item_3_mask=None,
-                  item_4_image=None, item_4_mask=None,
-                  item_5_image=None, item_5_mask=None,
-                  item_6_image=None, item_6_mask=None):
-
+    def composite(
+        self,
+        base_image,
+        blend_mode="alpha",
+        feather_amount=4,
+        item_1_image=None,
+        item_1_mask=None,
+        item_2_image=None,
+        item_2_mask=None,
+        item_3_image=None,
+        item_3_mask=None,
+        item_4_image=None,
+        item_4_mask=None,
+        item_5_image=None,
+        item_5_mask=None,
+        item_6_image=None,
+        item_6_mask=None,
+    ):
         import torch.nn.functional as F
 
         result = base_image.clone()
@@ -445,7 +591,9 @@ class DressingRoomCompositor:
                     mask = mask.unsqueeze(0).unsqueeze(0)
                 elif mask.dim() == 3:
                     mask = mask.unsqueeze(1)
-                mask = F.avg_pool2d(mask, kernel_size=k, stride=1, padding=feather_amount)
+                mask = F.avg_pool2d(
+                    mask, kernel_size=k, stride=1, padding=feather_amount
+                )
                 mask = mask.squeeze(1)
 
             # Ensure mask is [B, H, W]
@@ -460,7 +608,8 @@ class DressingRoomCompositor:
                 item_image = F.interpolate(
                     item_image.permute(0, 3, 1, 2),
                     size=(result.shape[1], result.shape[2]),
-                    mode="bilinear", align_corners=False
+                    mode="bilinear",
+                    align_corners=False,
                 ).permute(0, 2, 3, 1)
 
             # Composite this item
@@ -481,10 +630,22 @@ class HairStylist:
                 "clip": ("CLIP",),
                 "vae": ("VAE",),
                 "source_image": ("IMAGE",),
-                "hairstyle": (["short", "long", "curly", "straight", "wavy",
-                               "bob", "ponytail", "braided", "updo", "pixie"],),
+                "hairstyle": (
+                    [
+                        "short",
+                        "long",
+                        "curly",
+                        "straight",
+                        "wavy",
+                        "bob",
+                        "ponytail",
+                        "braided",
+                        "updo",
+                        "pixie",
+                    ],
+                ),
                 "hair_color": ("STRING", {"default": "natural brown"}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
                 "steps": ("INT", {"default": 30, "min": 1, "max": 100}),
                 "cfg": ("FLOAT", {"default": 7.0, "min": 0.0, "max": 20.0}),
                 "denoise": ("FLOAT", {"default": 0.75, "min": 0.0, "max": 1.0}),
@@ -493,7 +654,7 @@ class HairStylist:
                 "hair_prompt": ("STRING", {"multiline": True, "default": ""}),
                 "bangs": (["none", "side bangs", "straight bangs", "curtain bangs"],),
                 "highlights": ("STRING", {"default": ""}),
-            }
+            },
         }
 
     RETURN_TYPES = ("IMAGE",)
@@ -501,13 +662,27 @@ class HairStylist:
     CATEGORY = "Laura Studio/Dressing"
     DESCRIPTION = "Change hairstyle and hair color via segmentation + inpainting"
 
-    def style_hair(self, model, clip, vae, source_image, hairstyle, hair_color,
-                   seed, steps, cfg, denoise,
-                   hair_prompt="", bangs="none", highlights=""):
-
+    def style_hair(
+        self,
+        model,
+        clip,
+        vae,
+        source_image,
+        hairstyle,
+        hair_color,
+        seed,
+        steps,
+        cfg,
+        denoise,
+        hair_prompt="",
+        bangs="none",
+        highlights="",
+    ):
         # First, get hair mask using ClothingSegmentor
         seg = ClothingSegmentor()
-        hair_mask, _ = seg.segment_clothing(source_image, "hair", expand_mask=8, feather=4)
+        hair_mask, _ = seg.segment_clothing(
+            source_image, "hair", expand_mask=8, feather=4
+        )
 
         # Build prompt
         style_desc = f"{hairstyle} hairstyle"
@@ -525,9 +700,17 @@ class HairStylist:
         # Use VirtualDresser for the actual inpainting
         dresser = VirtualDresser()
         result = dresser.dress(
-            model, clip, vae, source_image, hair_mask, prompt,
-            seed, steps, cfg, denoise,
-            negative_prompt="deformed, blurry, bad hair, wrong hair color, low quality"
+            model,
+            clip,
+            vae,
+            source_image,
+            hair_mask,
+            prompt,
+            seed,
+            steps,
+            cfg,
+            denoise,
+            negative_prompt="deformed, blurry, bad hair, wrong hair color, low quality",
         )
 
         return result
@@ -545,10 +728,23 @@ class AccessoryEditor:
                 "clip": ("CLIP",),
                 "vae": ("VAE",),
                 "source_image": ("IMAGE",),
-                "accessory_type": (["watch", "glasses", "necklace", "earrings",
-                                    "bracelet", "ring", "bag", "belt"],),
-                "accessory_prompt": ("STRING", {"multiline": True, "default": "luxury watch"}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "accessory_type": (
+                    [
+                        "watch",
+                        "glasses",
+                        "necklace",
+                        "earrings",
+                        "bracelet",
+                        "ring",
+                        "bag",
+                        "belt",
+                    ],
+                ),
+                "accessory_prompt": (
+                    "STRING",
+                    {"multiline": True, "default": "luxury watch"},
+                ),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
                 "steps": ("INT", {"default": 25, "min": 1, "max": 100}),
                 "cfg": ("FLOAT", {"default": 7.0, "min": 0.0, "max": 20.0}),
                 "denoise": ("FLOAT", {"default": 0.7, "min": 0.0, "max": 1.0}),
@@ -560,15 +756,25 @@ class AccessoryEditor:
     CATEGORY = "Laura Studio/Dressing"
     DESCRIPTION = "Add or change accessories via segmentation + inpainting"
 
-    def edit_accessory(self, model, clip, vae, source_image, accessory_type,
-                       accessory_prompt, seed, steps, cfg, denoise):
-
+    def edit_accessory(
+        self,
+        model,
+        clip,
+        vae,
+        source_image,
+        accessory_type,
+        accessory_prompt,
+        seed,
+        steps,
+        cfg,
+        denoise,
+    ):
         # Map accessory to segmentation category
         acc_to_seg = {
-            "watch": "belt",       # wrist area ~ belt level fallback
+            "watch": "belt",  # wrist area ~ belt level fallback
             "glasses": "sunglasses",
-            "necklace": "scarf",   # neck area
-            "earrings": "face",    # near face
+            "necklace": "scarf",  # neck area
+            "earrings": "face",  # near face
             "bracelet": "belt",
             "ring": "belt",
             "bag": "bag",
@@ -578,9 +784,23 @@ class AccessoryEditor:
 
         # Get mask from AccessoryDetector
         detector = AccessoryDetector()
-        mask, _ = detector.detect_accessory(source_image, seg_cat if seg_cat in
-            ["shoes", "watch", "bag", "belt", "sunglasses", "hat", "scarf", "jewelry"]
-            else "bag", expand_mask=6)
+        mask, _ = detector.detect_accessory(
+            source_image,
+            seg_cat
+            if seg_cat
+            in [
+                "shoes",
+                "watch",
+                "bag",
+                "belt",
+                "sunglasses",
+                "hat",
+                "scarf",
+                "jewelry",
+            ]
+            else "bag",
+            expand_mask=6,
+        )
 
         type_descs = {
             "watch": "luxury watch, timepiece",
@@ -590,7 +810,7 @@ class AccessoryEditor:
             "bracelet": "bracelet, jewelry",
             "ring": "ring, fine jewelry",
             "bag": "designer bag, fashion accessory",
-            "belt": "leather belt, fashion accessory"
+            "belt": "leather belt, fashion accessory",
         }
         desc = type_descs.get(accessory_type, "accessory")
         prompt = f"{desc}, {accessory_prompt}"
@@ -598,9 +818,17 @@ class AccessoryEditor:
         # Inpaint the accessory
         dresser = VirtualDresser()
         result = dresser.dress(
-            model, clip, vae, source_image, mask, prompt,
-            seed, steps, cfg, denoise,
-            negative_prompt="deformed, blurry, bad accessory, low quality"
+            model,
+            clip,
+            vae,
+            source_image,
+            mask,
+            prompt,
+            seed,
+            steps,
+            cfg,
+            denoise,
+            negative_prompt="deformed, blurry, bad accessory, low quality",
         )
 
         return result
@@ -618,9 +846,19 @@ class MakeupArtist:
                 "clip": ("CLIP",),
                 "vae": ("VAE",),
                 "source_image": ("IMAGE",),
-                "makeup_style": (["natural", "glam", "dramatic", "nude",
-                                  "vintage", "bold", "soft", "editorial"],),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "makeup_style": (
+                    [
+                        "natural",
+                        "glam",
+                        "dramatic",
+                        "nude",
+                        "vintage",
+                        "bold",
+                        "soft",
+                        "editorial",
+                    ],
+                ),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
                 "steps": ("INT", {"default": 25, "min": 1, "max": 100}),
                 "cfg": ("FLOAT", {"default": 6.0, "min": 0.0, "max": 20.0}),
                 "denoise": ("FLOAT", {"default": 0.45, "min": 0.0, "max": 1.0}),
@@ -629,7 +867,7 @@ class MakeupArtist:
                 "makeup_details": ("STRING", {"multiline": True, "default": ""}),
                 "lip_color": ("STRING", {"default": ""}),
                 "eye_style": ("STRING", {"default": ""}),
-            }
+            },
         }
 
     RETURN_TYPES = ("IMAGE",)
@@ -637,13 +875,26 @@ class MakeupArtist:
     CATEGORY = "Laura Studio/Dressing"
     DESCRIPTION = "Apply makeup looks via face segmentation + inpainting"
 
-    def apply_makeup(self, model, clip, vae, source_image, makeup_style,
-                     seed, steps, cfg, denoise,
-                     makeup_details="", lip_color="", eye_style=""):
-
+    def apply_makeup(
+        self,
+        model,
+        clip,
+        vae,
+        source_image,
+        makeup_style,
+        seed,
+        steps,
+        cfg,
+        denoise,
+        makeup_details="",
+        lip_color="",
+        eye_style="",
+    ):
         # Get face mask for makeup region
         seg = ClothingSegmentor()
-        face_mask, _ = seg.segment_clothing(source_image, "face", expand_mask=6, feather=4)
+        face_mask, _ = seg.segment_clothing(
+            source_image, "face", expand_mask=6, feather=4
+        )
 
         style_descs = {
             "natural": "natural makeup, minimal, fresh skin",
@@ -653,7 +904,7 @@ class MakeupArtist:
             "vintage": "vintage makeup, classic red lip",
             "bold": "bold makeup, striking colors",
             "soft": "soft makeup, delicate, pastel",
-            "editorial": "editorial makeup, high fashion, avant-garde"
+            "editorial": "editorial makeup, high fashion, avant-garde",
         }
         desc = style_descs.get(makeup_style, "natural makeup")
 
@@ -669,9 +920,17 @@ class MakeupArtist:
 
         dresser = VirtualDresser()
         result = dresser.dress(
-            model, clip, vae, source_image, face_mask, prompt,
-            seed, steps, cfg, denoise,
-            negative_prompt="deformed, blurry, bad makeup, unnatural skin, low quality"
+            model,
+            clip,
+            vae,
+            source_image,
+            face_mask,
+            prompt,
+            seed,
+            steps,
+            cfg,
+            denoise,
+            negative_prompt="deformed, blurry, bad makeup, unnatural skin, low quality",
         )
 
         return result
@@ -692,16 +951,24 @@ class OutfitCombinator:
                 "top_prompt": ("STRING", {"default": "elegant blouse"}),
                 "bottom_prompt": ("STRING", {"default": "designer jeans"}),
                 "shoes_prompt": ("STRING", {"default": "high heels"}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
                 "steps": ("INT", {"default": 35, "min": 1, "max": 100}),
                 "cfg": ("FLOAT", {"default": 7.0, "min": 0.0, "max": 20.0}),
                 "denoise": ("FLOAT", {"default": 0.85, "min": 0.0, "max": 1.0}),
             },
             "optional": {
                 "accessory_prompt": ("STRING", {"default": ""}),
-                "style": (["casual", "formal", "business", "evening",
-                           "streetwear", "bohemian"],),
-            }
+                "style": (
+                    [
+                        "casual",
+                        "formal",
+                        "business",
+                        "evening",
+                        "streetwear",
+                        "bohemian",
+                    ],
+                ),
+            },
         }
 
     RETURN_TYPES = ("IMAGE",)
@@ -709,71 +976,250 @@ class OutfitCombinator:
     CATEGORY = "Laura Studio/Dressing"
     DESCRIPTION = "Create complete outfit by sequentially replacing items"
 
-    def combine_outfit(self, model, clip, vae, source_image, top_prompt,
-                       bottom_prompt, shoes_prompt, seed, steps, cfg, denoise,
-                       accessory_prompt="", style="casual"):
-
+    def combine_outfit(
+        self,
+        model,
+        clip,
+        vae,
+        source_image,
+        top_prompt,
+        bottom_prompt,
+        shoes_prompt,
+        seed,
+        steps,
+        cfg,
+        denoise,
+        accessory_prompt="",
+        style="casual",
+    ):
         # Sequentially replace each clothing item using real masks
         seg = ClothingSegmentor()
         dresser = VirtualDresser()
 
         style_prefix = {
-            "casual": "casual", "formal": "elegant formal",
-            "business": "professional business", "evening": "sophisticated evening",
-            "streetwear": "trendy streetwear", "bohemian": "bohemian"
+            "casual": "casual",
+            "formal": "elegant formal",
+            "business": "professional business",
+            "evening": "sophisticated evening",
+            "streetwear": "trendy streetwear",
+            "bohemian": "bohemian",
         }.get(style, "stylish")
 
         # Step 1: Replace top
-        top_mask, _ = seg.segment_clothing(source_image, "top", expand_mask=4, feather=2)
+        top_mask, _ = seg.segment_clothing(
+            source_image, "top", expand_mask=4, feather=2
+        )
         result = dresser.dress(
-            model, clip, vae, source_image, top_mask,
-            f"{style_prefix} {top_prompt}", seed, steps, cfg, denoise
+            model,
+            clip,
+            vae,
+            source_image,
+            top_mask,
+            f"{style_prefix} {top_prompt}",
+            seed,
+            steps,
+            cfg,
+            denoise,
         )[0]
 
         # Step 2: Replace bottom
-        bottom_mask, _ = seg.segment_clothing(result, "bottom", expand_mask=4, feather=2)
+        bottom_mask, _ = seg.segment_clothing(
+            result, "bottom", expand_mask=4, feather=2
+        )
         result = dresser.dress(
-            model, clip, vae, result, bottom_mask,
-            f"{style_prefix} {bottom_prompt}", seed + 1, steps, cfg, denoise
+            model,
+            clip,
+            vae,
+            result,
+            bottom_mask,
+            f"{style_prefix} {bottom_prompt}",
+            seed + 1,
+            steps,
+            cfg,
+            denoise,
         )[0]
 
         # Step 3: Replace shoes
         shoes_mask, _ = seg.segment_clothing(result, "shoes", expand_mask=4, feather=2)
         result = dresser.dress(
-            model, clip, vae, result, shoes_mask,
-            f"{style_prefix} {shoes_prompt}", seed + 2, steps, cfg, denoise
+            model,
+            clip,
+            vae,
+            result,
+            shoes_mask,
+            f"{style_prefix} {shoes_prompt}",
+            seed + 2,
+            steps,
+            cfg,
+            denoise,
         )[0]
 
         # Step 4: Accessories (optional)
         if accessory_prompt:
             acc_mask, _ = seg.segment_clothing(result, "belt", expand_mask=4, feather=2)
             result = dresser.dress(
-                model, clip, vae, result, acc_mask,
-                f"{style_prefix} {accessory_prompt}", seed + 3, steps, cfg, 0.7
+                model,
+                clip,
+                vae,
+                result,
+                acc_mask,
+                f"{style_prefix} {accessory_prompt}",
+                seed + 3,
+                steps,
+                cfg,
+                0.7,
             )[0]
 
         return (result,)
 
 
-# Register all dressing nodes
-NODE_CLASS_MAPPINGS.update({
-    "ClothingSegmentor": ClothingSegmentor,
-    "AccessoryDetector": AccessoryDetector,
-    "VirtualDresser": VirtualDresser,
-    "DressingRoomCompositor": DressingRoomCompositor,
-    "HairStylist": HairStylist,
-    "AccessoryEditor": AccessoryEditor,
-    "MakeupArtist": MakeupArtist,
-    "OutfitCombinator": OutfitCombinator,
-})
+# ============== IPADAPTER STYLE REFERENCE ==============
+class IPAdapterStyleReference:
+    """Extract artistic style from reference image using IPAdapter"""
 
-NODE_DISPLAY_NAME_MAPPINGS.update({
-    "ClothingSegmentor": "Clothing Segmentor (RMBG)",
-    "AccessoryDetector": "Accessory Detector (RMBG)",
-    "VirtualDresser": "Virtual Dresser",
-    "DressingRoomCompositor": "Dressing Room Compositor",
-    "HairStylist": "Hair Stylist",
-    "AccessoryEditor": "Accessory Editor",
-    "MakeupArtist": "Makeup Artist",
-    "OutfitCombinator": "Outfit Combinator",
-})
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "model": ("MODEL",),
+                "style_image": ("IMAGE",),
+                "weight": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 2.0}),
+            },
+            "optional": {
+                "noise": ("FLOAT", {"default": 0.1, "min": 0.0, "max": 1.0}),
+                "start_at": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0}),
+                "end_at": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0}),
+            },
+        }
+
+    RETURN_TYPES = ("MODEL",)
+    FUNCTION = "apply_style"
+    CATEGORY = "Laura Studio/Dressing"
+    DESCRIPTION = "Apply style reference using IPAdapter"
+
+    def apply_style(
+        self, model, style_image, weight, noise=0.1, start_at=0.0, end_at=1.0
+    ):
+        IPALoader, IPAApply = _try_import_ipadapter()
+
+        if IPALoader is not None and IPAApply is not None:
+            try:
+                loader = IPALoader()
+                # Standard preset for style
+                ipa_model, clip_vision = loader.load_models(
+                    model, preset="STANDARD (medium strength)"
+                )
+
+                applier = IPAApply()
+                result = applier.apply_ipadapter(
+                    model=ipa_model,
+                    ipadapter=ipa_model,
+                    image=style_image,
+                    weight=weight,
+                    noise=noise,
+                    start_at=start_at,
+                    end_at=end_at,
+                    weight_type="style transfer",
+                    combine_embeds="concat",
+                )
+                return (result[0],)
+            except Exception as e:
+                print(f"[Laura Studio] IPAdapter style transfer failed: {e}")
+                return (model,)
+        else:
+            print(
+                "[Laura Studio] IPAdapter Plus not installed. Returning model unchanged."
+            )
+            return (model,)
+
+
+# ============== IPADAPTER CLOTHING REFERENCE ==============
+class IPAdapterClothingReference:
+    """Extract clothing features from reference image using IPAdapter"""
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "model": ("MODEL",),
+                "clothing_image": ("IMAGE",),
+                "weight": ("FLOAT", {"default": 0.9, "min": 0.0, "max": 2.0}),
+            },
+            "optional": {
+                "noise": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0}),
+                "start_at": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0}),
+                "end_at": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 1.0}),
+            },
+        }
+
+    RETURN_TYPES = ("MODEL",)
+    FUNCTION = "apply_clothing"
+    CATEGORY = "Laura Studio/Dressing"
+    DESCRIPTION = "Apply clothing reference using IPAdapter"
+
+    def apply_clothing(
+        self, model, clothing_image, weight, noise=0.0, start_at=0.0, end_at=0.8
+    ):
+        IPALoader, IPAApply = _try_import_ipadapter()
+
+        if IPALoader is not None and IPAApply is not None:
+            try:
+                loader = IPALoader()
+                # Use composition or standard preset for clothing details
+                ipa_model, clip_vision = loader.load_models(
+                    model, preset="PLUS (high strength)"
+                )
+
+                applier = IPAApply()
+                result = applier.apply_ipadapter(
+                    model=ipa_model,
+                    ipadapter=ipa_model,
+                    image=clothing_image,
+                    weight=weight,
+                    noise=noise,
+                    start_at=start_at,
+                    end_at=end_at,
+                    weight_type="composition",
+                    combine_embeds="concat",
+                )
+                return (result[0],)
+            except Exception as e:
+                print(f"[Laura Studio] IPAdapter clothing reference failed: {e}")
+                return (model,)
+        else:
+            print(
+                "[Laura Studio] IPAdapter Plus not installed. Returning model unchanged."
+            )
+            return (model,)
+
+
+# Register all dressing nodes
+NODE_CLASS_MAPPINGS.update(
+    {
+        "ClothingSegmentor": ClothingSegmentor,
+        "AccessoryDetector": AccessoryDetector,
+        "VirtualDresser": VirtualDresser,
+        "DressingRoomCompositor": DressingRoomCompositor,
+        "HairStylist": HairStylist,
+        "AccessoryEditor": AccessoryEditor,
+        "MakeupArtist": MakeupArtist,
+        "OutfitCombinator": OutfitCombinator,
+        "IPAdapterStyleReference": IPAdapterStyleReference,
+        "IPAdapterClothingReference": IPAdapterClothingReference,
+    }
+)
+
+NODE_DISPLAY_NAME_MAPPINGS.update(
+    {
+        "ClothingSegmentor": "Clothing Segmentor (RMBG)",
+        "AccessoryDetector": "Accessory Detector (RMBG)",
+        "VirtualDresser": "Virtual Dresser",
+        "DressingRoomCompositor": "Dressing Room Compositor",
+        "HairStylist": "Hair Stylist",
+        "AccessoryEditor": "Accessory Editor",
+        "MakeupArtist": "Makeup Artist",
+        "OutfitCombinator": "Outfit Combinator",
+        "IPAdapterStyleReference": "Style Reference (IPAdapter)",
+        "IPAdapterClothingReference": "Clothing Reference (IPAdapter)",
+    }
+)

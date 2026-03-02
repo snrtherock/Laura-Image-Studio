@@ -1,0 +1,32 @@
+{
+  "last_node_id": 10,
+  "last_link_id": 10,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LauraVideoFaceDrive",
+      "pos": [10, 10],
+      "widgets_values": [1.0, 0.5, true]
+    },
+    {
+      "id": 2,
+      "type": "LauraVRAMCleaner",
+      "pos": [350, 10],
+      "widgets_values": [null, "Soft (Empty Cache)"]
+    },
+    {
+      "id": 3,
+      "type": "LauraVideoCinemaUpscale",
+      "pos": [600, 10],
+      "widgets_values": ["2x", "Cinema (SUPIR)", "2x (RIFE)", 0.25]
+    }
+  ],
+  "links": [
+    [1, 1, 0, 2, 0, "IMAGE"],
+    [2, 2, 0, 3, 0, "IMAGE"]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {},
+  "version": 0.8
+}

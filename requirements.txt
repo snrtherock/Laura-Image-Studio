@@ -1,0 +1,52 @@
+# Laura Image Studio - SOTA Video Requirements
+# Version: 0.8 (Viral Video Edition)
+
+# Core ComfyUI Dependencies
+torch>=2.2.0
+torchvision
+torchaudio
+numpy>=1.24.0
+Pillow>=10.0.0
+opencv-python>=4.8.0
+tqdm
+requests
+pyyaml
+einops
+accelerate>=0.28.0
+transformers>=4.38.0
+safetensors
+diffusers>=0.26.0
+
+# SOTA Video Stack (v0.8+) Requirements
+# These support LivePortrait v2, SUPIR-Video, Wan 2.2, and RIFE v4
+
+# 1. Temporal Face Driving (LivePortrait v2)
+# Ref: https://github.com/Kijai/ComfyUI-LivePortraitKJ
+insightface>=0.7.3
+filterpy
+imageio
+imageio-ffmpeg
+scipy
+onnxruntime-gpu
+
+# 2. Cinema-Grade Video Upscaling (SUPIR-Video)
+# Ref: https://github.com/Kijai/ComfyUI-SUPIR
+spandrel
+kornia>=0.7.1
+open-clip-torch
+
+# 3. Frame Interpolation (RIFE v4)
+# Ref: https://github.com/Fannovel16/ComfyUI-Frame-Interpolation
+cupy-cuda12x  # Match with CUDA version (11x, 12x)
+
+# 4. Advanced Video Handling (VideoHelperSuite)
+# Ref: https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite
+av
+ffmpeg-python
+
+# 5. Motion Control & Advanced Architectures (Wan 2.2 / Cosmos)
+# Handled by core diffusers and transformers, but specific versions recommended:
+sentencepiece
+protobuf
+triton; sys_platform == 'linux'
+xformers>=0.0.25; sys_platform == 'win32' or sys_platform == 'linux'
