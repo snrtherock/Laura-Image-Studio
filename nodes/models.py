@@ -9,7 +9,9 @@ import numpy as np
 import folder_paths
 import os
 import json
-from nodes import LoraLoader, CheckpointLoaderSimple
+
+NODE_CLASS_MAPPINGS = {}
+NODE_DISPLAY_NAME_MAPPINGS = {}
 
 
 # ============== ADVANCED LOGGER ==============

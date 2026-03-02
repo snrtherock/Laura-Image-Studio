@@ -6,10 +6,7 @@ Support for CogVideoX and other advanced video models
 import torch
 import folder_paths
 import os
-from .models import LauraLogger
-
-NODE_CLASS_MAPPINGS = {}
-NODE_DISPLAY_NAME_MAPPINGS = {}
+from .models import LauraLogger, NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS
 
 
 # ============== COGVIDEOX LOADER ==============
