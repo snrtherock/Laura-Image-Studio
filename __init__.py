@@ -24,6 +24,7 @@ def _check_dependencies():
 
     try:
         # sys.executable ensures we use the EXACT python that ComfyUI is currently using
+        # This handles Portable (python_embeded) vs Conda vs System Python automatically.
         subprocess.check_call(
             [
                 sys.executable,
