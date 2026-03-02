@@ -1,0 +1,163 @@
+{
+  "last_node_id": 40,
+  "last_link_id": 50,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "WorkflowTogglePanel",
+      "pos": [10, 10],
+      "size": [320, 420],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "outputs": [
+        {"name": "upscaling", "type": "BOOLEAN", "links": [10], "slot_index": 0},
+        {"name": "face_ops", "type": "BOOLEAN", "links": [11], "slot_index": 1},
+        {"name": "background", "type": "BOOLEAN", "links": [12], "slot_index": 2},
+        {"name": "dressing", "type": "BOOLEAN", "links": [13], "slot_index": 3},
+        {"name": "virtual_tryon", "type": "BOOLEAN", "links": [14], "slot_index": 4},
+        {"name": "inpainting", "type": "BOOLEAN", "links": [15], "slot_index": 5},
+        {"name": "video", "type": "BOOLEAN", "links": [16], "slot_index": 6},
+        {"name": "batch_mode", "type": "BOOLEAN", "links": [17], "slot_index": 7},
+        {"name": "tile_mode", "type": "BOOLEAN", "links": [18], "slot_index": 8}
+      ],
+      "properties": {"Node name for S&R": "WorkflowTogglePanel"},
+      "widgets_values": [true, true, true, false, false, false, false, false, false],
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 2,
+      "type": "UniversalModelLoader",
+      "pos": [10, 450],
+      "size": [320, 200],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "outputs": [
+        {"name": "MODEL", "type": "MODEL", "links": [1], "slot_index": 0},
+        {"name": "CLIP", "type": "CLIP", "links": [2], "slot_index": 1},
+        {"name": "VAE", "type": "VAE", "links": [3], "slot_index": 2}
+      ],
+      "properties": {"Node name for S&R": "UniversalModelLoader"},
+      "widgets_values": ["auto", "", true, true],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 10,
+      "type": "Wan22Loader",
+      "pos": [350, 450],
+      "size": [320, 150],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "outputs": [
+        {"name": "model", "type": "MODEL", "links": [40], "slot_index": 0},
+        {"name": "clip", "type": "CLIP", "links": [41], "slot_index": 1},
+        {"name": "vae", "type": "VAE", "links": [42], "slot_index": 2}
+      ],
+      "properties": {"Node name for S&R": "Wan 2.2 Model Loader"},
+      "widgets_values": ["wan2.2_14b_t2v.safetensors", "14B-T2V", "bf16"],
+      "color": "#323",
+      "bgcolor": "#535"
+    },
+    {
+      "id": 11,
+      "type": "CosmosPredictLoader",
+      "pos": [350, 620],
+      "size": [320, 150],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "outputs": [
+        {"name": "model", "type": "MODEL", "links": [], "slot_index": 0},
+        {"name": "clip", "type": "CLIP", "links": [], "slot_index": 1},
+        {"name": "vae", "type": "VAE", "links": [], "slot_index": 2}
+      ],
+      "properties": {"Node name for S&R": "NVIDIA Cosmos-Predict Loader"},
+      "widgets_values": ["cosmos_1.0_predict.safetensors", "14B-T2V", "bf16"],
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 20,
+      "type": "BatchPromptList",
+      "pos": [700, 10],
+      "size": [320, 200],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "outputs": [
+        {"name": "prompt_list", "type": "LIST", "links": [45], "slot_index": 0}
+      ],
+      "properties": {"Node name for S&R": "Batch Prompt List"},
+      "widgets_values": ["A cinematic portrait of Laura", "A beautiful forest landscape", "Cyberpunk city at night", ""],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 30,
+      "type": "TileSplitter",
+      "pos": [700, 250],
+      "size": [320, 150],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "outputs": [
+        {"name": "tiles", "type": "IMAGE", "links": [46], "slot_index": 0},
+        {"name": "tile_data", "type": "TILE_DATA", "links": [47], "slot_index": 1}
+      ],
+      "properties": {"Node name for S&R": "Tile Splitter"},
+      "widgets_values": [512, 64],
+      "color": "#332",
+      "bgcolor": "#553"
+    },
+    {
+      "id": 31,
+      "type": "TileMerger",
+      "pos": [1050, 250],
+      "size": [320, 120],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {"name": "tiles", "type": "IMAGE", "link": 48},
+        {"name": "tile_data", "type": "TILE_DATA", "link": 47}
+      ],
+      "outputs": [
+        {"name": "IMAGE", "type": "IMAGE", "links": [], "slot_index": 0}
+      ],
+      "properties": {"Node name for S&R": "Tile Merger"},
+      "color": "#332",
+      "bgcolor": "#553"
+    }
+  ],
+  "links": [
+    [1, 2, 0, 6, 0, "MODEL"],
+    [2, 2, 1, 6, 1, "CLIP"],
+    [3, 2, 2, 6, 2, "VAE"],
+    [40, 10, 0, 12, 0, "MODEL"],
+    [41, 10, 1, 12, 1, "CLIP"],
+    [42, 10, 2, 12, 2, "VAE"],
+    [45, 20, 0, 21, 0, "LIST"],
+    [46, 30, 0, 31, 0, "IMAGE"],
+    [47, 30, 1, 31, 1, "TILE_DATA"],
+    [48, 12, 0, 31, 0, "IMAGE"]
+  ],
+  "groups": [
+    {
+      "title": "Core Loaders",
+      "bounding": [0, 400, 680, 500],
+      "color": "#335"
+    },
+    {
+      "title": "Advanced Features (Batch & Tiles)",
+      "bounding": [690, 0, 700, 450],
+      "color": "#553"
+    }
+  ],
+  "config": {},
+  "extra": {},
+  "version": 0.4
+}

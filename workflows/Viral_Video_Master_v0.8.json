@@ -1,0 +1,77 @@
+{
+  "last_node_id": 110,
+  "last_link_id": 210,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "ModelHealthCheck",
+      "pos": [10, 10],
+      "color": "#233",
+      "bgcolor": "#122",
+      "widgets_values": [true]
+    },
+    {
+      "id": 2,
+      "type": "UniversalModelLoader",
+      "pos": [300, 10],
+      "color": "#232",
+      "bgcolor": "#121",
+      "widgets_values": ["wan2.1_t2v_14b_720p.safetensors", "auto", 1280, 720]
+    },
+    {
+      "id": 3,
+      "type": "LauraVRAMCleaner",
+      "pos": [580, 10],
+      "color": "#322",
+      "bgcolor": "#211",
+      "widgets_values": [null, "Hard (Unload All Models)"]
+    },
+    {
+      "id": 10,
+      "type": "Wan22Generator",
+      "pos": [800, 10],
+      "color": "#422",
+      "bgcolor": "#311",
+      "widgets_values": ["High-end cinematic video of Laura dancing salsa in neon rain, 4k", "blurry, low quality, static", 1280, 720, 81, 0, 40, 6.0]
+    },
+    {
+      "id": 11,
+      "type": "LauraVRAMCleaner",
+      "pos": [1150, 10],
+      "color": "#322",
+      "bgcolor": "#211",
+      "widgets_values": [null, "Extreme (GC + Unload)"]
+    },
+    {
+      "id": 20,
+      "type": "LauraVideoFaceDrive",
+      "pos": [1300, 10],
+      "color": "#223",
+      "bgcolor": "#112",
+      "widgets_values": [1.0, 0.5, true]
+    },
+    {
+      "id": 30,
+      "type": "LauraVideoCinemaUpscale",
+      "pos": [1650, 10],
+      "color": "#332",
+      "bgcolor": "#221",
+      "widgets_values": ["2x", "Cinema (SUPIR)", "2x (RIFE)", 0.25]
+    }
+  ],
+  "links": [
+    [201, 2, 0, 10, 0, "MODEL"],
+    [202, 2, 1, 10, 1, "CLIP"],
+    [203, 2, 2, 10, 2, "VAE"],
+    [204, 10, 0, 11, 0, "IMAGE"],
+    [205, 11, 0, 20, 0, "IMAGE"]
+  ],
+  "groups": [
+    { "title": "PHASE 1: HEALTH & LOADING", "bounding": [0, 0, 560, 400], "color": "#223322" },
+    { "title": "PHASE 2: WAN 2.2 GENERATION", "bounding": [570, 0, 560, 400], "color": "#332222" },
+    { "title": "PHASE 3: POST-PROCESSING (FACE + UPSCALE)", "bounding": [1140, 0, 880, 400], "color": "#222233" }
+  ],
+  "config": {},
+  "extra": {},
+  "version": 0.8
+}

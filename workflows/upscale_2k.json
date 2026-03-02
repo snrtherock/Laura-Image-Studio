@@ -1,0 +1,106 @@
+{
+  "last_node_id": 5,
+  "last_link_id": 8,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [50, 50],
+      "size": [300, 100],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {"name": "IMAGE", "type": "IMAGE", "slot_index": 0},
+        {"name": "MASK", "type": "MASK", "slot_index": 1}
+      ],
+      "properties": {},
+      "widgets_values": ["laura_input.png", "image"]
+    },
+    {
+      "id": 2,
+      "type": "UpscaleModelLoader",
+      "pos": [400, 50],
+      "size": [300, 100],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {"name": "UPSCALE_MODEL", "type": "UPSCALE_MODEL", "slot_index": 0}
+      ],
+      "properties": {},
+      "widgets_values": ["4x-UltraSharp.pth"]
+    },
+    {
+      "id": 3,
+      "type": "Upscale2K",
+      "pos": [750, 50],
+      "size": [350, 180],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {"name": "image", "type": "IMAGE", "link": 1},
+        {"name": "upscale_model", "type": "UPSCALE_MODEL", "link": 2}
+      ],
+      "outputs": [
+        {"name": "image", "type": "IMAGE", "slot_index": 0}
+      ],
+      "properties": {},
+      "widgets_values": ["ultrasharp", 0.2, 512, 32]
+    },
+    {
+      "id": 4,
+      "type": "DetailEnhancer",
+      "pos": [50, 300],
+      "size": [350, 180],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {"name": "image", "type": "IMAGE", "link": 3},
+        {"name": "model", "type": "MODEL", "link": null},
+        {"name": "clip", "type": "CLIP", "link": null},
+        {"name": "vae", "type": "VAE", "link": null}
+      ],
+      "outputs": [
+        {"name": "image", "type": "IMAGE", "slot_index": 0}
+      ],
+      "properties": {},
+      "widgets_values": [0.2, 42, "texture", 5.0]
+    },
+    {
+      "id": 5,
+      "type": "SaveImage",
+      "pos": [450, 300],
+      "size": [315, 270],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {"name": "images", "type": "IMAGE", "link": 4}
+      ],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": ["laura_upscale_2k"]
+    }
+  ],
+  "links": [
+    [1, 3, 0, 1, "IMAGE"],
+    [2, 3, 0, 2, "UPSCALE_MODEL"],
+    [3, 4, 0, 3, "IMAGE"],
+    [4, 5, 0, 4, "IMAGE"]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {"scale": 1.0, "offset": [0, 0]}
+  },
+  "version": 0.4,
+  "output": {
+    "resolution": "2048x2048",
+    "description": "2K Upscale Workflow"
+  }
+}
