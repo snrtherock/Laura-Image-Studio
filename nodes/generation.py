@@ -8,8 +8,7 @@ from PIL import Image
 import numpy as np
 import folder_paths
 
-NODE_CLASS_MAPPINGS = {}
-NODE_DISPLAY_NAME_MAPPINGS = {}
+from .models import NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS
 
 
 # ============== LAURA SDXL GENERATOR ==============
