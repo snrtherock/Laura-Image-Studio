@@ -443,3 +443,237 @@ class LauraControlCenter:
 
 NODE_CLASS_MAPPINGS["LauraControlCenter"] = LauraControlCenter
 NODE_DISPLAY_NAME_MAPPINGS["LauraControlCenter"] = "Laura Control Center"
+
+
+# =============================================================================
+# DOWNLOAD API  –  HuggingFace model downloader with progress tracking
+# =============================================================================
+
+import threading
+import uuid
+
+try:
+    import requests as _requests
+except ImportError:
+    _requests = None
+
+# Module-level dict that tracks active / completed download jobs.
+# Keys are job-id strings (UUIDs); values are dicts with status info.
+_download_jobs: dict = {}
+
+_CHUNK_SIZE = 8 * 1024 * 1024  # 8 MB
+
+
+def _do_download(job_id: str, model_key: str, file_role: str | None):
+    """Background worker that downloads model files from HuggingFace.
+
+    Updates ``_download_jobs[job_id]`` in-place so callers can poll progress.
+
+    Args:
+        job_id:    UUID string for this job.
+        model_key: Key into ``MODEL_REGISTRY``.
+        file_role: Optional file role to download (e.g. ``"diffusion_model"``).
+                   If ``None``, all files for the model are downloaded.
+    """
+    job = _download_jobs[job_id]
+    job["status"] = "running"
+
+    if _requests is None:
+        job["status"] = "error"
+        job["error"] = "Python 'requests' package is not installed."
+        return
+
+    model_info = MODEL_REGISTRY.get(model_key)
+    if model_info is None:
+        job["status"] = "error"
+        job["error"] = f"Model key '{model_key}' not found in MODEL_REGISTRY."
+        return
+
+    repo = model_info.get("repo", "")
+    files_dict = model_info.get("files", {})
+
+    # Determine which file roles to download
+    if file_role:
+        if file_role not in files_dict:
+            job["status"] = "error"
+            job["error"] = (
+                f"File role '{file_role}' not found for model '{model_key}'. "
+                f"Available roles: {', '.join(files_dict.keys())}"
+            )
+            return
+        roles_to_download = {file_role: files_dict[file_role]}
+    else:
+        roles_to_download = files_dict
+
+    total_files = len(roles_to_download)
+    job["total"] = total_files
+    job["progress"] = 0
+    job["current_file"] = ""
+    job["files_completed"] = []
+    job["files_skipped"] = []
+
+    for role_name, file_info in roles_to_download.items():
+        filename = file_info.get("filename", "")
+        folder_name = file_info.get("folder", "")
+        if not filename or not folder_name:
+            job["progress"] += 1
+            job["files_skipped"].append(role_name)
+            continue
+
+        job["current_file"] = filename
+
+        # Resolve the target directory via ComfyUI's folder_paths
+        try:
+            folder_list = folder_paths.get_folder_paths(folder_name)
+            if not folder_list:
+                job["status"] = "error"
+                job["error"] = (
+                    f"No folder paths found for folder type '{folder_name}'. "
+                    f"Cannot determine where to save '{filename}'."
+                )
+                return
+            target_dir = folder_list[0]
+        except Exception as exc:
+            job["status"] = "error"
+            job["error"] = f"Error resolving folder '{folder_name}': {exc}"
+            return
+
+        target_path = os.path.join(target_dir, filename)
+        tmp_path = target_path + ".tmp"
+
+        # Skip if already downloaded
+        if os.path.isfile(target_path):
+            job["progress"] += 1
+            job["files_skipped"].append(filename)
+            continue
+
+        # Build HuggingFace download URL
+        url = f"https://huggingface.co/{repo}/resolve/main/{filename}"
+
+        try:
+            os.makedirs(target_dir, exist_ok=True)
+
+            resp = _requests.get(url, stream=True, timeout=30)
+            resp.raise_for_status()
+
+            total_bytes = int(resp.headers.get("content-length", 0))
+            downloaded_bytes = 0
+            job["current_file_total_bytes"] = total_bytes
+            job["current_file_downloaded_bytes"] = 0
+
+            with open(tmp_path, "wb") as f:
+                for chunk in resp.iter_content(chunk_size=_CHUNK_SIZE):
+                    if chunk:
+                        f.write(chunk)
+                        downloaded_bytes += len(chunk)
+                        job["current_file_downloaded_bytes"] = downloaded_bytes
+
+            # Atomic rename on completion
+            if os.path.isfile(target_path):
+                # Another thread may have downloaded concurrently
+                os.remove(tmp_path)
+            else:
+                os.rename(tmp_path, target_path)
+
+            job["progress"] += 1
+            job["files_completed"].append(filename)
+
+        except Exception as exc:
+            # Clean up partial download
+            try:
+                if os.path.isfile(tmp_path):
+                    os.remove(tmp_path)
+            except OSError:
+                pass
+            job["status"] = "error"
+            job["error"] = f"Download failed for '{filename}': {exc}"
+            job["current_file"] = filename
+            return
+
+    job["status"] = "completed"
+    job["current_file"] = ""
+
+
+# ---------------------------------------------------------------------------
+# Register API routes on ComfyUI's PromptServer (if available)
+# ---------------------------------------------------------------------------
+
+try:
+    from server import PromptServer
+    from aiohttp import web
+
+    @PromptServer.instance.routes.post("/laura/download")
+    async def _api_download_start(request):
+        """Start a model download job.
+
+        Expects JSON body: ``{"model_key": "...", "file_role": "..."}``
+        ``file_role`` is optional -- omit to download all files for the model.
+
+        Returns JSON: ``{"job_id": "..."}``
+        """
+        try:
+            body = await request.json()
+        except Exception:
+            return web.json_response(
+                {"error": "Invalid JSON body."}, status=400,
+            )
+
+        model_key = body.get("model_key")
+        if not model_key:
+            return web.json_response(
+                {"error": "Missing required field 'model_key'."}, status=400,
+            )
+
+        if model_key not in MODEL_REGISTRY:
+            return web.json_response(
+                {"error": f"Unknown model_key '{model_key}'."}, status=400,
+            )
+
+        file_role = body.get("file_role", None)
+        job_id = str(uuid.uuid4())
+        _download_jobs[job_id] = {
+            "status": "pending",
+            "progress": 0,
+            "total": 0,
+            "error": None,
+            "model_key": model_key,
+            "current_file": "",
+        }
+
+        thread = threading.Thread(
+            target=_do_download,
+            args=(job_id, model_key, file_role),
+            daemon=True,
+        )
+        thread.start()
+
+        return web.json_response({"job_id": job_id})
+
+    @PromptServer.instance.routes.get("/laura/download/status/{job_id}")
+    async def _api_download_status(request):
+        """Poll the status of a download job.
+
+        Returns JSON with keys: ``status``, ``progress``, ``total``,
+        ``error``, ``model_key``.
+        """
+        job_id = request.match_info.get("job_id", "")
+        job = _download_jobs.get(job_id)
+        if job is None:
+            return web.json_response(
+                {"error": f"Unknown job_id '{job_id}'."}, status=404,
+            )
+
+        return web.json_response({
+            "status": job.get("status", "unknown"),
+            "progress": job.get("progress", 0),
+            "total": job.get("total", 0),
+            "error": job.get("error"),
+            "model_key": job.get("model_key", ""),
+            "current_file": job.get("current_file", ""),
+            "files_completed": job.get("files_completed", []),
+            "files_skipped": job.get("files_skipped", []),
+        })
+
+except Exception:
+    # PromptServer not available (running outside ComfyUI or during testing)
+    pass
