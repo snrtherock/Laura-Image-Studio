@@ -1,5 +1,5 @@
 {
-  "last_node_id": 250,
+  "last_node_id": 1006,
   "last_link_id": 900,
   "nodes": [
     {
@@ -1716,6 +1716,274 @@
       "widgets_values": [
         "Extreme (GC + Unload)"
       ]
+    },
+    {
+      "id": 1000,
+      "type": "LauraModelLinks",
+      "pos": [
+        2000,
+        50
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 101,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "model_links",
+          "type": "STRING",
+          "slot_index": 0
+        },
+        {
+          "name": "directory_tree",
+          "type": "STRING",
+          "slot_index": 1
+        },
+        {
+          "name": "download_urls_json",
+          "type": "STRING",
+          "slot_index": 2
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LauraModelLinks"
+      },
+      "widgets_values": [
+        "z_image_turbo"
+      ]
+    },
+    {
+      "id": 1001,
+      "type": "LauraModelManager",
+      "pos": [
+        2000,
+        350
+      ],
+      "size": [
+        400,
+        250
+      ],
+      "flags": {},
+      "order": 102,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "model_info",
+          "type": "STRING",
+          "slot_index": 0
+        },
+        {
+          "name": "recommended_quant",
+          "type": "STRING",
+          "slot_index": 1
+        },
+        {
+          "name": "install_status",
+          "type": "STRING",
+          "slot_index": 2
+        },
+        {
+          "name": "model_key",
+          "type": "STRING",
+          "slot_index": 3
+        },
+        {
+          "name": "total_size_gb",
+          "type": "FLOAT",
+          "slot_index": 4
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LauraModelManager"
+      },
+      "widgets_values": [
+        "flux1_dev",
+        true,
+        "high"
+      ]
+    },
+    {
+      "id": 1002,
+      "type": "LauraAutoConfig",
+      "pos": [
+        2000,
+        650
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 103,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "auto_config",
+          "type": "STRING",
+          "slot_index": 0
+        },
+        {
+          "name": "recommended_model",
+          "type": "STRING",
+          "slot_index": 1
+        },
+        {
+          "name": "recommended_quant",
+          "type": "STRING",
+          "slot_index": 2
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LauraAutoConfig"
+      },
+      "widgets_values": [
+        "image_gen",
+        true,
+        false
+      ]
+    },
+    {
+      "id": 1003,
+      "type": "LauraQuantizationAdvisor",
+      "pos": [
+        2000,
+        950
+      ],
+      "size": [
+        400,
+        150
+      ],
+      "flags": {},
+      "order": 104,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "recommendation",
+          "type": "STRING",
+          "slot_index": 0
+        },
+        {
+          "name": "all_variants",
+          "type": "STRING",
+          "slot_index": 1
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LauraQuantizationAdvisor"
+      },
+      "widgets_values": [
+        "flux1_dev"
+      ]
+    },
+    {
+      "id": 1004,
+      "type": "LauraModelDownloadHelper",
+      "pos": [
+        2000,
+        1250
+      ],
+      "size": [
+        400,
+        150
+      ],
+      "flags": {},
+      "order": 105,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "download_info",
+          "type": "STRING",
+          "slot_index": 0
+        },
+        {
+          "name": "urls_json",
+          "type": "STRING",
+          "slot_index": 1
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LauraModelDownloadHelper"
+      },
+      "widgets_values": [
+        "flux1_dev"
+      ]
+    },
+    {
+      "id": 1005,
+      "type": "LauraCompatibilityChecker",
+      "pos": [
+        2000,
+        1550
+      ],
+      "size": [
+        400,
+        150
+      ],
+      "flags": {},
+      "order": 106,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "compatibility_report",
+          "type": "STRING",
+          "slot_index": 0
+        },
+        {
+          "name": "compatibility_json",
+          "type": "STRING",
+          "slot_index": 1
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LauraCompatibilityChecker"
+      },
+      "widgets_values": [
+        "flux1_dev"
+      ]
+    },
+    {
+      "id": 1006,
+      "type": "ModuleConfigPanel",
+      "pos": [
+        2000,
+        1850
+      ],
+      "size": [
+        400,
+        300
+      ],
+      "flags": {},
+      "order": 107,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "config_summary",
+          "type": "STRING",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ModuleConfigPanel"
+      },
+      "widgets_values": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ]
     }
   ],
   "links": [
@@ -2285,7 +2553,7 @@
     }
   },
   "version": 0.9,
-  "description": "ENHANCED MASTER WORKFLOW v0.9 \u2014 Complete production pipeline with SDXL generation, LoRA loading, Face/Character operations, Virtual Dressing, Inpainting/Outpainting, Background editing, 2K/4K/8K Upscaling, PLUS v0.9 features: FP8 Transformer Config, FLUX.1 Tools (Fill/Depth/Canny/Redux), multi-engine video (CogVideoX, HunyuanVideo 2.0), Wan FunCtrl trajectory control, and intelligent VRAM management.",
+  "description": "ENHANCED MASTER WORKFLOW v0.9 — Complete production pipeline with SDXL generation, LoRA loading, Face/Character operations, Virtual Dressing, Inpainting/Outpainting, Background editing, 2K/4K/8K Upscaling, PLUS v0.9 features: FP8 Transformer Config, FLUX.1 Tools (Fill/Depth/Canny/Redux), multi-engine video (CogVideoX, HunyuanVideo 2.0), Wan FunCtrl trajectory control, and intelligent VRAM management.",
   "models": [
     {
       "name": "flux1-dev.safetensors",
