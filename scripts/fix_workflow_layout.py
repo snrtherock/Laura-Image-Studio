@@ -3,9 +3,10 @@
 Fix overlapping groups in Laura Image Studio master workflows.
 
 For each workflow, detects whether groups are arranged vertically or horizontally,
-identifies groups that actually overlap, and shifts the later group (and all
-subsequent groups in the same row/column) to eliminate the overlap with a
-minimum 100px gap. Also shifts all nodes contained within moved groups.
+and ensures a minimum 100px gap between all adjacent groups (fixing both overlaps
+and groups that are too close together). Shifts the later group (and all subsequent
+groups in the same row/column) as needed. Also shifts all nodes contained within
+moved groups.
 
 Handles node positions in both [x, y] list and {"0": x, "1": y} dict formats.
 """
@@ -148,10 +149,9 @@ def fix_workflow(filepath):
 
 def fix_vertical(groups, nodes):
     """
-    Fix vertically-stacked groups. Only fixes ACTUAL overlaps (where one
-    group's bottom edge extends past the next group's top edge) among groups
-    that share the same x-column. Cascades shifts to all subsequent groups
-    in the same column.
+    Fix vertically-stacked groups. Enforces a minimum MIN_GAP px gap between
+    adjacent groups that share the same x-column. Cascades shifts to all
+    subsequent groups in the same column.
     """
     changes = []
 
@@ -169,9 +169,6 @@ def fix_vertical(groups, nodes):
     column_groups = [g for g in groups if abs(g["bounding"][0] - dominant_x) <= 200]
     column_groups.sort(key=lambda g: g["bounding"][1])
 
-    # Track cumulative shift that has been applied to each group
-    cumulative_shift = 0
-
     for i in range(len(column_groups) - 1):
         g_curr = column_groups[i]
         g_next = column_groups[i + 1]
@@ -180,10 +177,10 @@ def fix_vertical(groups, nodes):
         bx2, by2, bw2, bh2 = g_next["bounding"]
 
         curr_end_y = by1 + bh1
-        # Check for actual overlap (end of current > start of next)
-        if curr_end_y > by2:
-            overlap = curr_end_y - by2
-            delta_y = overlap + MIN_GAP
+        gap = by2 - curr_end_y
+        # Enforce minimum gap (fixes overlaps AND groups that are too close)
+        if gap < MIN_GAP:
+            delta_y = MIN_GAP - gap
             # Shift this group and ALL subsequent column groups down
             for j in range(i + 1, len(column_groups)):
                 g = column_groups[j]
@@ -200,9 +197,9 @@ def fix_vertical(groups, nodes):
 
 def fix_horizontal(groups, nodes):
     """
-    Fix horizontally-arranged groups. Only fixes ACTUAL overlaps (where one
-    group's right edge extends past the next group's left edge) among groups
-    in the same y-row. Cascades shifts to all subsequent groups in the row.
+    Fix horizontally-arranged groups. Enforces a minimum MIN_GAP px gap between
+    adjacent groups in the same y-row. Cascades shifts to all subsequent groups
+    in the row.
     """
     changes = []
 
@@ -226,10 +223,10 @@ def fix_horizontal(groups, nodes):
         bx2, by2, bw2, bh2 = g_next["bounding"]
 
         curr_end_x = bx1 + bw1
-        # Check for actual overlap
-        if curr_end_x > bx2:
-            overlap = curr_end_x - bx2
-            delta_x = overlap + MIN_GAP
+        gap = bx2 - curr_end_x
+        # Enforce minimum gap (fixes overlaps AND groups that are too close)
+        if gap < MIN_GAP:
+            delta_x = MIN_GAP - gap
             # Shift this group and ALL subsequent row groups right
             for j in range(i + 1, len(row_groups)):
                 g = row_groups[j]
