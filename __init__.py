@@ -87,6 +87,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {}
 _modules_to_load = [
     "model_registry",   # Pure data — no nodes, must load first
     "model_manager",    # Config + management nodes, load second
+    "control_center",   # Control Center supernode, load third
     "generation",
     "models",
     "toggle",
@@ -107,7 +108,7 @@ _modules_to_load = [
 
 # Core modules always load, even if config says otherwise
 _CORE_MODULES = {
-    "model_registry", "model_manager", "models", "toggle",
+    "model_registry", "model_manager", "control_center", "models", "toggle",
     "quantization", "checkpoint", "batch_processing",
     "tile_processing", "comparison",
 }
