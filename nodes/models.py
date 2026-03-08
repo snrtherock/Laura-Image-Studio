@@ -3,38 +3,45 @@ Laura Image Studio - Universal Model Support
 Multi-model generation nodes supporting SDXL, Flux, Wan 2.2, SD 1.5, SD 3, and more
 """
 
+import time
+
 import torch
 from PIL import Image
 import numpy as np
 import folder_paths
 import os
-import json
+
+from .model_registry import detect_model_key_from_filename, MODEL_REGISTRY, get_all_required_files
 
 NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
+
+# Initialize colorama once at module level
+try:
+    from colorama import Fore, Style, init as _colorama_init
+
+    _colorama_init(autoreset=True)
+except ImportError:
+    # Fallback if colorama is not installed
+    class Fore:
+        CYAN = RED = YELLOW = ""
+
+    class Style:
+        RESET_ALL = ""
 
 
 # ============== ADVANCED LOGGER ==============
 class LauraLogger:
     @staticmethod
     def info(msg):
-        from colorama import Fore, Style, init
-
-        init(autoreset=True)
         print(f"{Fore.CYAN}[snrtherock/Laura Studio] {Style.RESET_ALL}{msg}")
 
     @staticmethod
     def warn(msg):
-        from colorama import Fore, Style, init
-
-        init(autoreset=True)
         print(f"{Fore.YELLOW}[snrtherock/Laura Studio] WARNING: {Style.RESET_ALL}{msg}")
 
     @staticmethod
     def error(msg):
-        from colorama import Fore, Style, init
-
-        init(autoreset=True)
         print(f"{Fore.RED}[snrtherock/Laura Studio] ERROR: {Style.RESET_ALL}{msg}")
 
 
@@ -60,23 +67,46 @@ class ModelHealthCheck:
         if not check_now:
             return ("Check skipped", False, "")
 
-        required = {
-            "flux1-dev.safetensors": "Flux.1 Dev",
-            "flux1-schnell.safetensors": "Flux.1 Schnell",
-            "diffusion_pytorch_model.safetensors": "Wan 2.2",
-            "sd3.5_medium.safetensors": "SD 3.5 Medium",
-        }
-
-        present = folder_paths.get_filename_list("checkpoints")
+        # Build required files list from the model registry
         report = ["--- LAURA STUDIO MODEL HEALTH ---"]
         all_ok = True
 
-        for file, label in required.items():
-            found = any(file.lower() in p.lower() for p in present)
+        # Cache folder listings to avoid repeated calls
+        _folder_cache = {}
+
+        def _get_folder_files(folder_name):
+            if folder_name not in _folder_cache:
+                try:
+                    _folder_cache[folder_name] = [
+                        f.lower() for f in folder_paths.get_filename_list(folder_name)
+                    ]
+                except Exception:
+                    _folder_cache[folder_name] = []
+            return _folder_cache[folder_name]
+
+        for model_key, entry in MODEL_REGISTRY.items():
+            files = entry.get("files", {})
+            if not files:
+                continue
+
+            display_name = entry.get("display_name", model_key)
+            model_files = get_all_required_files(model_key)
+            if not model_files:
+                continue
+
+            # Check the primary file (first file entry) for this model
+            primary = model_files[0]
+            folder = primary.get("folder", "checkpoints")
+            filename = primary.get("filename", "")
+            if not filename:
+                continue
+
+            present_files = _get_folder_files(folder)
+            found = any(filename.lower() in p for p in present_files)
             if found:
-                report.append(f"✅ {label}: Found")
+                report.append(f"\u2705 {display_name}: Found")
             else:
-                report.append(f"❌ {label}: MISSING")
+                report.append(f"\u274c {display_name}: MISSING")
                 all_ok = False
 
         # VRAM Advice
@@ -99,6 +129,128 @@ class ModelHealthCheck:
         return ("\n".join(report), all_ok, advice)
 
 
+# ============== LAURA STAGE PREVIEW ==============
+class LauraStagePreview:
+    """Lightweight preview/thumbnail node for any pipeline stage.
+
+    Drop this node between any two stages (e.g. after generation, after
+    upscaling, after face-swap) to get a quick visual preview, resolution
+    info, and optional on-disk debug thumbnail.  It passes the image
+    through unchanged so it never breaks the pipeline.
+
+    Output ``stage_info`` is a human-readable string with dimensions,
+    pixel count, dtype, and the stage label.
+    """
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "stage_label": (
+                    "STRING",
+                    {"default": "Stage", "multiline": False},
+                ),
+            },
+            "optional": {
+                "save_thumbnail": ("BOOLEAN", {"default": False}),
+                "thumbnail_max_size": (
+                    "INT",
+                    {"default": 256, "min": 64, "max": 1024, "step": 32},
+                ),
+                "output_dir": (
+                    "STRING",
+                    {"default": "laura_previews", "multiline": False},
+                ),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE", "STRING")
+    RETURN_NAMES = ("image", "stage_info")
+    FUNCTION = "preview_stage"
+    CATEGORY = "Laura Studio/Utility"
+    DESCRIPTION = "Preview image at any pipeline stage — logs metadata and optionally saves a debug thumbnail"
+    OUTPUT_NODE = True
+
+    def preview_stage(
+        self,
+        image,
+        stage_label,
+        save_thumbnail=False,
+        thumbnail_max_size=256,
+        output_dir="laura_previews",
+    ):
+        # Gather image metadata
+        if image.ndim == 4:
+            batch, height, width, channels = image.shape
+        elif image.ndim == 3:
+            height, width, channels = image.shape
+            batch = 1
+        else:
+            batch, height, width, channels = 1, 0, 0, 0
+
+        megapixels = (width * height) / 1_000_000
+        dtype_str = str(image.dtype)
+
+        info_lines = [
+            f"--- {stage_label} ---",
+            f"Resolution : {width} x {height}  ({megapixels:.2f} MP)",
+            f"Batch/Frames: {batch}",
+            f"Channels    : {channels}",
+            f"Dtype       : {dtype_str}",
+            f"Tensor shape: {list(image.shape)}",
+        ]
+        stage_info = "\n".join(info_lines)
+
+        LauraLogger.info(
+            f"[StagePreview] {stage_label}: {width}x{height} "
+            f"({megapixels:.2f}MP), batch={batch}, dtype={dtype_str}"
+        )
+
+        # Optionally save a debug thumbnail to disk
+        if save_thumbnail and width > 0 and height > 0:
+            try:
+                # Resolve output directory relative to ComfyUI output
+                out_base = folder_paths.get_output_directory()
+                thumb_dir = os.path.join(out_base, output_dir)
+                os.makedirs(thumb_dir, exist_ok=True)
+
+                # Take the first image in the batch
+                first_img = image[0] if image.ndim == 4 else image
+                # Convert to numpy uint8
+                img_np = (
+                    first_img.cpu().numpy()
+                    if hasattr(first_img, "cpu")
+                    else np.array(first_img)
+                )
+                img_np = np.clip(img_np * 255, 0, 255).astype(np.uint8)
+
+                pil_img = Image.fromarray(img_np)
+
+                # Resize to thumbnail
+                pil_img.thumbnail(
+                    (thumbnail_max_size, thumbnail_max_size), Image.LANCZOS
+                )
+
+                # Safe filename
+                safe_label = "".join(
+                    c if c.isalnum() or c in "-_" else "_" for c in stage_label
+                )
+                filename = f"{safe_label}_{int(time.time())}.png"
+                filepath = os.path.join(thumb_dir, filename)
+                pil_img.save(filepath)
+
+                LauraLogger.info(
+                    f"[StagePreview] Saved thumbnail: {filepath} "
+                    f"({pil_img.width}x{pil_img.height})"
+                )
+            except Exception as e:
+                LauraLogger.warn(f"[StagePreview] Failed to save thumbnail: {e}")
+
+        # Pass image through unchanged
+        return (image, stage_info)
+
+
 # ============== MODEL TYPE DETECTOR ==============
 class ModelTypeDetector:
     """Detect model type from filename or metadata"""
@@ -119,6 +271,37 @@ class ModelTypeDetector:
 
     def detect_type(self, model_name):
         LauraLogger.info(f"Detecting architecture for: {model_name}")
+
+        # --- Registry-based detection (preferred) ---
+        registry_key = detect_model_key_from_filename(model_name)
+        if registry_key:
+            type_map = {
+                "z_image_turbo": "zimage_turbo",
+                "z_image_base": "zimage",
+                "z_image_edit": "zimage_edit",
+                "flux2_dev": "flux2",
+                "flux1_dev": "flux",
+                "flux1_schnell": "flux_schnell",
+                "qwen_image_2512": "qwen",
+                "glm_image": "glm_image",
+                "firered_edit_1_1": "firered",
+                "helios_distilled": "helios",
+                "helios_base": "helios",
+                "ltx_2_3": "ltx23",
+                "sd35_medium": "sd35",
+            }
+            model_type = type_map.get(registry_key)
+            if model_type:
+                model_info = MODEL_REGISTRY.get(registry_key, {})
+                default_res = model_info.get("inference", {}).get("default_resolution", {"width": 1024, "height": 1024})
+                if default_res is None:
+                    default_res = {"width": 1024, "height": 1024}
+                width = default_res.get("width", 1024) if isinstance(default_res, dict) else 1024
+                height = default_res.get("height", 1024) if isinstance(default_res, dict) else 1024
+                LauraLogger.info(f"Registry match: {registry_key} -> {model_type} ({width}x{height})")
+                return (model_type, width, height)
+
+        # --- Fallback: pattern-based detection ---
         model_name = model_name.lower()
 
         # 2025/2026 SOTA Detection
@@ -150,107 +333,6 @@ class ModelTypeDetector:
         return ("unknown", 1024, 1024)
 
 
-class AdvancedModelLoader:
-    """Enhanced model loader with VRAM optimization and precision control"""
-
-    @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "model_name": (folder_paths.get_filename_list("checkpoints"),),
-                "precision": (
-                    ["fp32", "fp16", "bf16", "fp8_e4m3fn", "int8"],
-                    {"default": "fp16"},
-                ),
-                "vram_optimization": (
-                    ["low", "medium", "high", "extreme", "auto"],
-                    {"default": "auto"},
-                ),
-            },
-            "optional": {
-                "vae_name": (["baked"] + folder_paths.get_filename_list("vae"),),
-                "lora_name": (["none"] + folder_paths.get_filename_list("loras"),),
-                "lora_strength": (
-                    "FLOAT",
-                    {"default": 1.0, "min": -10.0, "max": 10.0, "step": 0.01},
-                ),
-            },
-        }
-
-    RETURN_TYPES = ("MODEL", "CLIP", "VAE")
-    RETURN_NAMES = ("model", "clip", "vae")
-    FUNCTION = "load_advanced_model"
-    CATEGORY = "Laura Studio/Models"
-
-    def load_advanced_model(
-        self,
-        model_name,
-        precision,
-        vram_optimization,
-        vae_name="baked",
-        lora_name="none",
-        lora_strength=1.0,
-    ):
-        # Auto VRAM Detection
-        if vram_optimization == "auto":
-            if torch.cuda.is_available():
-                total_vram = torch.cuda.get_device_properties(0).total_memory / (
-                    1024**3
-                )
-
-                # Adaptive Model-Specific Precision for SOTA Models
-                if "flux" in model_name.lower() or "wan2" in model_name.lower():
-                    if total_vram < 12:
-                        precision = "fp8_e4m3fn"
-                        vram_optimization = "extreme"
-                    elif total_vram < 16:
-                        vram_optimization = "high"
-
-                # Standard Logic
-                if total_vram < 8:
-                    vram_optimization = "extreme"
-                    precision = "fp8_e4m3fn"
-                elif total_vram < 12:
-                    vram_optimization = "high"
-                elif total_vram < 16:
-                    vram_optimization = "medium"
-                else:
-                    vram_optimization = "low"
-            else:
-                vram_optimization = "high"
-
-        # Loading logic
-        ckpt_loader = CheckpointLoaderSimple()
-        model, clip, vae = ckpt_loader.load_checkpoint(model_name)
-
-        # Apply precision
-        if precision == "fp8_e4m3fn":
-            model = model.clone()
-            # In a real ComfyUI environment, we'd use model.patch_model to set weight_dtype
-            LauraLogger.info(
-                f"Patching {model_name} weights to FP8_E4M3FN (Low VRAM optimization)"
-            )
-
-        # Apply LoRA if requested
-        if lora_name != "none":
-            lora_path = folder_paths.get_full_path("loras", lora_name)
-            if lora_path:
-                model, clip = LoraLoader().load_lora(
-                    model, clip, lora_name, lora_strength, lora_strength
-                )
-
-        # Apply VAE if not baked
-        if vae_name != "baked":
-            from nodes import VAELoader
-
-            vae = VAELoader().load_vae(vae_name)
-
-        LauraLogger.info(
-            f"Loaded {model_name} with {vram_optimization} VRAM optimization and {precision} precision."
-        )
-        return (model, clip, vae)
-
-
 # ============== CHARACTER LORA LOADER ==============
 class CharacterLoRALoader:
     """Specialized loader for trained character LoRAs (Influencer models)"""
@@ -280,6 +362,8 @@ class CharacterLoRALoader:
     def load_character_lora(
         self, model, clip, lora_name, strength, trigger_word, append_trigger
     ):
+        from nodes import LoraLoader
+
         LauraLogger.info(f"Applying Character LoRA: {lora_name}")
         # Load LoRA using standard loader
         new_model, new_clip = LoraLoader().load_lora(
@@ -326,12 +410,20 @@ class UniversalModelLoader:
                         "pixart",
                         "aura",
                         "kolors",
+                        "glm_image",
+                        "firered",
+                        "helios",
+                        "ltx23",
                     ],
                 ),
             },
             "optional": {
                 "default_width": ("INT", {"default": 1024, "min": 256, "max": 2048}),
                 "default_height": ("INT", {"default": 1024, "min": 256, "max": 2048}),
+                "torch_compile": (
+                    "BOOLEAN",
+                    {"default": False},
+                ),
             },
         }
 
@@ -340,11 +432,17 @@ class UniversalModelLoader:
     FUNCTION = "load_model"
     CATEGORY = "Laura Studio/Models"
     DESCRIPTION = (
-        "Load any model with auto-detection of architecture and optimal settings"
+        "Load any model with auto-detection of architecture and optimal settings. "
+        "Enable torch_compile for ~15-40% faster inference (first run is slow due to compilation)."
     )
 
     def load_model(
-        self, model_name, model_type, default_width=1024, default_height=1024
+        self,
+        model_name,
+        model_type,
+        default_width=1024,
+        default_height=1024,
+        torch_compile=False,
     ):
         # Auto-detect if needed
         if model_type == "auto":
@@ -354,7 +452,7 @@ class UniversalModelLoader:
 
         LauraLogger.info(f"Universal Loading: {model_name} as {model_type}")
 
-        # Set default resolutions per model type
+        # Set default resolutions per model type (only if user didn't override)
         resolution_map = {
             "sdxl": (1024, 1024),
             "flux": (512, 512),
@@ -370,14 +468,20 @@ class UniversalModelLoader:
             "zimage": (1024, 1024),
             "zimage_turbo": (1024, 1024),
             "zimage_edit": (1024, 1024),
-            "qwen": (1024, 1024),
+            "qwen": (2512, 2512),
+            "glm_image": (1024, 1024),
+            "firered": (1024, 1024),
+            "helios": (1024, 1024),
+            "ltx23": (768, 768),
             "playground": (1024, 1024),
             "pixart": (1024, 1024),
             "aura": (512, 512),
             "kolors": (1024, 1024),
         }
 
-        width, height = resolution_map.get(model_type, (1024, 1024))
+        # Use resolution_map as a refinement when user used default dimensions
+        if default_width == 1024 and default_height == 1024 and model_type != "auto":
+            width, height = resolution_map.get(model_type, (width, height))
 
         # Load model using ComfyUI's built-in
         from nodes import CheckpointLoaderSimple
@@ -385,7 +489,36 @@ class UniversalModelLoader:
         result = CheckpointLoaderSimple().load_checkpoint(model_name)
         model, clip, vae = result[0], result[1], result[2]
 
+        # torch.compile() optimization (v0.9) — reduces overhead by ~15-40%
+        if torch_compile:
+            model = self._apply_torch_compile(model, model_name)
+
         return (model, clip, vae, model_type)
+
+    @staticmethod
+    def _apply_torch_compile(model, model_name="model"):
+        """Apply torch.compile with reduce-overhead mode to the inner diffusion model."""
+        try:
+            if (
+                hasattr(torch, "compile")
+                and hasattr(model, "model")
+                and hasattr(model.model, "diffusion_model")
+            ):
+                model.model.diffusion_model = torch.compile(
+                    model.model.diffusion_model,
+                    mode="reduce-overhead",
+                    fullgraph=False,
+                )
+                LauraLogger.info(
+                    f"torch.compile(mode='reduce-overhead') applied to {model_name}"
+                )
+            else:
+                LauraLogger.warn(
+                    "torch.compile requested but model structure not compatible or torch.compile unavailable"
+                )
+        except Exception as e:
+            LauraLogger.warn(f"torch.compile failed (will run without): {e}")
+        return model
 
 
 # ============== ADVANCED MODEL LOADER ==============
@@ -419,6 +552,10 @@ class AdvancedModelLoader:
                         "pixart",
                         "aura",
                         "kolors",
+                        "glm_image",
+                        "firered",
+                        "helios",
+                        "ltx23",
                     ],
                 ),
                 "attention_mode": (
@@ -430,6 +567,10 @@ class AdvancedModelLoader:
                 "quant_config": ("QUANT_CONFIG",),
                 "default_width": ("INT", {"default": 1024, "min": 256, "max": 2048}),
                 "default_height": ("INT", {"default": 1024, "min": 256, "max": 2048}),
+                "torch_compile": (
+                    "BOOLEAN",
+                    {"default": False},
+                ),
             },
         }
 
@@ -437,7 +578,7 @@ class AdvancedModelLoader:
     RETURN_NAMES = ("model", "clip", "vae", "detected_type")
     FUNCTION = "load_model_advanced"
     CATEGORY = "Laura Studio/Models"
-    DESCRIPTION = "Load model with optional precision/VRAM optimizations"
+    DESCRIPTION = "Load model with optional precision/VRAM optimizations and torch.compile acceleration"
 
     def load_model_advanced(
         self,
@@ -447,6 +588,7 @@ class AdvancedModelLoader:
         quant_config=None,
         default_width=1024,
         default_height=1024,
+        torch_compile=False,
     ):
         # Auto-detect if needed
         if model_type == "auto":
@@ -502,8 +644,58 @@ class AdvancedModelLoader:
         result = CheckpointLoaderSimple().load_checkpoint(model_name)
         model, clip, vae = result[0], result[1], result[2]
 
-        # In a real environment, we'd apply attention_mode here via model_patcher
-        # model.set_model_attn_mode(attention_mode)
+        # Apply weight dtype optimization via ComfyUI model patcher
+        dtype_map = {
+            "fp8_e4m3fn": torch.float8_e4m3fn
+            if hasattr(torch, "float8_e4m3fn")
+            else torch.float16,
+            "fp8_e5m2": torch.float8_e5m2
+            if hasattr(torch, "float8_e5m2")
+            else torch.float16,
+            "fp16": torch.float16,
+            "bf16": torch.bfloat16,
+            "fp32": torch.float32,
+            "int8": torch.int8,
+        }
+        target_dtype = dtype_map.get(weight_dtype)
+        if target_dtype and target_dtype != torch.float32:
+            try:
+                # ComfyUI ModelPatcher exposes model_dtype() and can cast weights
+                if hasattr(model, "model") and hasattr(model.model, "to"):
+                    model.model.to(target_dtype)
+                    LauraLogger.info(f"Applied weight dtype: {weight_dtype}")
+            except Exception as e:
+                LauraLogger.warn(f"Could not apply weight dtype {weight_dtype}: {e}")
+
+        # Apply attention mode via ComfyUI's model options
+        if attention_mode != "auto":
+            try:
+                if hasattr(model, "model_options"):
+                    model.model_options["attention_mode"] = attention_mode
+                    LauraLogger.info(f"Applied attention mode: {attention_mode}")
+            except Exception as e:
+                LauraLogger.warn(
+                    f"Could not apply attention mode {attention_mode}: {e}"
+                )
+
+        # Apply CPU offload if configured
+        if quant_config.get("enable_cpu_offload", False):
+            try:
+                import comfy.model_management
+
+                comfy.model_management.soft_empty_cache()
+                # Move model to CPU initially; ComfyUI will load to GPU on demand
+                if hasattr(model, "model") and hasattr(model.model, "to"):
+                    model.model.to("cpu")
+                LauraLogger.info(
+                    "CPU offload enabled — model stored on CPU, loaded to GPU on demand"
+                )
+            except Exception as e:
+                LauraLogger.warn(f"Could not configure CPU offload: {e}")
+
+        # torch.compile() optimization (v0.9)
+        if torch_compile:
+            model = UniversalModelLoader._apply_torch_compile(model, model_name)
 
         return (model, clip, vae, model_type)
 
@@ -518,12 +710,12 @@ class LoraManager:
             "required": {
                 "model": ("MODEL",),
                 "clip": ("CLIP",),
-                "lora_name": ("STRING", {"default": ""}),
                 "lora_path": (folder_paths.get_filename_list("loras"),),
                 "strength_model": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 2.0}),
                 "strength_clip": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 2.0}),
             },
             "optional": {
+                "lora_name": ("STRING", {"default": ""}),
                 "enable": ("BOOLEAN", {"default": True}),
             },
         }
@@ -538,10 +730,10 @@ class LoraManager:
         self,
         model,
         clip,
-        lora_name,
         lora_path,
         strength_model,
         strength_clip,
+        lora_name="",
         enable=True,
     ):
         if not enable or not lora_path or lora_path == "None":
@@ -562,7 +754,9 @@ class LoraManager:
             )
             model, clip = result[0], result[1]
         except Exception as e:
-            LauraLogger.error(f"LoRA loading error: {e}")
+            LauraLogger.warn(
+                f"LoRA '{lora_name or lora_path}' failed to load: {e}. Returning model without LoRA applied."
+            )
 
         return (model, clip)
 
@@ -579,18 +773,20 @@ class MultiLoraStack:
                 "clip": ("CLIP",),
                 "lora_1": (folder_paths.get_filename_list("loras"),),
                 "lora_1_strength": ("FLOAT", {"default": 0.7, "min": 0.0, "max": 2.0}),
+            },
+            "optional": {
                 "lora_2": (folder_paths.get_filename_list("loras"),),
                 "lora_2_strength": ("FLOAT", {"default": 0.5, "min": 0.0, "max": 2.0}),
                 "lora_3": (folder_paths.get_filename_list("loras"),),
                 "lora_3_strength": ("FLOAT", {"default": 0.3, "min": 0.0, "max": 2.0}),
-            }
+            },
         }
 
     RETURN_TYPES = ("MODEL", "CLIP")
     RETURN_NAMES = ("model", "clip")
     FUNCTION = "apply_loras"
     CATEGORY = "Laura Studio/Models"
-    DESCRIPTION = "Apply a stack of 3 LoRAs (e.g., Character + Style + Lighting)"
+    DESCRIPTION = "Apply a stack of up to 3 LoRAs (e.g., Character + Style + Lighting)"
 
     def apply_loras(
         self,
@@ -598,10 +794,10 @@ class MultiLoraStack:
         clip,
         lora_1,
         lora_1_strength,
-        lora_2,
-        lora_2_strength,
-        lora_3,
-        lora_3_strength,
+        lora_2=None,
+        lora_2_strength=0.5,
+        lora_3=None,
+        lora_3_strength=0.3,
     ):
         LauraLogger.info("Applying Multi-LoRA Stack")
         from nodes import LoraLoader
@@ -665,6 +861,10 @@ class UniversalGenerator:
                         "pixart",
                         "aura",
                         "kolors",
+                        "glm_image",
+                        "firered",
+                        "helios",
+                        "ltx23",
                     ],
                 ),
                 "positive_prompt": ("STRING", {"multiline": True, "default": ""}),
@@ -746,16 +946,20 @@ class UniversalGenerator:
         LauraLogger.info(f"VRAM-Safe Resolution: {width}x{height} (Tier: {vram_tier})")
 
         # 1. AUTO-CHARACTER IDENTITY (Influencer Logic)
-        # If character keywords aren't in prompt, inject them based on model type
+        # If character keywords aren't in prompt and the model type suggests a Laura persona,
+        # inject identity triggers. Users can disable this by including "laura" in their prompt
+        # or by using a non-Laura model type.
+        laura_model_types = {"flux", "sdxl", "wan22"}
         character_triggers = {
             "flux": "laura influencer, professional digital style",
             "sdxl": "laura, highly detailed face, professional photography",
             "wan22": "laura, realistic skin, cinematic motion",
         }
-        trigger = character_triggers.get(model_type, "laura influencer")
-        if "laura" not in positive_prompt.lower():
-            positive_prompt = f"{trigger}, {positive_prompt}"
-            LauraLogger.info(f"Auto-Injected Character Identity: {trigger}")
+        if model_type in laura_model_types and "laura" not in positive_prompt.lower():
+            trigger = character_triggers.get(model_type, "")
+            if trigger:
+                positive_prompt = f"{trigger}, {positive_prompt}"
+                LauraLogger.info(f"Auto-Injected Character Identity: {trigger}")
 
         # Adjust settings based on model type
         model_defaults = {
@@ -769,7 +973,10 @@ class UniversalGenerator:
             "wan22": {"steps": 25, "cfg": 5.0, "max_res": None},
         }
         defaults = model_defaults.get(model_type, {})
-        if defaults.get("cfg") and cfg > defaults["cfg"] + 1:
+        if defaults.get("cfg") is not None and cfg > defaults["cfg"] + 1:
+            LauraLogger.warn(
+                f"CFG {cfg} exceeds recommended max for {model_type}, clamping to {defaults['cfg']}"
+            )
             cfg = defaults["cfg"]
         if defaults.get("steps") and model_type in [
             "flux",
@@ -861,6 +1068,10 @@ class UniversalImg2Img:
                         "pixart",
                         "aura",
                         "kolors",
+                        "glm_image",
+                        "firered",
+                        "helios",
+                        "ltx23",
                     ],
                 ),
                 "positive_prompt": ("STRING", {"multiline": True, "default": ""}),
@@ -876,6 +1087,7 @@ class UniversalImg2Img:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "img2img"
     CATEGORY = "Laura Studio/Generation"
     DESCRIPTION = "Universal image-to-image conversion"
@@ -894,15 +1106,15 @@ class UniversalImg2Img:
         steps,
         cfg,
     ):
-        return UniversalGenerator().generate(
+        result = UniversalGenerator().generate(
             model,
             clip,
             vae,
             model_type,
             positive_prompt,
             negative_prompt,
-            image.shape[3],
             image.shape[2],
+            image.shape[1],
             seed,
             steps,
             cfg,
@@ -911,6 +1123,7 @@ class UniversalImg2Img:
             image_to_image=image,
             denoise=denoise,
         )
+        return (result[0],)
 
 
 # ============== INPAINTING UNIVERSAL ==============
@@ -939,6 +1152,7 @@ class UniversalInpainter:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "inpaint"
     CATEGORY = "Laura Studio/Generation"
     DESCRIPTION = "Universal inpainting"
@@ -957,37 +1171,62 @@ class UniversalInpainter:
         cfg,
         denoise,
     ):
-        from nodes import VAEEncode, CLIPTextEncode, KSampler, VAEDecode
+        from nodes import CLIPTextEncode, KSampler, VAEDecode
 
-        # Encode image
-        encoded = VAEEncode().encode(vae, image)[0]
+        # Use VAEEncodeForInpaint for proper mask-aware encoding
+        try:
+            from nodes import VAEEncodeForInpaint
 
-        # Process mask
-        if mask.dim() == 2:
-            mask = mask.unsqueeze(0).unsqueeze(0)
-        elif mask.dim() == 3:
-            mask = mask.unsqueeze(0)
+            # VAEEncodeForInpaint expects (pixels, vae, mask, grow_mask_by)
+            # mask should be [B, H, W] with 1.0 = inpaint region
+            inpaint_mask = mask
+            if inpaint_mask.dim() == 4:
+                inpaint_mask = inpaint_mask.squeeze(1)
+            if inpaint_mask.dim() == 2:
+                inpaint_mask = inpaint_mask.unsqueeze(0)
+            encoded = VAEEncodeForInpaint().encode(vae, image, inpaint_mask, 6)[0]
+            use_inpaint_encoder = True
+        except ImportError:
+            # Fallback to standard VAEEncode if VAEEncodeForInpaint unavailable
+            from nodes import VAEEncode
 
-        # Resize mask to latent size
-        latent_h = encoded["samples"].shape[2]
-        latent_w = encoded["samples"].shape[3]
+            encoded = VAEEncode().encode(vae, image)[0]
+            use_inpaint_encoder = False
+
+        # Build latent-space mask for noise_mask (only needed if fallback encoder)
         import torch.nn.functional as F
 
-        mask_latent = F.interpolate(
-            mask, size=(latent_h, latent_w), mode="bilinear", align_corners=False
-        )
-        mask_latent = (mask_latent > 0.5).float()
+        if not use_inpaint_encoder:
+            # Process mask to [B, 1, H, W] for latent-space interpolation
+            mask_for_latent = mask
+            if mask_for_latent.dim() == 2:
+                mask_for_latent = mask_for_latent.unsqueeze(0).unsqueeze(0)
+            elif mask_for_latent.dim() == 3:
+                mask_for_latent = mask_for_latent.unsqueeze(1)
+            elif mask_for_latent.dim() == 4 and mask_for_latent.shape[1] > 1:
+                mask_for_latent = mask_for_latent[:, 0:1, :, :]
+
+            latent_h = encoded["samples"].shape[2]
+            latent_w = encoded["samples"].shape[3]
+            mask_latent = F.interpolate(
+                mask_for_latent,
+                size=(latent_h, latent_w),
+                mode="bilinear",
+                align_corners=False,
+            )
+            mask_latent = (mask_latent > 0.5).float()
+        else:
+            # VAEEncodeForInpaint already handles mask internally via noise_mask
+            mask_latent = None
 
         # Encode prompts
         positive = CLIPTextEncode().encode(clip, positive_prompt)[0]
         negative = CLIPTextEncode().encode(clip, negative_prompt)[0]
 
         # Create latent
-        latent = {
-            "samples": encoded["samples"],
-            "mask": mask_latent,
-            "noise_mask": mask_latent,
-        }
+        latent = {"samples": encoded["samples"]}
+        if mask_latent is not None:
+            latent["noise_mask"] = mask_latent
 
         # Sample
         sampled = KSampler().sample(
@@ -1022,6 +1261,7 @@ class ControlNetLoader:
         }
 
     RETURN_TYPES = ("CONTROL_NET",)
+    RETURN_NAMES = ("control_net",)
     FUNCTION = "load_controlnet"
     CATEGORY = "Laura Studio/Models"
     DESCRIPTION = "Load ControlNet model"
@@ -1049,20 +1289,28 @@ class ApplyControlNet:
         }
 
     RETURN_TYPES = ("CONDITIONING",)
+    RETURN_NAMES = ("conditioning",)
     FUNCTION = "apply_controlnet"
     CATEGORY = "Laura Studio/Models"
-    DESCRIPTION = "Apply ControlNet"
+    DESCRIPTION = "Apply ControlNet to positive conditioning"
 
     def apply_controlnet(self, conditioning, control_net, image, strength):
         try:
             from comfy_extras.nodes_controlnet import ControlNetApplyAdvanced
 
+            # ControlNetApplyAdvanced requires both positive and negative CONDITIONING.
+            # Since we only have positive, create a minimal empty negative conditioning.
+            # CONDITIONING type is a list of [tensor, dict] pairs.
+            empty_negative = [[torch.zeros((1, 1, 768), dtype=torch.float32), {}]]
             result = ControlNetApplyAdvanced().apply_controlnet(
-                conditioning, conditioning, control_net, image, strength, 0.0, 1.0
+                conditioning, empty_negative, control_net, image, strength, 0.0, 1.0
             )
+            # Note: result[1] (modified negative) is intentionally discarded — only positive conditioning is returned
             return (result[0],)
-        except Exception:
-            # Fallback: return conditioning unchanged
+        except Exception as e:
+            LauraLogger.warn(
+                f"ControlNet application failed: {e}. Returning conditioning unchanged."
+            )
             return (conditioning,)
 
 
@@ -1070,6 +1318,7 @@ class ApplyControlNet:
 NODE_CLASS_MAPPINGS.update(
     {
         "ModelHealthCheck": ModelHealthCheck,
+        "LauraStagePreview": LauraStagePreview,
         "ModelTypeDetector": ModelTypeDetector,
         "UniversalModelLoader": UniversalModelLoader,
         "AdvancedModelLoader": AdvancedModelLoader,
@@ -1087,6 +1336,7 @@ NODE_CLASS_MAPPINGS.update(
 NODE_DISPLAY_NAME_MAPPINGS.update(
     {
         "ModelHealthCheck": "Model Health Check",
+        "LauraStagePreview": "Laura Stage Preview",
         "ModelTypeDetector": "Model Type Detector",
         "UniversalModelLoader": "Universal Model Loader",
         "AdvancedModelLoader": "Advanced Model Loader",

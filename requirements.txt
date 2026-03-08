@@ -1,53 +1,56 @@
 # Laura Image Studio - SOTA Video Requirements
-# Version: 0.8 (Viral Video Edition)
+# Version: 0.8.1
 
 # Core ComfyUI Dependencies
 torch>=2.2.0
-torchvision
-torchaudio
-numpy>=1.24.0
+torchvision>=0.17.0
+torchaudio>=2.2.0
+numpy>=1.24.0,<2.0.0
 Pillow>=10.0.0
 opencv-python>=4.8.0
-tqdm
-requests
-pyyaml
-einops
+tqdm>=4.66.0
+requests>=2.31.0
 accelerate>=0.28.0
 transformers>=4.38.0
-safetensors
+safetensors>=0.4.0
 diffusers>=0.26.0
+colorama>=0.4.6
 
 # SOTA Video Stack (v0.8+) Requirements
 # These support LivePortrait v2, SUPIR-Video, Wan 2.2, and RIFE v4
 
 # 1. Temporal Face Driving (LivePortrait v2)
 # Ref: https://github.com/Kijai/ComfyUI-LivePortraitKJ
-setuptools
+setuptools>=69.0.0
 insightface>=0.7.3
-filterpy
-imageio
-imageio-ffmpeg
-scipy
-onnxruntime-gpu
+filterpy>=1.4.5
+imageio>=2.33.0
+imageio-ffmpeg>=0.4.9
+scipy>=1.11.0
+onnxruntime-gpu>=1.17.0; platform_machine == 'x86_64' and sys_platform != 'darwin'
+onnxruntime>=1.17.0; platform_machine != 'x86_64' or sys_platform == 'darwin'
 
 # 2. Cinema-Grade Video Upscaling (SUPIR-Video)
 # Ref: https://github.com/Kijai/ComfyUI-SUPIR
-spandrel
+spandrel>=0.3.0
 kornia>=0.7.1
-open-clip-torch
+open-clip-torch>=2.24.0
 
 # 3. Frame Interpolation (RIFE v4)
 # Ref: https://github.com/Fannovel16/ComfyUI-Frame-Interpolation
-cupy-cuda12x  # Match with CUDA version (11x, 12x)
+# cupy is optional — install manually to match your CUDA version:
+#   CUDA 12.x: pip install cupy-cuda12x
+#   CUDA 11.x: pip install cupy-cuda11x
+#   CPU-only:  skip (RIFE will use torch fallback)
 
 # 4. Advanced Video Handling (VideoHelperSuite)
 # Ref: https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite
-av
-ffmpeg-python
+av>=12.0.0
+ffmpeg-python>=0.2.0
 
 # 5. Motion Control & Advanced Architectures (Wan 2.2 / Cosmos)
 # Handled by core diffusers and transformers, but specific versions recommended:
-sentencepiece
-protobuf
-triton; sys_platform == 'linux'
+sentencepiece>=0.2.0
+protobuf>=4.25.0
+triton>=2.2.0; sys_platform == 'linux'
 xformers>=0.0.25; sys_platform == 'win32' or sys_platform == 'linux'

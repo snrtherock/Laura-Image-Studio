@@ -5,8 +5,6 @@ Delegates to RMBG ClothesSegment for real segmentation
 """
 
 import torch
-from PIL import Image
-import numpy as np
 
 NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
@@ -334,15 +332,17 @@ class AccessoryDetector:
         FashionSegNode = _try_import_rmbg_fashion()
 
         # Map our accessory names to RMBG categories
+        # Note: "watch" and "jewelry" have no direct RMBG segment label,
+        # so we combine left-arm + right-arm regions as the best proxy.
         accessory_to_rmbg = {
             "shoes": "shoes",
-            "watch": "belt",  # closest available
+            "watch": "left_arm",
             "bag": "bag",
             "belt": "belt",
             "sunglasses": "sunglasses",
             "hat": "hat",
             "scarf": "scarf",
-            "jewelry": "belt",  # closest available
+            "jewelry": "face",
         }
         rmbg_cat = accessory_to_rmbg.get(accessory, "bag")
 
@@ -424,6 +424,7 @@ class VirtualDresser:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "dress"
     CATEGORY = "Laura Studio/Dressing"
     DESCRIPTION = "Replace clothing via mask-based inpainting"
@@ -543,6 +544,7 @@ class DressingRoomCompositor:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "composite"
     CATEGORY = "Laura Studio/Dressing"
     DESCRIPTION = "Composite up to 6 individually modified items onto base image"
@@ -658,6 +660,7 @@ class HairStylist:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "style_hair"
     CATEGORY = "Laura Studio/Dressing"
     DESCRIPTION = "Change hairstyle and hair color via segmentation + inpainting"
@@ -752,6 +755,7 @@ class AccessoryEditor:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "edit_accessory"
     CATEGORY = "Laura Studio/Dressing"
     DESCRIPTION = "Add or change accessories via segmentation + inpainting"
@@ -771,12 +775,12 @@ class AccessoryEditor:
     ):
         # Map accessory to segmentation category
         acc_to_seg = {
-            "watch": "belt",  # wrist area ~ belt level fallback
+            "watch": "left_arm",  # wrist area proxy
             "glasses": "sunglasses",
             "necklace": "scarf",  # neck area
             "earrings": "face",  # near face
-            "bracelet": "belt",
-            "ring": "belt",
+            "bracelet": "left_arm",  # wrist area proxy
+            "ring": "left_arm",  # finger area proxy
             "bag": "bag",
             "belt": "belt",
         }
@@ -871,6 +875,7 @@ class MakeupArtist:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "apply_makeup"
     CATEGORY = "Laura Studio/Dressing"
     DESCRIPTION = "Apply makeup looks via face segmentation + inpainting"
@@ -972,6 +977,7 @@ class OutfitCombinator:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "combine_outfit"
     CATEGORY = "Laura Studio/Dressing"
     DESCRIPTION = "Create complete outfit by sequentially replacing items"
@@ -1093,6 +1099,7 @@ class IPAdapterStyleReference:
         }
 
     RETURN_TYPES = ("MODEL",)
+    RETURN_NAMES = ("model",)
     FUNCTION = "apply_style"
     CATEGORY = "Laura Studio/Dressing"
     DESCRIPTION = "Apply style reference using IPAdapter"
@@ -1153,6 +1160,7 @@ class IPAdapterClothingReference:
         }
 
     RETURN_TYPES = ("MODEL",)
+    RETURN_NAMES = ("model",)
     FUNCTION = "apply_clothing"
     CATEGORY = "Laura Studio/Dressing"
     DESCRIPTION = "Apply clothing reference using IPAdapter"

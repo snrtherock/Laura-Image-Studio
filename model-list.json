@@ -3,49 +3,266 @@
     "name": "flux1-dev.safetensors",
     "type": "checkpoints",
     "base": "Flux.1 Dev",
-    "description": "High-quality base model for Flux generation",
+    "description": "FLUX.1 Dev - High-quality guidance-distilled model (12GB+ VRAM recommended)",
     "url": "https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors"
   },
   {
     "name": "flux1-schnell.safetensors",
     "type": "checkpoints",
     "base": "Flux.1 Schnell",
-    "description": "Fast 4-step generation model",
+    "description": "FLUX.1 Schnell - Fast 4-step distilled model (8GB+ VRAM)",
     "url": "https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/flux1-schnell.safetensors"
   },
   {
-    "name": "wan2.1_t2v_14b_720p.safetensors",
-    "type": "checkpoints",
-    "base": "Wan 2.1 14B T2V",
-    "description": "Wan 2.1 14B Text-to-Video Model",
-    "url": "https://huggingface.co/Wan-AI/Wan2.1-T2V-14B/resolve/main/wan2.1_t2v_14b_720p.safetensors"
+    "name": "ae.safetensors",
+    "type": "vae",
+    "base": "Flux.1",
+    "description": "FLUX.1 VAE (autoencoder) - Required for all FLUX.1 models",
+    "url": "https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/ae.safetensors"
   },
   {
-    "name": "wan2.1_i2v_14b_720p.safetensors",
-    "type": "checkpoints",
-    "base": "Wan 2.1 14B I2V",
-    "description": "Wan 2.1 14B Image-to-Video Model",
-    "url": "https://huggingface.co/Wan-AI/Wan2.1-I2V-14B-720P/resolve/main/wan2.1_i2v_14b_720p.safetensors"
+    "name": "clip_l.safetensors",
+    "type": "clip",
+    "base": "Flux.1",
+    "description": "CLIP-L text encoder for FLUX.1",
+    "url": "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors"
   },
   {
-    "name": "wan2.1_t2v_1.3b_480p.safetensors",
+    "name": "t5xxl_fp16.safetensors",
+    "type": "clip",
+    "base": "Flux.1",
+    "description": "T5-XXL text encoder for FLUX.1 (FP16, ~9.5GB)",
+    "url": "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors"
+  },
+  {
+    "name": "t5xxl_fp8_e4m3fn.safetensors",
+    "type": "clip",
+    "base": "Flux.1",
+    "description": "T5-XXL text encoder for FLUX.1 (FP8, ~4.9GB, low VRAM)",
+    "url": "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors"
+  },
+  {
+    "name": "sd3.5_medium.safetensors",
     "type": "checkpoints",
-    "base": "Wan 2.1 1.3B T2V",
-    "description": "Wan 2.1 1.3B Text-to-Video Model (Low VRAM)",
-    "url": "https://huggingface.co/Wan-AI/Wan2.1-T2V-1.3B/resolve/main/wan2.1_t2v_1.3b_480p.safetensors"
+    "base": "SD 3.5 Medium",
+    "description": "Stable Diffusion 3.5 Medium - High prompt adherence (8GB+ VRAM)",
+    "url": "https://huggingface.co/stabilityai/stable-diffusion-3.5-medium/resolve/main/sd3.5_medium.safetensors"
+  },
+  {
+    "name": "sd3.5_large.safetensors",
+    "type": "checkpoints",
+    "base": "SD 3.5 Large",
+    "description": "Stable Diffusion 3.5 Large - Maximum quality (12GB+ VRAM)",
+    "url": "https://huggingface.co/stabilityai/stable-diffusion-3.5-large/resolve/main/sd3.5_large.safetensors"
+  },
+  {
+    "name": "sd_xl_base_1.0.safetensors",
+    "type": "checkpoints",
+    "base": "SDXL 1.0",
+    "description": "Stable Diffusion XL Base 1.0 (8GB+ VRAM)",
+    "url": "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors"
+  },
+  {
+    "name": "wan2.2_t2v_14b_720p.safetensors",
+    "type": "checkpoints",
+    "base": "Wan 2.2 14B T2V",
+    "description": "Wan 2.2 14B Text-to-Video - SOTA open-source video (12GB+ VRAM with FP8)",
+    "url": "https://huggingface.co/Wan-AI/Wan2.2-T2V-14B/resolve/main/wan2.2_t2v_14b_720p.safetensors"
+  },
+  {
+    "name": "wan2.2_i2v_14b_720p.safetensors",
+    "type": "checkpoints",
+    "base": "Wan 2.2 14B I2V",
+    "description": "Wan 2.2 14B Image-to-Video 720P (12GB+ VRAM with FP8)",
+    "url": "https://huggingface.co/Wan-AI/Wan2.2-I2V-14B-720P/resolve/main/wan2.2_i2v_14b_720p.safetensors"
+  },
+  {
+    "name": "wan2.2_t2v_1.3b_480p.safetensors",
+    "type": "checkpoints",
+    "base": "Wan 2.2 1.3B T2V",
+    "description": "Wan 2.2 1.3B Text-to-Video - Low VRAM variant (6GB+ VRAM)",
+    "url": "https://huggingface.co/Wan-AI/Wan2.2-T2V-1.3B/resolve/main/wan2.2_t2v_1.3b_480p.safetensors"
+  },
+  {
+    "name": "wan2.2_i2v_1.3b_480p.safetensors",
+    "type": "checkpoints",
+    "base": "Wan 2.2 1.3B I2V",
+    "description": "Wan 2.2 1.3B Image-to-Video - Low VRAM variant (6GB+ VRAM)",
+    "url": "https://huggingface.co/Wan-AI/Wan2.2-I2V-1.3B-480P/resolve/main/wan2.2_i2v_1.3b_480p.safetensors"
+  },
+  {
+    "name": "wan_vae.safetensors",
+    "type": "vae",
+    "base": "Wan 2.2",
+    "description": "Wan 2.2 VAE - Required for all Wan video models",
+    "url": "https://huggingface.co/Wan-AI/Wan2.2-T2V-14B/resolve/main/wan_vae.safetensors"
+  },
+  {
+    "name": "models_clip_open-clip-xlm-roberta-large-vit-huge-14.safetensors",
+    "type": "clip",
+    "base": "Wan 2.2",
+    "description": "Wan 2.2 CLIP text encoder (Open-CLIP XLM-RoBERTa)",
+    "url": "https://huggingface.co/Wan-AI/Wan2.2-T2V-14B/resolve/main/models_clip_open-clip-xlm-roberta-large-vit-huge-14.safetensors"
+  },
+  {
+    "name": "models_t5_umt5-xxl-enc-bf16.safetensors",
+    "type": "clip",
+    "base": "Wan 2.2",
+    "description": "Wan 2.2 T5 text encoder (UMT5-XXL BF16)",
+    "url": "https://huggingface.co/Wan-AI/Wan2.2-T2V-14B/resolve/main/models_t5_umt5-xxl-enc-bf16.safetensors"
+  },
+  {
+    "name": "cogvideox_5b.safetensors",
+    "type": "checkpoints",
+    "base": "CogVideoX 5B",
+    "description": "CogVideoX 5B - High-quality video generation (12GB+ VRAM)",
+    "url": "https://huggingface.co/THUDM/CogVideoX-5b/resolve/main/cogvideox_5b.safetensors"
+  },
+  {
+    "name": "cogvideox_2b.safetensors",
+    "type": "checkpoints",
+    "base": "CogVideoX 2B",
+    "description": "CogVideoX 2B - Efficient video generation (8GB+ VRAM)",
+    "url": "https://huggingface.co/THUDM/CogVideoX-2b/resolve/main/cogvideox_2b.safetensors"
   },
   {
     "name": "liveportrait_model.safetensors",
     "type": "checkpoints",
     "base": "LivePortrait",
-    "description": "LivePortrait base model for video driving",
+    "description": "LivePortrait v2 - Face animation and video driving (4GB VRAM)",
     "url": "https://huggingface.co/Kijai/LivePortrait_safetensors/resolve/main/liveportrait_model.safetensors"
   },
   {
-    "name": "supir_v0.safetensors",
+    "name": "liveportrait_retargeting.safetensors",
     "type": "checkpoints",
+    "base": "LivePortrait",
+    "description": "LivePortrait retargeting model for expression transfer",
+    "url": "https://huggingface.co/Kijai/LivePortrait_safetensors/resolve/main/liveportrait_retargeting_model.safetensors"
+  },
+  {
+    "name": "SUPIR_v0.safetensors",
+    "type": "upscale_models",
     "base": "SUPIR",
-    "description": "SUPIR image/video upscaler model",
+    "description": "SUPIR v0 - Cinema-grade image/video upscaler (8GB+ VRAM)",
     "url": "https://huggingface.co/Kijai/SUPIR_safetensors/resolve/main/SUPIR_v0.safetensors"
+  },
+  {
+    "name": "SUPIR_v0Q.safetensors",
+    "type": "upscale_models",
+    "base": "SUPIR",
+    "description": "SUPIR v0Q - Quality-focused variant of SUPIR upscaler",
+    "url": "https://huggingface.co/Kijai/SUPIR_safetensors/resolve/main/SUPIR_v0Q.safetensors"
+  },
+  {
+    "name": "RealESRGAN_x4plus.pth",
+    "type": "upscale_models",
+    "base": "RealESRGAN",
+    "description": "RealESRGAN x4 Plus - General-purpose 4x upscaler",
+    "url": "https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth"
+  },
+  {
+    "name": "RealESRGAN_x4plus_anime_6B.pth",
+    "type": "upscale_models",
+    "base": "RealESRGAN",
+    "description": "RealESRGAN x4 Anime - Optimized for anime/illustration content",
+    "url": "https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.2.4/RealESRGAN_x4plus_anime_6B.pth"
+  },
+  {
+    "name": "rife47.safetensors",
+    "type": "custom_nodes",
+    "base": "RIFE",
+    "description": "RIFE v4.7 - Frame interpolation for 60fps video (2GB VRAM)",
+    "url": "https://huggingface.co/Kijai/rife_safetensors/resolve/main/rife47.safetensors"
+  },
+  {
+    "name": "inswapper_128.onnx",
+    "type": "insightface",
+    "base": "ReActor",
+    "description": "InsightFace inswapper - Face swap model for ReActor",
+    "url": "https://huggingface.co/ezioruan/inswapper_128.onnx/resolve/main/inswapper_128.onnx"
+  },
+  {
+    "name": "ip-adapter-plus_sd15.safetensors",
+    "type": "ipadapter",
+    "base": "IPAdapter Plus SD1.5",
+    "description": "IPAdapter Plus for SD1.5 - Style/face/clothing reference",
+    "url": "https://huggingface.co/h94/IP-Adapter/resolve/main/models/ip-adapter-plus_sd15.safetensors"
+  },
+  {
+    "name": "ip-adapter-plus_sdxl_vit-h.safetensors",
+    "type": "ipadapter",
+    "base": "IPAdapter Plus SDXL",
+    "description": "IPAdapter Plus for SDXL - Style/face/clothing reference",
+    "url": "https://huggingface.co/h94/IP-Adapter/resolve/main/sdxl_models/ip-adapter-plus_sdxl_vit-h.safetensors"
+  },
+  {
+    "name": "ip-adapter-faceid-plusv2_sd15.bin",
+    "type": "ipadapter",
+    "base": "IPAdapter FaceID SD1.5",
+    "description": "IPAdapter FaceID Plus v2 for SD1.5 - Identity-preserving generation",
+    "url": "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid-plusv2_sd15.bin"
+  },
+  {
+    "name": "ip-adapter-faceid-plusv2_sdxl.bin",
+    "type": "ipadapter",
+    "base": "IPAdapter FaceID SDXL",
+    "description": "IPAdapter FaceID Plus v2 for SDXL - Identity-preserving generation",
+    "url": "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid-plusv2_sdxl.bin"
+  },
+  {
+    "name": "CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors",
+    "type": "clip_vision",
+    "base": "CLIP ViT-H",
+    "description": "CLIP ViT-H/14 - Required for IPAdapter Plus models",
+    "url": "https://huggingface.co/h94/IP-Adapter/resolve/main/models/image_encoder/model.safetensors"
+  },
+  {
+    "name": "CLIP-ViT-bigG-14-laion2B-39B-b160k.safetensors",
+    "type": "clip_vision",
+    "base": "CLIP ViT-bigG",
+    "description": "CLIP ViT-bigG/14 - Required for SDXL IPAdapter models",
+    "url": "https://huggingface.co/h94/IP-Adapter/resolve/main/sdxl_models/image_encoder/model.safetensors"
+  },
+  {
+    "name": "sam2_hiera_large.safetensors",
+    "type": "sams",
+    "base": "SAM 2",
+    "description": "Segment Anything 2 Large - Mask generation for inpainting/editing",
+    "url": "https://huggingface.co/facebook/sam2-hiera-large/resolve/main/sam2_hiera_large.safetensors"
+  },
+  {
+    "name": "RMBG-2.0.safetensors",
+    "type": "custom_nodes",
+    "base": "RMBG 2.0",
+    "description": "BRIA RMBG 2.0 - Background removal model",
+    "url": "https://huggingface.co/briaai/RMBG-2.0/resolve/main/RMBG-2.0.safetensors"
+  },
+  {
+    "name": "control_v11p_sd15_openpose.safetensors",
+    "type": "controlnet",
+    "base": "ControlNet SD1.5",
+    "description": "ControlNet OpenPose - Pose-guided generation for SD1.5",
+    "url": "https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_openpose.safetensors"
+  },
+  {
+    "name": "control_v11f1p_sd15_depth.safetensors",
+    "type": "controlnet",
+    "base": "ControlNet SD1.5",
+    "description": "ControlNet Depth - Depth-guided generation for SD1.5",
+    "url": "https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11f1p_sd15_depth.safetensors"
+  },
+  {
+    "name": "control_v11p_sd15_canny.safetensors",
+    "type": "controlnet",
+    "base": "ControlNet SD1.5",
+    "description": "ControlNet Canny - Edge-guided generation for SD1.5",
+    "url": "https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_canny.safetensors"
+  },
+  {
+    "name": "diffusion_pytorch_model.fp16.safetensors",
+    "type": "controlnet",
+    "base": "ControlNet SDXL",
+    "description": "ControlNet Canny for SDXL",
+    "url": "https://huggingface.co/diffusers/controlnet-canny-sdxl-1.0/resolve/main/diffusion_pytorch_model.fp16.safetensors"
   }
 ]

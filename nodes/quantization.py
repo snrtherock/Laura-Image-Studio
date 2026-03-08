@@ -1,13 +1,34 @@
 """
 Laura Image Studio - VRAM Optimization & Quantization Nodes
-Automatically detect GPU capabilities and adjust model precision and resolution
+Automatically detect GPU capabilities and adjust model precision and resolution.
+v0.9: Added FP8 Transformer Engine with Ada Lovelace+ auto-detection.
 """
 
 import torch
-import os
+
+from .model_registry import get_recommended_quantization
 
 NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
+
+
+def _detect_fp8_capability():
+    """Detect if GPU supports native FP8 (Ada Lovelace / SM 8.9+ or Hopper SM 9.0+).
+    Returns (supports_fp8: bool, gpu_name: str, compute_capability: tuple|None).
+    """
+    if not torch.cuda.is_available():
+        return False, "CPU", None
+    if not hasattr(torch, "float8_e4m3fn"):
+        return False, "unknown", None
+    try:
+        props = torch.cuda.get_device_properties(0)
+        gpu_name = props.name
+        cc = (props.major, props.minor)
+        # Ada Lovelace = SM 8.9, Hopper = SM 9.0, Blackwell = SM 10.0+
+        supports_fp8 = cc >= (8, 9)
+        return supports_fp8, gpu_name, cc
+    except (RuntimeError, AssertionError):
+        return False, "unknown", None
 
 
 # ============== VRAM AUTO DETECTOR ==============
@@ -61,7 +82,7 @@ class VRAMAutoDetector:
             # Get total memory of the current device
             try:
                 vram_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
-            except:
+            except (RuntimeError, AssertionError):
                 pass
 
         if vram_gb < 4.5:
@@ -99,11 +120,19 @@ class QuantizationSelector:
                         "sdxl",
                         "flux",
                         "flux_schnell",
+                        "flux2",
                         "sd15",
                         "sd3",
                         "wan21",
                         "wan22",
                         "cogvideox",
+                        "zimage_turbo",
+                        "zimage",
+                        "qwen",
+                        "glm_image",
+                        "firered",
+                        "helios",
+                        "ltx23",
                     ],
                 ),
             }
@@ -116,23 +145,57 @@ class QuantizationSelector:
     DESCRIPTION = "Select optimal weight precision"
 
     def select_quantization(self, vram_tier, model_type):
+        # Registry-based lookup (preferred for newer models)
+        type_to_key = {
+            "zimage_turbo": "z_image_turbo",
+            "zimage": "z_image_base",
+            "flux": "flux1_dev",
+            "flux_schnell": "flux1_schnell",
+            "flux2": "flux2_dev",
+            "qwen": "qwen_image_2512",
+            "glm_image": "glm_image",
+            "firered": "firered_edit_1_1",
+            "helios": "helios_distilled",
+            "ltx23": "ltx_2_3",
+            "wan22": "wan22_14b",
+            "cogvideox": "cogvideox_5b",
+            "sd3": "sd35_medium",
+        }
+        registry_key = type_to_key.get(model_type)
+        if registry_key:
+            rec = get_recommended_quantization(registry_key, vram_tier)
+            if rec:
+                return (rec,)
+
+        # Fallback: Check if GPU supports native FP8 for optimal recommendations
+        supports_fp8, _, _ = _detect_fp8_capability()
+
         # Determine optimal precision
         if vram_tier in ["ultra_low", "low"]:
+            # FP8 is better than int8 on capable hardware
+            if supports_fp8:
+                return ("fp8_e4m3fn",)
             return ("int8",)
         elif vram_tier in ["medium", "high"]:
             if model_type in ["flux", "flux_schnell", "wan21", "wan22", "cogvideox"]:
-                return ("fp8_e4m3fn",)
+                if supports_fp8:
+                    return ("fp8_e4m3fn",)
+                return ("fp16",)
             else:
                 return ("fp16",)
         else:
-            # ultra, extreme, hpc
-            if model_type in ["flux", "flux_schnell", "wan21", "wan22"]:
-                # Many large models still do best in fp16/bf16 even on big GPUs
-                return ("fp16",)
-            elif model_type == "cogvideox":
+            # ultra, extreme, hpc — use higher precision
+            if supports_fp8 and model_type in [
+                "flux",
+                "flux_schnell",
+                "wan22",
+                "cogvideox",
+            ]:
+                # FP8 on large models even on big GPUs saves VRAM for larger batch/resolution
+                return ("fp8_e4m3fn",)
+            if model_type == "cogvideox":
                 return ("bf16",)
-            else:
-                return ("fp16",)
+            return ("fp16",)
 
 
 # ============== RESOLUTION SCALER ==============
@@ -244,6 +307,113 @@ class QuantizationConfig:
         return (config,)
 
 
+# ============== FP8 TRANSFORMER ENGINE CONFIG (v0.9) ==============
+class FP8TransformerConfig:
+    """Native FP8 Transformer Engine — auto-detects Ada Lovelace+ GPUs and provides
+    FP8 (float8_e4m3fn) precision for ~50% memory reduction with minimal quality loss.
+    Requires: PyTorch 2.1+ with FP8 support, CUDA SM 8.9+ (RTX 4060+, Ada Lovelace).
+    """
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "mode": (
+                    ["auto", "force_fp8", "force_fp16", "force_bf16"],
+                    {"default": "auto"},
+                ),
+            },
+            "optional": {
+                "fp8_format": (
+                    ["e4m3fn", "e5m2"],
+                    {"default": "e4m3fn"},
+                ),
+                "fallback_dtype": (
+                    ["fp16", "bf16"],
+                    {"default": "fp16"},
+                ),
+                "cast_activations": (
+                    "BOOLEAN",
+                    {"default": False},
+                ),
+            },
+        }
+
+    RETURN_TYPES = ("QUANT_CONFIG", "STRING", "BOOLEAN")
+    RETURN_NAMES = ("quant_config", "status_report", "fp8_active")
+    FUNCTION = "configure_fp8"
+    CATEGORY = "Laura Studio/Optimization"
+    DESCRIPTION = "Configure native FP8 precision (Ada Lovelace+ GPUs). Auto-detects capability and falls back gracefully."
+
+    def configure_fp8(
+        self,
+        mode="auto",
+        fp8_format="e4m3fn",
+        fallback_dtype="fp16",
+        cast_activations=False,
+    ):
+        supports_fp8, gpu_name, cc = _detect_fp8_capability()
+        cc_str = f"SM {cc[0]}.{cc[1]}" if cc else "N/A"
+
+        report_lines = [
+            "--- FP8 Transformer Engine ---",
+            f"GPU: {gpu_name}",
+            f"Compute Capability: {cc_str}",
+            f"Native FP8 Support: {'Yes' if supports_fp8 else 'No'}",
+            f"PyTorch float8: {'Available' if hasattr(torch, 'float8_e4m3fn') else 'Not Available'}",
+        ]
+
+        use_fp8 = False
+        weight_dtype = fallback_dtype
+
+        if mode == "force_fp8":
+            if hasattr(torch, "float8_e4m3fn"):
+                use_fp8 = True
+                weight_dtype = f"fp8_{fp8_format}"
+                if not supports_fp8:
+                    report_lines.append(
+                        "WARNING: FP8 forced but GPU lacks native support — emulated, may be slower"
+                    )
+                else:
+                    report_lines.append("FP8 forced ON — native acceleration active")
+            else:
+                report_lines.append(
+                    "ERROR: FP8 forced but torch.float8_e4m3fn not available — falling back"
+                )
+                weight_dtype = fallback_dtype
+        elif mode == "force_fp16":
+            weight_dtype = "fp16"
+            report_lines.append("Forced FP16 precision")
+        elif mode == "force_bf16":
+            weight_dtype = "bf16"
+            report_lines.append("Forced BF16 precision")
+        elif mode == "auto":
+            if supports_fp8:
+                use_fp8 = True
+                weight_dtype = f"fp8_{fp8_format}"
+                report_lines.append(
+                    f"Auto-detected Ada Lovelace+ — using FP8 ({fp8_format})"
+                )
+            else:
+                weight_dtype = fallback_dtype
+                report_lines.append(
+                    f"GPU does not support native FP8 — using {fallback_dtype}"
+                )
+
+        report_lines.append(f"Active dtype: {weight_dtype}")
+
+        config = {
+            "weight_dtype": weight_dtype,
+            "fp8_active": use_fp8,
+            "fp8_format": fp8_format if use_fp8 else None,
+            "cast_activations": cast_activations and use_fp8,
+            "enable_cpu_offload": False,
+            "sequential_offload": False,
+        }
+
+        return (config, "\n".join(report_lines), use_fp8)
+
+
 NODE_CLASS_MAPPINGS.update(
     {
         "VRAMAutoDetector": VRAMAutoDetector,
@@ -251,6 +421,7 @@ NODE_CLASS_MAPPINGS.update(
         "ResolutionScaler": ResolutionScaler,
         "ModelOffloadConfig": ModelOffloadConfig,
         "QuantizationConfig": QuantizationConfig,
+        "FP8TransformerConfig": FP8TransformerConfig,
     }
 )
 
@@ -261,5 +432,6 @@ NODE_DISPLAY_NAME_MAPPINGS.update(
         "ResolutionScaler": "Resolution Scaler",
         "ModelOffloadConfig": "Model Offload Config",
         "QuantizationConfig": "Quantization Config Builder",
+        "FP8TransformerConfig": "FP8 Transformer Engine",
     }
 )

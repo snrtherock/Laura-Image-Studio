@@ -5,8 +5,6 @@ Delegates to SAM2/GroundingDINO for intelligent mask generation
 """
 
 import torch
-from PIL import Image
-import numpy as np
 
 NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
@@ -17,6 +15,7 @@ def _try_import_sam2():
     """Try to import RMBG SAM2Segment node"""
     try:
         from custom_nodes import ComfyUI_RMBG
+
         mappings = ComfyUI_RMBG.NODE_CLASS_MAPPINGS
         if "SAM2Segment" in mappings:
             return mappings["SAM2Segment"]
@@ -24,6 +23,7 @@ def _try_import_sam2():
         pass
     try:
         import importlib
+
         mod = importlib.import_module("custom_nodes.ComfyUI-RMBG")
         mappings = mod.NODE_CLASS_MAPPINGS
         if "SAM2Segment" in mappings:
@@ -37,6 +37,7 @@ def _try_import_grounding_dino():
     """Try to import RMBG GroundingDINO node for text-prompted detection"""
     try:
         from custom_nodes import ComfyUI_RMBG
+
         mappings = ComfyUI_RMBG.NODE_CLASS_MAPPINGS
         if "GroundingDINO" in mappings:
             return mappings["GroundingDINO"]
@@ -44,6 +45,7 @@ def _try_import_grounding_dino():
         pass
     try:
         import importlib
+
         mod = importlib.import_module("custom_nodes.ComfyUI-RMBG")
         mappings = mod.NODE_CLASS_MAPPINGS
         if "GroundingDINO" in mappings:
@@ -96,10 +98,13 @@ class SmartMaskGenerator:
             },
             "optional": {
                 "mode": (["text_detect", "subject", "background"],),
-                "detection_threshold": ("FLOAT", {"default": 0.3, "min": 0.1, "max": 0.9}),
+                "detection_threshold": (
+                    "FLOAT",
+                    {"default": 0.3, "min": 0.1, "max": 0.9},
+                ),
                 "expand_mask": ("INT", {"default": 4, "min": 0, "max": 100}),
                 "invert": ("BOOLEAN", {"default": False}),
-            }
+            },
         }
 
     RETURN_TYPES = ("MASK", "IMAGE")
@@ -108,10 +113,15 @@ class SmartMaskGenerator:
     CATEGORY = "Laura Studio/Inpainting"
     DESCRIPTION = "Generate masks using SAM2/GroundingDINO text-prompted detection"
 
-    def generate_mask(self, image, text_prompt,
-                      mode="text_detect", detection_threshold=0.3,
-                      expand_mask=4, invert=False):
-
+    def generate_mask(
+        self,
+        image,
+        text_prompt,
+        mode="text_detect",
+        detection_threshold=0.3,
+        expand_mask=4,
+        invert=False,
+    ):
         mask = None
 
         if mode == "text_detect":
@@ -120,7 +130,9 @@ class SmartMaskGenerator:
             if GDNode is not None:
                 try:
                     gd = GDNode()
-                    result = gd.detect(image, text_prompt, threshold=detection_threshold)
+                    result = gd.detect(
+                        image, text_prompt, threshold=detection_threshold
+                    )
                     # Returns bounding boxes; use SAM2 for precise masks
                     boxes = result[0]
 
@@ -132,8 +144,10 @@ class SmartMaskGenerator:
                     else:
                         # Convert bounding boxes to rectangular mask
                         B, H, W, C = image.shape
-                        mask = torch.zeros((B, H, W), dtype=torch.float32, device=image.device)
-                        if hasattr(boxes, 'shape') and len(boxes) > 0:
+                        mask = torch.zeros(
+                            (B, H, W), dtype=torch.float32, device=image.device
+                        )
+                        if hasattr(boxes, "shape") and len(boxes) > 0:
                             for box in boxes:
                                 x1, y1, x2, y2 = [int(v) for v in box[:4]]
                                 mask[:, y1:y2, x1:x2] = 1.0
@@ -158,12 +172,15 @@ class SmartMaskGenerator:
             elif mode == "background":
                 mask = _simple_center_mask(image, "background")
             else:
-                print("[Laura Studio] SAM2/GroundingDINO not available. Using center fallback mask.")
+                print(
+                    "[Laura Studio] SAM2/GroundingDINO not available. Using center fallback mask."
+                )
                 mask = _simple_center_mask(image, "subject")
 
         # Expand mask
         if expand_mask > 0:
             import torch.nn.functional as F
+
             k = expand_mask * 2 + 1
             if mask.dim() == 2:
                 mask = mask.unsqueeze(0).unsqueeze(0)
@@ -199,12 +216,15 @@ class ManualMaskEditor:
         return {
             "required": {
                 "mask": ("MASK",),
-                "mode": (["invert", "expand", "contract", "feather", "smooth", "threshold"],),
+                "mode": (
+                    ["invert", "expand", "contract", "feather", "smooth", "threshold"],
+                ),
                 "amount": ("INT", {"default": 10, "min": 1, "max": 100}),
             }
         }
 
     RETURN_TYPES = ("MASK",)
+    RETURN_NAMES = ("mask",)
     FUNCTION = "edit_mask"
     CATEGORY = "Laura Studio/Inpainting"
     DESCRIPTION = "Edit mask with real morphological operations"
@@ -263,27 +283,44 @@ class LauraInpainter:
                 "image": ("IMAGE",),
                 "mask": ("MASK",),
                 "positive_prompt": ("STRING", {"multiline": True, "default": ""}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
                 "steps": ("INT", {"default": 30, "min": 1, "max": 100}),
                 "cfg": ("FLOAT", {"default": 7.0, "min": 0.0, "max": 20.0}),
                 "denoise": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0}),
             },
             "optional": {
-                "negative_prompt": ("STRING", {"multiline": True, "default": "deformed, blurry, artifacts, low quality"}),
+                "negative_prompt": (
+                    "STRING",
+                    {
+                        "multiline": True,
+                        "default": "deformed, blurry, artifacts, low quality",
+                    },
+                ),
                 "edge_feather": ("INT", {"default": 8, "min": 0, "max": 50}),
-            }
+            },
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "inpaint"
     CATEGORY = "Laura Studio/Inpainting"
     DESCRIPTION = "Inpaint masked areas with proper mask-to-latent processing"
 
-    def inpaint(self, model, clip, vae, image, mask, positive_prompt,
-                seed, steps, cfg, denoise,
-                negative_prompt="deformed, blurry, artifacts, low quality",
-                edge_feather=8):
-
+    def inpaint(
+        self,
+        model,
+        clip,
+        vae,
+        image,
+        mask,
+        positive_prompt,
+        seed,
+        steps,
+        cfg,
+        denoise,
+        negative_prompt="deformed, blurry, artifacts, low quality",
+        edge_feather=8,
+    ):
         from nodes import VAEEncode, KSampler, VAEDecode, CLIPTextEncode
         import torch.nn.functional as F
 
@@ -299,8 +336,9 @@ class LauraInpainter:
 
         latent_h = encoded["samples"].shape[2]
         latent_w = encoded["samples"].shape[3]
-        mask_latent = F.interpolate(m.float(), size=(latent_h, latent_w),
-                                     mode="bilinear", align_corners=False)
+        mask_latent = F.interpolate(
+            m.float(), size=(latent_h, latent_w), mode="bilinear", align_corners=False
+        )
 
         # Encode prompts
         positive = CLIPTextEncode().encode(clip, positive_prompt)[0]
@@ -314,8 +352,16 @@ class LauraInpainter:
 
         # Sample
         sampled = KSampler().sample(
-            model, seed, steps, cfg, "dpmpp_2m", "karras",
-            positive, negative, latent, denoise=denoise
+            model,
+            seed,
+            steps,
+            cfg,
+            "dpmpp_2m",
+            "karras",
+            positive,
+            negative,
+            latent,
+            denoise=denoise,
         )[0]
 
         # Decode
@@ -350,19 +396,37 @@ class LauraOutpainter:
                 "clip": ("CLIP",),
                 "vae": ("VAE",),
                 "image": ("IMAGE",),
-                "direction": (["all", "top", "bottom", "left", "right",
-                               "top-bottom", "left-right"],),
+                "direction": (
+                    [
+                        "all",
+                        "top",
+                        "bottom",
+                        "left",
+                        "right",
+                        "top-bottom",
+                        "left-right",
+                    ],
+                ),
                 "pixels": ("INT", {"default": 256, "min": 64, "max": 1024, "step": 8}),
-                "positive_prompt": ("STRING", {"multiline": True, "default": "detailed background, professional photography"}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "positive_prompt": (
+                    "STRING",
+                    {
+                        "multiline": True,
+                        "default": "detailed background, professional photography",
+                    },
+                ),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
                 "steps": ("INT", {"default": 30, "min": 1, "max": 100}),
                 "cfg": ("FLOAT", {"default": 7.0, "min": 0.0, "max": 20.0}),
                 "denoise": ("FLOAT", {"default": 0.9, "min": 0.0, "max": 1.0}),
             },
             "optional": {
-                "negative_prompt": ("STRING", {"multiline": True, "default": "deformed, blurry, artifacts"}),
+                "negative_prompt": (
+                    "STRING",
+                    {"multiline": True, "default": "deformed, blurry, artifacts"},
+                ),
                 "blend_width": ("INT", {"default": 64, "min": 16, "max": 256}),
-            }
+            },
         }
 
     RETURN_TYPES = ("IMAGE", "INT", "INT")
@@ -371,11 +435,22 @@ class LauraOutpainter:
     CATEGORY = "Laura Studio/Inpainting"
     DESCRIPTION = "Expand image boundaries with AI content"
 
-    def outpaint(self, model, clip, vae, image, direction, pixels,
-                 positive_prompt, seed, steps, cfg, denoise,
-                 negative_prompt="deformed, blurry, artifacts",
-                 blend_width=64):
-
+    def outpaint(
+        self,
+        model,
+        clip,
+        vae,
+        image,
+        direction,
+        pixels,
+        positive_prompt,
+        seed,
+        steps,
+        cfg,
+        denoise,
+        negative_prompt="deformed, blurry, artifacts",
+        blend_width=64,
+    ):
         from nodes import VAEEncode, KSampler, VAEDecode, CLIPTextEncode
         import torch.nn.functional as F
 
@@ -406,39 +481,71 @@ class LauraOutpainter:
         new_W = ((new_W + 7) // 8) * 8
 
         # Create expanded canvas (filled with edge-extended pixels)
-        expanded = torch.zeros((B, new_H, new_W, C), dtype=image.dtype, device=image.device)
+        expanded = torch.zeros(
+            (B, new_H, new_W, C), dtype=image.dtype, device=image.device
+        )
 
         # Place original image
-        expanded[:, pad_top:pad_top + H, pad_left:pad_left + W, :] = image
+        expanded[:, pad_top : pad_top + H, pad_left : pad_left + W, :] = image
 
         # Edge-extend into padding areas
         if pad_top > 0:
-            expanded[:, :pad_top, pad_left:pad_left + W, :] = image[:, 0:1, :, :].expand(B, pad_top, W, C)
+            expanded[:, :pad_top, pad_left : pad_left + W, :] = image[
+                :, 0:1, :, :
+            ].expand(B, pad_top, W, C)
         if pad_bottom > 0:
-            expanded[:, pad_top + H:, pad_left:pad_left + W, :] = image[:, -1:, :, :].expand(B, new_H - pad_top - H, W, C)
+            expanded[:, pad_top + H :, pad_left : pad_left + W, :] = image[
+                :, -1:, :, :
+            ].expand(B, new_H - pad_top - H, W, C)
         if pad_left > 0:
-            expanded[:, pad_top:pad_top + H, :pad_left, :] = image[:, :, 0:1, :].expand(B, H, pad_left, C)
+            expanded[:, pad_top : pad_top + H, :pad_left, :] = image[
+                :, :, 0:1, :
+            ].expand(B, H, pad_left, C)
         if pad_right > 0:
-            expanded[:, pad_top:pad_top + H, pad_left + W:, :] = image[:, :, -1:, :].expand(B, H, new_W - pad_left - W, C)
+            expanded[:, pad_top : pad_top + H, pad_left + W :, :] = image[
+                :, :, -1:, :
+            ].expand(B, H, new_W - pad_left - W, C)
 
         # Create mask: 1 where we need to generate, 0 where original image is
-        outpaint_mask = torch.ones((B, new_H, new_W), dtype=torch.float32, device=image.device)
-        outpaint_mask[:, pad_top:pad_top + H, pad_left:pad_left + W] = 0.0
+        outpaint_mask = torch.ones(
+            (B, new_H, new_W), dtype=torch.float32, device=image.device
+        )
+        outpaint_mask[:, pad_top : pad_top + H, pad_left : pad_left + W] = 0.0
 
-        # Add blend zone
+        # Add blend zone (gradient in PADDING region, transitioning toward original)
         bw = min(blend_width, pixels // 2)
         if pad_top > 0 and bw > 0:
-            blend = torch.linspace(1, 0, bw, device=image.device).view(1, bw, 1)
-            outpaint_mask[:, pad_top:pad_top + bw, pad_left:pad_left + W] = blend
+            actual_bw = min(bw, pad_top)
+            blend = torch.linspace(1, 0, actual_bw, device=image.device).view(
+                1, actual_bw, 1
+            )
+            outpaint_mask[:, pad_top - actual_bw : pad_top, pad_left : pad_left + W] = (
+                blend
+            )
         if pad_bottom > 0 and bw > 0:
-            blend = torch.linspace(0, 1, bw, device=image.device).view(1, bw, 1)
-            outpaint_mask[:, pad_top + H - bw:pad_top + H, pad_left:pad_left + W] = blend
+            actual_bw = min(bw, new_H - pad_top - H)
+            blend = torch.linspace(0, 1, actual_bw, device=image.device).view(
+                1, actual_bw, 1
+            )
+            outpaint_mask[
+                :, pad_top + H : pad_top + H + actual_bw, pad_left : pad_left + W
+            ] = blend
         if pad_left > 0 and bw > 0:
-            blend = torch.linspace(1, 0, bw, device=image.device).view(1, 1, bw)
-            outpaint_mask[:, pad_top:pad_top + H, pad_left:pad_left + bw] = blend
+            actual_bw = min(bw, pad_left)
+            blend = torch.linspace(1, 0, actual_bw, device=image.device).view(
+                1, 1, actual_bw
+            )
+            outpaint_mask[:, pad_top : pad_top + H, pad_left - actual_bw : pad_left] = (
+                blend
+            )
         if pad_right > 0 and bw > 0:
-            blend = torch.linspace(0, 1, bw, device=image.device).view(1, 1, bw)
-            outpaint_mask[:, pad_top:pad_top + H, pad_left + W - bw:pad_left + W] = blend
+            actual_bw = min(bw, new_W - pad_left - W)
+            blend = torch.linspace(0, 1, actual_bw, device=image.device).view(
+                1, 1, actual_bw
+            )
+            outpaint_mask[
+                :, pad_top : pad_top + H, pad_left + W : pad_left + W + actual_bw
+            ] = blend
 
         # Encode expanded canvas
         encoded = VAEEncode().encode(vae, expanded)[0]
@@ -447,7 +554,9 @@ class LauraOutpainter:
         m4d = outpaint_mask.unsqueeze(1)
         latent_h = encoded["samples"].shape[2]
         latent_w = encoded["samples"].shape[3]
-        mask_latent = F.interpolate(m4d, size=(latent_h, latent_w), mode="bilinear", align_corners=False)
+        mask_latent = F.interpolate(
+            m4d, size=(latent_h, latent_w), mode="bilinear", align_corners=False
+        )
 
         # Encode prompts
         positive = CLIPTextEncode().encode(clip, positive_prompt)[0]
@@ -459,8 +568,16 @@ class LauraOutpainter:
         latent = {"samples": latent_samples, "noise_mask": mask_latent.squeeze(1)}
 
         sampled = KSampler().sample(
-            model, seed, steps, cfg, "dpmpp_2m", "karras",
-            positive, negative, latent, denoise=denoise
+            model,
+            seed,
+            steps,
+            cfg,
+            "dpmpp_2m",
+            "karras",
+            positive,
+            negative,
+            latent,
+            denoise=denoise,
         )[0]
 
         result = VAEDecode().decode(vae, sampled)[0]
@@ -483,16 +600,18 @@ class EdgeBlender:
             },
             "optional": {
                 "blend_mode": (["linear", "gaussian", "smooth"],),
-            }
+            },
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "blend_edges"
     CATEGORY = "Laura Studio/Inpainting"
     DESCRIPTION = "Blend edges seamlessly between images"
 
-    def blend_edges(self, original_image, modified_image, mask, blend_width,
-                    blend_mode="linear"):
+    def blend_edges(
+        self, original_image, modified_image, mask, blend_width, blend_mode="linear"
+    ):
         import torch.nn.functional as F
 
         m = mask.clone()
@@ -508,7 +627,9 @@ class EdgeBlender:
             blended = m4d
             passes = 3 if blend_mode == "smooth" else 2
             for _ in range(passes):
-                blended = F.avg_pool2d(blended, kernel_size=k, stride=1, padding=blend_width)
+                blended = F.avg_pool2d(
+                    blended, kernel_size=k, stride=1, padding=blend_width
+                )
         else:
             # Single pass linear blend
             blended = F.avg_pool2d(m4d, kernel_size=k, stride=1, padding=blend_width)
@@ -532,40 +653,61 @@ class ObjectRemover:
                 "vae": ("VAE",),
                 "image": ("IMAGE",),
                 "object_prompt": ("STRING", {"multiline": True, "default": "car"}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
                 "steps": ("INT", {"default": 30, "min": 1, "max": 100}),
                 "cfg": ("FLOAT", {"default": 7.0, "min": 0.0, "max": 20.0}),
             },
             "optional": {
                 "expand_mask": ("INT", {"default": 8, "min": 0, "max": 50}),
                 "fill_prompt": ("STRING", {"multiline": True, "default": ""}),
-            }
+            },
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "remove_object"
     CATEGORY = "Laura Studio/Inpainting"
     DESCRIPTION = "Remove objects using text detection + inpainting"
 
-    def remove_object(self, model, clip, vae, image, object_prompt,
-                      seed, steps, cfg, expand_mask=8, fill_prompt=""):
-
+    def remove_object(
+        self,
+        model,
+        clip,
+        vae,
+        image,
+        object_prompt,
+        seed,
+        steps,
+        cfg,
+        expand_mask=8,
+        fill_prompt="",
+    ):
         # Step 1: Detect the object with SmartMaskGenerator
         mask_gen = SmartMaskGenerator()
         obj_mask, _ = mask_gen.generate_mask(
-            image, text_prompt=object_prompt,
-            mode="text_detect", detection_threshold=0.3,
-            expand_mask=expand_mask
+            image,
+            text_prompt=object_prompt,
+            mode="text_detect",
+            detection_threshold=0.3,
+            expand_mask=expand_mask,
         )
 
         # Step 2: Inpaint the masked area
         inpainter = LauraInpainter()
         fill = fill_prompt if fill_prompt else "clean background, seamless, natural"
         result = inpainter.inpaint(
-            model, clip, vae, image, obj_mask, fill,
-            seed, steps, cfg, denoise=0.95,
+            model,
+            clip,
+            vae,
+            image,
+            obj_mask,
+            fill,
+            seed,
+            steps,
+            cfg,
+            denoise=0.95,
             negative_prompt=f"deformed, blurry, {object_prompt}, artifacts",
-            edge_feather=8
+            edge_feather=8,
         )
 
         return result
@@ -585,7 +727,7 @@ class RegionInpainter:
                 "image": ("IMAGE",),
                 "mask_1": ("MASK",),
                 "prompt_1": ("STRING", {"multiline": True, "default": ""}),
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
                 "steps": ("INT", {"default": 30, "min": 1, "max": 100}),
                 "cfg": ("FLOAT", {"default": 7.0, "min": 0.0, "max": 20.0}),
             },
@@ -594,19 +736,31 @@ class RegionInpainter:
                 "prompt_2": ("STRING", {"multiline": True, "default": ""}),
                 "mask_3": ("MASK",),
                 "prompt_3": ("STRING", {"multiline": True, "default": ""}),
-            }
+            },
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "region_inpaint"
     CATEGORY = "Laura Studio/Inpainting"
     DESCRIPTION = "Inpaint different regions with different prompts"
 
-    def region_inpaint(self, model, clip, vae, image, mask_1, prompt_1,
-                       seed, steps, cfg,
-                       mask_2=None, prompt_2="",
-                       mask_3=None, prompt_3=""):
-
+    def region_inpaint(
+        self,
+        model,
+        clip,
+        vae,
+        image,
+        mask_1,
+        prompt_1,
+        seed,
+        steps,
+        cfg,
+        mask_2=None,
+        prompt_2="",
+        mask_3=None,
+        prompt_3="",
+    ):
         inpainter = LauraInpainter()
         result = image
 
@@ -619,30 +773,42 @@ class RegionInpainter:
 
         for i, (region_mask, region_prompt) in enumerate(regions):
             result = inpainter.inpaint(
-                model, clip, vae, result, region_mask, region_prompt,
-                seed + i, steps, cfg, denoise=0.9
+                model,
+                clip,
+                vae,
+                result,
+                region_mask,
+                region_prompt,
+                seed + i,
+                steps,
+                cfg,
+                denoise=0.9,
             )[0]
 
         return (result,)
 
 
 # Register all inpainting nodes
-NODE_CLASS_MAPPINGS.update({
-    "SmartMaskGenerator": SmartMaskGenerator,
-    "ManualMaskEditor": ManualMaskEditor,
-    "LauraInpainter": LauraInpainter,
-    "LauraOutpainter": LauraOutpainter,
-    "EdgeBlender": EdgeBlender,
-    "ObjectRemover": ObjectRemover,
-    "RegionInpainter": RegionInpainter,
-})
+NODE_CLASS_MAPPINGS.update(
+    {
+        "SmartMaskGenerator": SmartMaskGenerator,
+        "ManualMaskEditor": ManualMaskEditor,
+        "LauraInpainter": LauraInpainter,
+        "LauraOutpainter": LauraOutpainter,
+        "EdgeBlender": EdgeBlender,
+        "ObjectRemover": ObjectRemover,
+        "RegionInpainter": RegionInpainter,
+    }
+)
 
-NODE_DISPLAY_NAME_MAPPINGS.update({
-    "SmartMaskGenerator": "Smart Mask Generator (SAM2)",
-    "ManualMaskEditor": "Manual Mask Editor",
-    "LauraInpainter": "LAURA Inpainter",
-    "LauraOutpainter": "LAURA Outpainter",
-    "EdgeBlender": "Edge Blender",
-    "ObjectRemover": "Object Remover (Auto-Detect)",
-    "RegionInpainter": "Region Inpainter",
-})
+NODE_DISPLAY_NAME_MAPPINGS.update(
+    {
+        "SmartMaskGenerator": "Smart Mask Generator (SAM2)",
+        "ManualMaskEditor": "Manual Mask Editor",
+        "LauraInpainter": "LAURA Inpainter",
+        "LauraOutpainter": "LAURA Outpainter",
+        "EdgeBlender": "Edge Blender",
+        "ObjectRemover": "Object Remover (Auto-Detect)",
+        "RegionInpainter": "Region Inpainter",
+    }
+)

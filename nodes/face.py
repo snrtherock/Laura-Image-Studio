@@ -5,8 +5,6 @@ Delegates to ReActor, IPAdapter Plus, and RMBG for real operations
 """
 
 import torch
-from PIL import Image
-import numpy as np
 
 NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
@@ -219,6 +217,7 @@ class FaceSwapper:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "swap_face"
     CATEGORY = "Laura Studio/Face"
     DESCRIPTION = "Swap faces using ReActor"
@@ -341,6 +340,7 @@ class IPAdapterFace:
         }
 
     RETURN_TYPES = ("MODEL",)
+    RETURN_NAMES = ("model",)
     FUNCTION = "apply_ipadapter"
     CATEGORY = "Laura Studio/Face"
     DESCRIPTION = "Apply IPAdapter face embedding to model"
@@ -399,6 +399,7 @@ class ExpressionTransfer:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "transfer_expression"
     CATEGORY = "Laura Studio/Face"
     DESCRIPTION = "Transfer facial expression from source to target"
@@ -413,11 +414,13 @@ class ExpressionTransfer:
         detector = FaceDetector()
         _, face_mask, _ = detector.detect_face(target_image, expand_mask=4)
 
-        # Encode target to latent
-        encoded = VAEEncode().encode(vae, target_image)[0]
+        # Encode source expression to guide conditioning via IPAdapter or img2img latent blend
+        # Encode both source and target to latent space
+        source_encoded = VAEEncode().encode(vae, source_image)[0]
+        target_encoded = VAEEncode().encode(vae, target_image)[0]
 
-        # Use expression cues from source as conditioning
-        # In practice we prompt for the expression visible in source
+        # Blend source expression into target's face region in latent space
+        # This transfers the expression features from source into the target
         prompt = "same person, same face, expressive, detailed face, professional photo"
         neg = "deformed, blurry, different person, bad anatomy"
 
@@ -431,8 +434,8 @@ class ExpressionTransfer:
         elif mask.dim() == 3:
             mask = mask.unsqueeze(1)
 
-        latent_h = encoded["samples"].shape[2]
-        latent_w = encoded["samples"].shape[3]
+        latent_h = target_encoded["samples"].shape[2]
+        latent_w = target_encoded["samples"].shape[3]
         mask_latent = F.interpolate(
             mask.float(),
             size=(latent_h, latent_w),
@@ -440,10 +443,22 @@ class ExpressionTransfer:
             align_corners=False,
         )
 
-        # Inpaint face region with expression
-        noise = torch.randn_like(encoded["samples"])
-        latent_samples = encoded["samples"] * (1 - mask_latent) + noise * mask_latent
-        latent = {"samples": latent_samples, "noise_mask": mask_latent.squeeze(1)}
+        # Resize source latent to match target latent dimensions if different
+        source_samples = source_encoded["samples"]
+        if source_samples.shape[2:] != target_encoded["samples"].shape[2:]:
+            source_samples = F.interpolate(
+                source_samples,
+                size=(latent_h, latent_w),
+                mode="bilinear",
+                align_corners=False,
+            )
+
+        # Blend: use source expression in the face region, target elsewhere
+        # The source's latent features carry expression information
+        blended = (
+            target_encoded["samples"] * (1 - mask_latent) + source_samples * mask_latent
+        )
+        latent = {"samples": blended, "noise_mask": mask_latent.squeeze(1)}
 
         sampled = KSampler().sample(
             model,
@@ -459,6 +474,20 @@ class ExpressionTransfer:
         )[0]
 
         result = VAEDecode().decode(vae, sampled)[0]
+
+        # Ensure result matches target dimensions before compositing
+        if (
+            result.shape[1] != target_image.shape[1]
+            or result.shape[2] != target_image.shape[2]
+        ):
+            result = result.permute(0, 3, 1, 2)
+            result = F.interpolate(
+                result,
+                size=(target_image.shape[1], target_image.shape[2]),
+                mode="bilinear",
+                align_corners=False,
+            )
+            result = result.permute(0, 2, 3, 1)
 
         # Composite: face region from result, rest from target
         mask_rgb = face_mask.unsqueeze(-1).expand_as(target_image)
@@ -485,6 +514,7 @@ class AgeAdjuster:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "adjust_age"
     CATEGORY = "Laura Studio/Face"
     DESCRIPTION = "Adjust face age using face-region inpainting"
@@ -545,6 +575,17 @@ class AgeAdjuster:
 
         result = VAEDecode().decode(vae, sampled)[0]
 
+        # Ensure result matches input dimensions before compositing
+        if result.shape[1] != image.shape[1] or result.shape[2] != image.shape[2]:
+            result = result.permute(0, 3, 1, 2)
+            result = F.interpolate(
+                result,
+                size=(image.shape[1], image.shape[2]),
+                mode="bilinear",
+                align_corners=False,
+            )
+            result = result.permute(0, 2, 3, 1)
+
         # Composite
         mask_rgb = face_mask.unsqueeze(-1).expand_as(image)
         final = result * mask_rgb + image * (1 - mask_rgb)
@@ -572,6 +613,7 @@ class FaceEnhancer:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "enhance_face"
     CATEGORY = "Laura Studio/Face"
     DESCRIPTION = "Enhance face details using ReActor/CodeFormer/GFPGAN"
@@ -706,8 +748,12 @@ class LauraVideoFaceDrive:
     ):
         from .models import LauraLogger
 
-        # Check for LivePortrait dependency
-        # Typically looks for 'LivePortraitProcess' or similar node classes from ComfyUI-LivePortraitKJ
+        num_frames = driving_video.shape[0]
+        LauraLogger.info(
+            f"LauraVideoFaceDrive: {num_frames} frames, strength={motion_strength}, smooth={temporal_smoothing}"
+        )
+
+        # Strategy 1: Try LivePortrait v2 (ComfyUI-LivePortraitKJ)
         try:
             import importlib
 
@@ -715,35 +761,181 @@ class LauraVideoFaceDrive:
                 "custom_nodes.ComfyUI-LivePortraitKJ"
             )
             mappings = live_portrait_mod.NODE_CLASS_MAPPINGS
+
             if "LivePortraitProcess" in mappings:
                 lp_node = mappings["LivePortraitProcess"]()
                 LauraLogger.info(
                     "Delegating to LivePortraitProcess (LivePortrait v2)..."
                 )
-                # Mock calling the internal processing - in actual ComfyUI, this would be wired in workflow
-                # or called programmatically here if inputs match.
-                # result = lp_node.process(reference_image, driving_video, ...)
-                pass
-        except Exception:
-            LauraLogger.warn(
-                "LivePortraitKJ not found. Falling back to Frame-by-Frame FaceSwap (Simulated)."
-            )
 
-        LauraLogger.info(
-            f"Driving face in {driving_video.shape[0]} frames using LivePortrait v2 tech"
+                # LivePortraitProcess typically expects:
+                #   source_image (reference), driving_images (video frames),
+                #   dsize, scale, vx_ratio, vy_ratio, lip_zero, eye_retargeting, etc.
+                try:
+                    result = lp_node.run(
+                        source_image=reference_image,
+                        driving_images=driving_video,
+                        dsize=512,
+                        scale=2.3,
+                        vx_ratio=0.0,
+                        vy_ratio=-0.125,
+                        lip_zero=True,
+                        eye_retargeting=False,
+                        eyes_retargeting_multiplier=1.0,
+                        lip_retargeting=False,
+                        lip_retargeting_multiplier=1.0,
+                        stitching=stitching,
+                        relative=True,
+                    )
+                    # LivePortrait returns (output_images, ...)
+                    driven = result[0] if isinstance(result, tuple) else result
+                    LauraLogger.info(
+                        f"LivePortrait v2 processing complete: {driven.shape[0]} frames"
+                    )
+
+                    # Apply motion strength scaling (blend between static reference and driven)
+                    if motion_strength < 1.0:
+                        # Expand reference to match frame count
+                        ref_expanded = reference_image.expand(
+                            driven.shape[0], -1, -1, -1
+                        )
+                        # Resize ref to match driven dimensions if needed
+                        if ref_expanded.shape[1:3] != driven.shape[1:3]:
+                            ref_expanded = ref_expanded.permute(0, 3, 1, 2)
+                            ref_expanded = torch.nn.functional.interpolate(
+                                ref_expanded,
+                                size=(driven.shape[1], driven.shape[2]),
+                                mode="bilinear",
+                                align_corners=False,
+                            )
+                            ref_expanded = ref_expanded.permute(0, 2, 3, 1)
+                        driven = driven * motion_strength + ref_expanded * (
+                            1.0 - motion_strength
+                        )
+
+                    # Apply temporal smoothing (exponential moving average across frames)
+                    if temporal_smoothing > 0 and driven.shape[0] > 1:
+                        driven = self._temporal_smooth(driven, temporal_smoothing)
+
+                    return (driven,)
+                except Exception as e:
+                    LauraLogger.warn(
+                        f"LivePortrait execution failed: {e}. Trying fallback."
+                    )
+        except Exception:
+            pass
+
+        # Strategy 2: Try DownloadAndLoadLivePortraitModels + LivePortraitProcess
+        # (alternative node naming from some LivePortrait forks)
+        try:
+            import importlib
+
+            for mod_name in [
+                "custom_nodes.ComfyUI-AdvancedLivePortrait",
+                "custom_nodes.comfyui-liveportrait",
+            ]:
+                try:
+                    lp_mod = importlib.import_module(mod_name)
+                    mappings = lp_mod.NODE_CLASS_MAPPINGS
+                    for node_name in ["LivePortraitProcess", "AdvancedLivePortrait"]:
+                        if node_name in mappings:
+                            lp_node = mappings[node_name]()
+                            LauraLogger.info(f"Found {node_name} in {mod_name}")
+                            # Attempt generic call
+                            result = lp_node.run(
+                                source_image=reference_image,
+                                driving_images=driving_video,
+                                stitching=stitching,
+                                relative=True,
+                            )
+                            driven = result[0] if isinstance(result, tuple) else result
+                            if temporal_smoothing > 0 and driven.shape[0] > 1:
+                                driven = self._temporal_smooth(
+                                    driven, temporal_smoothing
+                                )
+                            return (driven,)
+                except Exception:
+                    continue
+        except Exception:
+            pass
+
+        # Strategy 3: Fallback — frame-by-frame face swap with temporal smoothing
+        LauraLogger.warn(
+            "No LivePortrait nodes found. Falling back to frame-by-frame face swap with temporal smoothing."
         )
 
-        # Implementation logic for temporal consistency:
-        # We process the driving video to extract deltas and apply them to the reference image.
-        # This prevents the 'swimming' or 'crawling' effect seen in standard frame-by-frame swaps.
+        ReActorNode = _try_import_reactor()
+        if ReActorNode is not None:
+            try:
+                reactor = ReActorNode()
+                driven_frames = []
 
-        driven_frames = driving_video.clone()
-        # Simulation of temporal mesh driving
-        # For each frame, calculate deformation field from driving video landmark deltas
-        # and warp the reference image accordingly.
+                for i in range(num_frames):
+                    frame = driving_video[i : i + 1]
+                    try:
+                        result = reactor.execute(
+                            enabled=True,
+                            input_image=frame,
+                            source_image=reference_image,
+                            swap_model="inswapper_128.onnx",
+                            facedetection="retinaface_resnet50",
+                            face_restore_model="codeformer",
+                            face_restore_visibility=0.7,
+                            codeformer_weight=0.5,
+                            detect_gender_source="no",
+                            detect_gender_input="no",
+                            source_faces_index="0",
+                            input_faces_index="0",
+                            console_log_level=0,
+                        )
+                        driven_frames.append(result[0])
+                    except Exception:
+                        driven_frames.append(frame)
 
-        LauraLogger.info("Face driving complete with temporal consistency.")
-        return (driven_frames,)
+                    if (i + 1) % 10 == 0:
+                        LauraLogger.info(f"  Face swap progress: {i + 1}/{num_frames}")
+
+                driven = torch.cat(driven_frames, dim=0)
+
+                # Apply temporal smoothing to reduce flickering
+                if temporal_smoothing > 0 and driven.shape[0] > 1:
+                    driven = self._temporal_smooth(driven, temporal_smoothing)
+
+                LauraLogger.info(
+                    f"Frame-by-frame face swap complete: {driven.shape[0]} frames"
+                )
+                return (driven,)
+            except Exception as e:
+                LauraLogger.warn(f"ReActor face swap fallback failed: {e}")
+
+        # Final fallback: return driving video unchanged
+        LauraLogger.warn(
+            "No face processing available. Returning driving video unchanged."
+        )
+        return (driving_video,)
+
+    @staticmethod
+    def _temporal_smooth(frames, factor):
+        """Apply exponential moving average temporal smoothing to video frames.
+
+        Args:
+            frames: [N, H, W, C] tensor of video frames
+            factor: smoothing factor 0.0 (none) to 1.0 (maximum)
+
+        Returns:
+            Temporally smoothed frames tensor
+        """
+        if factor <= 0 or frames.shape[0] <= 1:
+            return frames
+
+        # EMA alpha: higher factor = more smoothing = lower alpha for current frame
+        alpha = 1.0 - factor * 0.8  # Map factor 0-1 to alpha 1.0-0.2
+
+        smoothed = frames.clone()
+        for i in range(1, frames.shape[0]):
+            smoothed[i] = alpha * frames[i] + (1 - alpha) * smoothed[i - 1]
+
+        return smoothed
 
 
 # Register all face nodes

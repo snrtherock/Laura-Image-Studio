@@ -4,7 +4,6 @@ Manage image queues and batch generation
 """
 
 import torch
-import numpy as np
 
 NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
@@ -87,11 +86,12 @@ class BatchPromptList:
             },
         }
 
-    RETURN_TYPES = ("LIST",)
+    RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("prompt_list",)
     FUNCTION = "create_list"
     CATEGORY = "Laura Studio/Batch"
     DESCRIPTION = "Create a list of prompts for sequential generation"
+    OUTPUT_IS_LIST = (True,)
 
     def create_list(self, prompt_1, prompt_2="", prompt_3="", prompt_4=""):
         prompts = [prompt_1]
@@ -115,6 +115,7 @@ class BatchImageSelector:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "select_image"
     CATEGORY = "Laura Studio/Batch"
     DESCRIPTION = "Select a specific image from a batch by index"
@@ -141,6 +142,7 @@ class BatchIterator:
     RETURN_NAMES = ("current_image", "current_index", "total_count")
     FUNCTION = "iterate"
     CATEGORY = "Laura Studio/Batch"
+    DESCRIPTION = "Iterate over a batch, returning one image at a time"
 
     def iterate(self, image_batch):
         # In a real ComfyUI context, this might interact with the execution engine

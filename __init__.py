@@ -53,6 +53,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {}
 # Import all node modules with fault tolerance
 # If one module fails, the rest still load
 _modules_to_load = [
+    "model_registry",   # Pure data — no nodes, must load first
+    "model_manager",    # Config + management nodes, load second
     "generation",
     "models",
     "toggle",
@@ -68,9 +70,36 @@ _modules_to_load = [
     "batch_processing",
     "tile_processing",
     "comparison",
+    "flux_tools",
 ]
 
+# Core modules always load, even if config says otherwise
+_CORE_MODULES = {
+    "model_registry", "model_manager", "models", "toggle",
+    "quantization", "checkpoint", "batch_processing",
+    "tile_processing", "comparison",
+}
+
+# Load laura_config.json if available for module enable/disable
+_config = None
+_config_path = os.path.join(os.path.dirname(__file__), "laura_config.json")
+if os.path.exists(_config_path):
+    try:
+        import json as _json
+        with open(_config_path, "r") as _cf:
+            _config = _json.load(_cf)
+        print("[Laura Image Studio] Loaded module config from laura_config.json")
+    except Exception as _e:
+        print(f"[Laura Image Studio] WARNING: Failed to load config: {_e}")
+
 for _mod_name in _modules_to_load:
+    # Check if module is disabled in config (core modules always load)
+    if _config and _mod_name not in _CORE_MODULES:
+        _mod_config = _config.get("modules", {}).get(_mod_name, {})
+        if isinstance(_mod_config, dict) and not _mod_config.get("enabled", True):
+            print(f"[Laura Image Studio] SKIPPED: {_mod_name} (disabled in config)")
+            continue
+
     try:
         import importlib
 
@@ -82,6 +111,8 @@ for _mod_name in _modules_to_load:
     except Exception as e:
         print(f"[Laura Image Studio] WARNING: Failed to load {_mod_name}: {e}")
 
-WEB_DIRECTORY = None
+# Enable web extension directory for JavaScript-based UI enhancements
+# This serves the web/js/model_links.js extension for clickable download links
+WEB_DIRECTORY = "./web"
 
-__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
+__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]

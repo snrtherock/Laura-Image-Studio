@@ -1,0 +1,248 @@
+{
+  "last_node_id": 200,
+  "last_link_id": 400,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "ModelHealthCheck",
+      "pos": [10, 10],
+      "color": "#233",
+      "bgcolor": "#122",
+      "widgets_values": [true]
+    },
+    {
+      "id": 2,
+      "type": "FP8TransformerConfig",
+      "pos": [10, 120],
+      "color": "#323",
+      "bgcolor": "#212",
+      "widgets_values": ["auto", "e4m3fn", "fp16", false]
+    },
+    {
+      "id": 5,
+      "type": "LauraVRAMCleaner",
+      "pos": [300, 120],
+      "color": "#322",
+      "bgcolor": "#211",
+      "widgets_values": ["Hard (Unload All Models)"]
+    },
+
+    {
+      "id": 10,
+      "type": "Wan22Loader",
+      "pos": [10, 450],
+      "color": "#232",
+      "bgcolor": "#121",
+      "widgets_values": ["wan2.1_t2v_14b_720p.safetensors", "14B-T2V", "bf16"]
+    },
+    {
+      "id": 11,
+      "type": "Wan22Generator",
+      "pos": [400, 450],
+      "color": "#422",
+      "bgcolor": "#311",
+      "widgets_values": ["High-end cinematic video of Laura dancing salsa in neon rain, 4k", "blurry, low quality, static", 1280, 720, 81, 0, 40, 6.0]
+    },
+    {
+      "id": 12,
+      "type": "LauraVRAMCleaner",
+      "pos": [850, 450],
+      "color": "#322",
+      "bgcolor": "#211",
+      "widgets_values": ["Extreme (GC + Unload)"]
+    },
+
+    {
+      "id": 20,
+      "type": "WanFunCtrlKeypoints",
+      "pos": [10, 850],
+      "color": "#342",
+      "bgcolor": "#231",
+      "widgets_values": ["# frame, x, y  (normalised 0-1)\n0, 0.3, 0.5\n20, 0.5, 0.4\n40, 0.7, 0.5\n60, 0.5, 0.6\n80, 0.3, 0.5", "linear", false]
+    },
+    {
+      "id": 21,
+      "type": "WanFunCtrlGenerator",
+      "pos": [400, 850],
+      "color": "#432",
+      "bgcolor": "#321",
+      "widgets_values": ["Laura walking gracefully along a neon-lit corridor, smooth motion, 4k cinematic", "static, jittery, low quality, artifacts", 832, 480, 81, 1.0, 0, 40, 6.0, 1.0]
+    },
+    {
+      "id": 22,
+      "type": "LauraVRAMCleaner",
+      "pos": [850, 850],
+      "color": "#322",
+      "bgcolor": "#211",
+      "widgets_values": ["Extreme (GC + Unload)"]
+    },
+
+    {
+      "id": 30,
+      "type": "HunyuanVideoLoader",
+      "pos": [10, 1250],
+      "color": "#234",
+      "bgcolor": "#123",
+      "widgets_values": ["hunyuanvideo_720.safetensors", "HunyuanVideo", "bf16", "llava-llama-3-8b", true]
+    },
+    {
+      "id": 31,
+      "type": "HunyuanVideoGenerator",
+      "pos": [400, 1250],
+      "color": "#424",
+      "bgcolor": "#313",
+      "widgets_values": ["Cinematic drone shot over a mountain range at sunrise, golden light, volumetric fog, 4K, smooth motion", "blurry, low quality, static, watermark, text overlay, deformed, jittery, overexposed", 1280, 720, 129, 24, 0, 50, 7.0, 6.0, 1.0]
+    },
+    {
+      "id": 32,
+      "type": "LauraVRAMCleaner",
+      "pos": [850, 1250],
+      "color": "#322",
+      "bgcolor": "#211",
+      "widgets_values": ["Extreme (GC + Unload)"]
+    },
+
+    {
+      "id": 40,
+      "type": "CogVideoXLoader",
+      "pos": [10, 1650],
+      "color": "#243",
+      "bgcolor": "#132",
+      "widgets_values": ["cogvideox_5b.safetensors", "5B", "bf16"]
+    },
+    {
+      "id": 41,
+      "type": "CogVideoXGenerator",
+      "pos": [400, 1650],
+      "color": "#443",
+      "bgcolor": "#332",
+      "widgets_values": ["Laura exploring a vibrant Tokyo street at night, detailed neon reflections, cinematic", "blurry, low quality, static, deformed", 720, 480, 49, 0, 50, 6.0]
+    },
+    {
+      "id": 42,
+      "type": "LauraVRAMCleaner",
+      "pos": [850, 1650],
+      "color": "#322",
+      "bgcolor": "#211",
+      "widgets_values": ["Extreme (GC + Unload)"]
+    },
+
+    {
+      "id": 50,
+      "type": "CosmosPredictLoader",
+      "pos": [10, 2050],
+      "color": "#244",
+      "bgcolor": "#133",
+      "widgets_values": ["cosmos_predict_14b.safetensors", "14B-T2V", "bf16"]
+    },
+    {
+      "id": 51,
+      "type": "CosmosPredictGenerator",
+      "pos": [400, 2050],
+      "color": "#444",
+      "bgcolor": "#333",
+      "widgets_values": ["Sweeping aerial shot of a tropical coastline, crystal clear turquoise water, 4k cinematic", "blurry, static, low quality", 1280, 720, 24, 5.0, 0, 35, 4.5, 1.0]
+    },
+    {
+      "id": 52,
+      "type": "LauraVRAMCleaner",
+      "pos": [850, 2050],
+      "color": "#322",
+      "bgcolor": "#211",
+      "widgets_values": ["Extreme (GC + Unload)"]
+    },
+
+    {
+      "id": 60,
+      "type": "HunyuanDiTLoader",
+      "pos": [10, 2450],
+      "color": "#324",
+      "bgcolor": "#213",
+      "widgets_values": ["hunyuandit_v1.2.safetensors", "v1.2", "bf16"]
+    },
+    {
+      "id": 61,
+      "type": "HunyuanDiTGenerator",
+      "pos": [400, 2450],
+      "color": "#434",
+      "bgcolor": "#323",
+      "widgets_values": ["Professional portrait of Laura in a luxurious penthouse, golden hour lighting, 8k detail", "blurry, distorted, low quality", 1024, 1024, 0, 30, 6.0]
+    },
+
+    {
+      "id": 100,
+      "type": "LauraVideoFaceDrive",
+      "pos": [1200, 450],
+      "color": "#223",
+      "bgcolor": "#112",
+      "widgets_values": [1.0, 0.5, true]
+    },
+    {
+      "id": 110,
+      "type": "LauraVideoCinemaUpscale",
+      "pos": [1200, 850],
+      "color": "#332",
+      "bgcolor": "#221",
+      "widgets_values": ["2x", "Cinema (SUPIR)", "2x (RIFE)", 0.25]
+    },
+    {
+      "id": 120,
+      "type": "VideoSaver",
+      "pos": [1200, 1250],
+      "color": "#233",
+      "bgcolor": "#122",
+      "widgets_values": ["laura_viral_output", "mp4", 24, 85]
+    }
+  ],
+  "links": [
+    [301, 10, 0, 11, 0, "MODEL"],
+    [302, 10, 1, 11, 1, "CLIP"],
+    [303, 10, 2, 11, 2, "VAE"],
+    [304, 11, 0, 12, 0, "IMAGE"],
+
+    [310, 10, 0, 21, 0, "MODEL"],
+    [311, 10, 1, 21, 1, "CLIP"],
+    [312, 10, 2, 21, 2, "VAE"],
+    [313, 20, 0, 21, 3, "WAN_FUNCTRL_TRAJ"],
+    [314, 21, 0, 22, 0, "IMAGE"],
+
+    [320, 30, 0, 31, 0, "MODEL"],
+    [321, 30, 1, 31, 1, "CLIP"],
+    [322, 30, 2, 31, 2, "VAE"],
+    [323, 31, 0, 32, 0, "IMAGE"],
+
+    [330, 40, 0, 41, 0, "MODEL"],
+    [331, 40, 1, 41, 1, "CLIP"],
+    [332, 40, 2, 41, 2, "VAE"],
+    [333, 41, 0, 42, 0, "IMAGE"],
+
+    [340, 50, 0, 51, 0, "MODEL"],
+    [341, 50, 1, 51, 1, "CLIP"],
+    [342, 50, 2, 51, 2, "VAE"],
+    [343, 51, 0, 52, 0, "IMAGE"],
+
+    [350, 60, 0, 61, 0, "MODEL"],
+    [351, 60, 1, 61, 1, "CLIP"],
+    [352, 60, 2, 61, 2, "VAE"],
+
+    [360, 12, 0, 100, 0, "IMAGE"],
+    [361, 100, 0, 110, 0, "IMAGE"],
+    [362, 110, 0, 120, 0, "IMAGE"]
+  ],
+  "groups": [
+    { "title": "SETUP: Health Check + FP8 Config", "bounding": [0, 0, 900, 140], "color": "#223322" },
+    { "title": "ENGINE 1: Wan 2.2 Text-to-Video", "bounding": [0, 400, 1100, 350], "color": "#332222" },
+    { "title": "ENGINE 1B: Wan FunCtrl (Trajectory Control)", "bounding": [0, 800, 1100, 350], "color": "#332233" },
+    { "title": "ENGINE 2: HunyuanVideo 2.0", "bounding": [0, 1200, 1100, 350], "color": "#223344" },
+    { "title": "ENGINE 3: CogVideoX", "bounding": [0, 1600, 1100, 350], "color": "#224433" },
+    { "title": "ENGINE 4: Cosmos Predict", "bounding": [0, 2000, 1100, 350], "color": "#224444" },
+    { "title": "ENGINE 5: HunyuanDiT (Image Gen)", "bounding": [0, 2400, 850, 350], "color": "#332244" },
+    { "title": "POST-PROCESSING: Face Drive + Cinema Upscale + Save", "bounding": [1150, 400, 500, 1250], "color": "#222233" }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {"scale": 0.5, "offset": [0, 0]}
+  },
+  "version": 0.9,
+  "description": "VIRAL VIDEO MASTER v0.9 — Multi-engine video production pipeline. Features 5 video engines (Wan 2.2, Wan FunCtrl, HunyuanVideo 2.0, CogVideoX, Cosmos Predict) + HunyuanDiT image gen, FP8 quantization, VRAM management, face-driven animation, cinema upscaling (SUPIR+RIFE), and video export. Switch between engines by connecting different generator outputs to the post-processing chain."
+}

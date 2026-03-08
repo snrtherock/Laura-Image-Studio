@@ -1,3 +1,58 @@
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# OS
 .DS_Store
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+
+# Models (large binary files)
+*.safetensors
+*.ckpt
+*.pth
+*.onnx
+*.bin
+*.pt
+
+# Logs and temp
+*.log
+*.tmp
+*.bak
+*.orig
+
+# Secrets / credentials
+.env
+.env.*
+credentials.json
+secrets.json
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Coverage / testing
+.coverage
+htmlcov/
+.pytest_cache/

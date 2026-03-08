@@ -9,7 +9,8 @@ import os
 from PIL import Image
 import folder_paths
 
-from .models import NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS
+NODE_CLASS_MAPPINGS = {}
+NODE_DISPLAY_NAME_MAPPINGS = {}
 
 
 # ============== IMAGE TO VIDEO ==============
@@ -226,7 +227,7 @@ class VideoToVideo:
             # Encode frames to latent
             encoded = vae_encoder.encode(vae, sub_frames)[0]
 
-            # Apply temporally correlated noise
+            # Apply temporally correlated noise for consistency between frames
             frame_noise = torch.randn_like(encoded["samples"])
             # Blend between shared base noise and random noise
             blended_noise = (
@@ -234,8 +235,8 @@ class VideoToVideo:
                 + (1 - temporal_consistency) * frame_noise
             )
 
-            # Add blended noise to latent at denoise level
-            noisy_latent = {"samples": encoded["samples"]}
+            # Inject blended noise into latent at denoise level
+            noisy_latent = {"samples": encoded["samples"] + blended_noise * denoise}
 
             # Sample
             sampled = sampler.sample(
@@ -381,6 +382,8 @@ class VideoSaver:
             pil_frames.append(Image.fromarray(frame_np))
 
         if format == "gif":
+            # Note: quality setting does not apply to GIF format;
+            # GIF uses a fixed 256-color palette and duration-based timing.
             output_path = os.path.join(video_dir, f"{filename}.gif")
             duration = int(1000 / fps)
             pil_frames[0].save(
@@ -392,6 +395,9 @@ class VideoSaver:
             )
 
         elif format == "png_sequence":
+            # Note: quality setting does not apply to PNG sequences;
+            # PNG uses lossless compression. Use cv2.IMWRITE_PNG_COMPRESSION
+            # (0-9) at write time if compression level control is needed.
             seq_dir = os.path.join(video_dir, filename)
             os.makedirs(seq_dir, exist_ok=True)
             for i, frame in enumerate(pil_frames):
@@ -404,10 +410,13 @@ class VideoSaver:
                 import cv2
 
                 quality_map = {"low": 30, "medium": 23, "high": 18, "maximum": 10}
+                crf = quality_map.get(quality, 23)
                 fourcc_map = {"mp4": "mp4v", "webm": "VP90"}
                 fourcc = cv2.VideoWriter_fourcc(*fourcc_map.get(format, "mp4v"))
                 h, w = pil_frames[0].size[1], pil_frames[0].size[0]
                 writer = cv2.VideoWriter(output_path, fourcc, fps, (w, h))
+                # Set quality via VIDEOWRITER_PROP_QUALITY if backend supports it
+                writer.set(cv2.VIDEOWRITER_PROP_QUALITY, max(0, 100 - crf * 2))
                 for frame in pil_frames:
                     frame_bgr = cv2.cvtColor(np.array(frame), cv2.COLOR_RGB2BGR)
                     writer.write(frame_bgr)
@@ -460,8 +469,6 @@ class VideoLoader:
             return (blank, 0, 0)
 
         original_fps = int(cap.get(cv2.CAP_PROP_FPS))
-        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-
         # Seek to start frame
         if start_frame > 0:
             cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
@@ -614,8 +621,9 @@ class VideoFaceSwapper:
 
             # Temporal smoothing for flickering reduction
             if prev_result is not None and consistency > 0:
-                # Simple linear blend for the whole frame (can be masked in future)
-                swapped = (1.0 - consistency) * swapped + consistency * prev_result
+                # Blend: consistency controls how much of the CURRENT frame to keep
+                # consistency=0.9 → 90% current swap + 10% previous frame (subtle smoothing)
+                swapped = consistency * swapped + (1.0 - consistency) * prev_result
                 swapped = torch.clamp(swapped, 0, 1)
 
             processed.append(swapped)
@@ -662,17 +670,20 @@ class VideoUpscaler:
             # Upscale using model
             result = upscaler.upscale(upscale_model, frame)[0]
 
-            # If target is 2x but model is 4x, resize down
+            # If target is 2x but model is 4x, resize down to actual 2x
             if scale == 2:
-                h, w = result.shape[1] // 2, result.shape[2] // 2
-                result_np = result[0].cpu().numpy()
-                from PIL import Image as PILImage
-
-                img = PILImage.fromarray((result_np * 255).astype(np.uint8))
-                img = img.resize((w, h), PILImage.LANCZOS)
-                result = torch.from_numpy(
-                    np.array(img).astype(np.float32) / 255.0
-                ).unsqueeze(0)
+                # Resize to actual 2x of original input dimensions
+                orig_h, orig_w = frame.shape[1], frame.shape[2]
+                target_h, target_w = orig_h * 2, orig_w * 2
+                if result.shape[1] != target_h or result.shape[2] != target_w:
+                    result_perm = result.permute(0, 3, 1, 2)
+                    result_perm = torch.nn.functional.interpolate(
+                        result_perm,
+                        size=(target_h, target_w),
+                        mode="bilinear",
+                        align_corners=False,
+                    )
+                    result = result_perm.permute(0, 2, 3, 1)
 
             # Temporal smoothing
             if prev_frame is not None and temporal_smooth > 0:

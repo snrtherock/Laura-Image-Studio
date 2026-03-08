@@ -1,0 +1,141 @@
+{
+  "last_node_id": 10,
+  "last_link_id": 20,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "UniversalModelLoader",
+      "pos": [50, 50],
+      "size": [350, 150],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {"name": "MODEL", "type": "MODEL", "slot_index": 0},
+        {"name": "CLIP", "type": "CLIP", "slot_index": 1},
+        {"name": "VAE", "type": "VAE", "slot_index": 2},
+        {"name": "model_type", "type": "STRING", "slot_index": 3}
+      ],
+      "properties": {},
+      "widgets_values": ["wan22_video.safetensors", "wan22"]
+    },
+    {
+      "id": 2,
+      "type": "LoadImage",
+      "pos": [50, 250],
+      "size": [315, 400],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {"name": "IMAGE", "type": "IMAGE", "slot_index": 0},
+        {"name": "MASK", "type": "MASK", "slot_index": 1}
+      ],
+      "properties": {},
+      "widgets_values": ["input_image.png", "image"]
+    },
+    {
+      "id": 3,
+      "type": "ImageToVideo",
+      "pos": [450, 50],
+      "size": [400, 400],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {"name": "image", "type": "IMAGE", "link": 1},
+        {"name": "model", "type": "MODEL", "link": 2},
+        {"name": "clip", "type": "CLIP", "link": 3},
+        {"name": "vae", "type": "VAE", "link": 4}
+      ],
+      "outputs": [
+        {"name": "frames", "type": "IMAGE", "slot_index": 0},
+        {"name": "frame_count", "type": "INT", "slot_index": 1},
+        {"name": "fps", "type": "INT", "slot_index": 2}
+      ],
+      "properties": {},
+      "widgets_values": [
+        "smooth camera pan, gentle movement, cinematic",
+        "static, frozen, jittery, flickering, deformed",
+        16, 8, 42, 25, 5.0, 0.7, "wan22_video", "", null
+      ]
+    },
+    {
+      "id": 4,
+      "type": "FrameInterpolator",
+      "pos": [900, 50],
+      "size": [300, 150],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {"name": "frames", "type": "IMAGE", "link": 5}
+      ],
+      "outputs": [
+        {"name": "frames", "type": "IMAGE", "slot_index": 0},
+        {"name": "new_frame_count", "type": "INT", "slot_index": 1}
+      ],
+      "properties": {},
+      "widgets_values": ["2x", "blend", true, 0.3]
+    },
+    {
+      "id": 5,
+      "type": "ToggleImageSwitch",
+      "pos": [900, 250],
+      "size": [300, 120],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {"name": "input_image", "type": "IMAGE", "link": 6},
+        {"name": "enabled", "type": "BOOLEAN", "link": null},
+        {"name": "processed_image", "type": "IMAGE", "link": 7}
+      ],
+      "outputs": [
+        {"name": "image", "type": "IMAGE", "slot_index": 0}
+      ],
+      "properties": {},
+      "widgets_values": [true]
+    },
+    {
+      "id": 6,
+      "type": "VideoSaver",
+      "pos": [1300, 50],
+      "size": [300, 200],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {"name": "frames", "type": "IMAGE", "link": 8}
+      ],
+      "outputs": [
+        {"name": "video_path", "type": "STRING", "slot_index": 0}
+      ],
+      "properties": {},
+      "widgets_values": ["laura_video", 16, "mp4", "high", false]
+    }
+  ],
+  "links": [
+    [2, 3, 0, 1, "IMAGE"],
+    [1, 3, 0, 2, "MODEL"],
+    [1, 3, 1, 3, "CLIP"],
+    [1, 3, 2, 4, "VAE"],
+    [3, 4, 0, 5, "IMAGE"],
+    [3, 5, 0, 6, "IMAGE"],
+    [4, 5, 0, 7, "IMAGE"],
+    [5, 6, 0, 8, "IMAGE"]
+  ],
+  "groups": [
+    {"title": "Model & Input", "bounding": [30, 20, 400, 650], "color": "#2a363b"},
+    {"title": "Video Generation", "bounding": [430, 20, 450, 450], "color": "#a73b8f"},
+    {"title": "Frame Interpolation (Optional)", "bounding": [880, 20, 350, 380], "color": "#3f789e"},
+    {"title": "Output", "bounding": [1280, 20, 350, 250], "color": "#8fa73b"}
+  ],
+  "config": {},
+  "extra": {
+    "ds": {"scale": 0.8, "offset": [0, 0]}
+  },
+  "version": 0.4
+}

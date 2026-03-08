@@ -1,0 +1,42 @@
+{
+  "last_node_id": 10,
+  "last_link_id": 10,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "HunyuanVideoLoader",
+      "pos": [10, 10],
+      "widgets_values": ["hunyuanvideo_720.safetensors", "HunyuanVideo", "bf16", "llava-llama-3-8b", true]
+    },
+    {
+      "id": 2,
+      "type": "HunyuanVideoGenerator",
+      "pos": [400, 10],
+      "widgets_values": ["A cinematic drone shot over a mountain range at sunrise, golden light, volumetric fog, 4K, smooth motion", "blurry, low quality, static, watermark, text overlay, deformed, jittery, overexposed", 1280, 720, 129, 24, 0, 50, 7.0, 6.0, 1.0]
+    },
+    {
+      "id": 3,
+      "type": "LauraVRAMCleaner",
+      "pos": [850, 10],
+      "widgets_values": ["Extreme (GC + Unload)"]
+    },
+    {
+      "id": 4,
+      "type": "VideoSaver",
+      "pos": [1100, 10],
+      "widgets_values": ["hunyuan_output", "mp4", 24, 85]
+    }
+  ],
+  "links": [
+    [1, 1, 0, 2, 0, "MODEL"],
+    [2, 1, 1, 2, 1, "CLIP"],
+    [3, 1, 2, 2, 2, "VAE"],
+    [4, 2, 0, 3, 0, "IMAGE"],
+    [5, 3, 0, 4, 0, "IMAGE"]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {},
+  "version": 0.9,
+  "description": "HunyuanVideo 2.0 Atomic Workflow — Load model, generate 1080p video with prompt rewriting, clean VRAM, save output."
+}

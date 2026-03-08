@@ -1,0 +1,2297 @@
+{
+  "last_node_id": 250,
+  "last_link_id": 900,
+  "nodes": [
+    {
+      "id": 999,
+      "type": "Note",
+      "pos": [
+        1620,
+        50
+      ],
+      "size": [
+        360,
+        240
+      ],
+      "flags": {},
+      "order": 100,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "LAURA IMAGE STUDIO v0.9 - ENHANCED MASTER WORKFLOW\n\nNEW IN v0.9:\n- FP8 Transformer Config (8GB GPU support)\n- FLUX.1 Tools (Fill/Depth/Canny/Redux)\n- Multi-engine Video (CogVideoX, Cosmos, HunyuanVideo 2.0)\n- Wan FunCtrl trajectory control\n- HunyuanDiT image generation\n\nSYSTEM REQUIREMENTS:\n- Extreme (24GB+): Run everything at once.\n- High (16GB): All nodes functional, some batching.\n- Mid (12GB): Enable FP8 + Extreme Optimization.\n- Low (8GB): Force FP8 and avoid 4K+ upscales.\n\nMODELS NEEDED:\n1. Juggernaut XL v8 (Base SDXL)\n2. FLUX.1-dev (FLUX Tools)\n3. Zoriana LoRA (Character)\n4. Face: inswapper_128, yoloface_v8n\n5. RMBG: BriaRMBG-1.4\n6. Upscale: RealESRGAN_x4plus_anime_6B"
+      ]
+    },
+    {
+      "id": 1,
+      "type": "CheckpointLoader",
+      "pos": [
+        50,
+        50
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "slot_index": 0
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "slot_index": 1
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "slot_index": 2
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CheckpointLoader"
+      },
+      "widgets_values": [
+        "juggernaut_xl_v8.safetensors"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "LoraLoader",
+      "pos": [
+        500,
+        50
+      ],
+      "size": [
+        400,
+        250
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 1
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "slot_index": 0
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "slot_index": 1
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoader"
+      },
+      "widgets_values": [
+        "zoriana_lora.safetensors",
+        0.8,
+        1.0
+      ]
+    },
+    {
+      "id": 3,
+      "type": "LoraLoader",
+      "pos": [
+        950,
+        50
+      ],
+      "size": [
+        400,
+        250
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 3
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "slot_index": 0
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "slot_index": 1
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoader"
+      },
+      "widgets_values": [
+        "clothing_lora.safetensors",
+        0.6,
+        1.0
+      ]
+    },
+    {
+      "id": 4,
+      "type": "FP8TransformerConfig",
+      "pos": [
+        50,
+        300
+      ],
+      "size": [
+        350,
+        150
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "quant_config",
+          "type": "QUANT_CONFIG",
+          "slot_index": 0
+        },
+        {
+          "name": "status_report",
+          "type": "STRING",
+          "slot_index": 1
+        },
+        {
+          "name": "fp8_active",
+          "type": "BOOLEAN",
+          "slot_index": 2
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FP8TransformerConfig"
+      },
+      "widgets_values": [
+        "auto",
+        "e4m3fn",
+        "fp16",
+        false
+      ]
+    },
+    {
+      "id": 10,
+      "type": "LoadImage",
+      "pos": [
+        50,
+        500
+      ],
+      "size": [
+        315,
+        270
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "slot_index": 1
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "character_reference.png",
+        "image"
+      ]
+    },
+    {
+      "id": 11,
+      "type": "LoadImage",
+      "pos": [
+        400,
+        500
+      ],
+      "size": [
+        315,
+        270
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "slot_index": 1
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "clothing_reference.png",
+        "image"
+      ]
+    },
+    {
+      "id": 12,
+      "type": "LoadImage",
+      "pos": [
+        750,
+        500
+      ],
+      "size": [
+        315,
+        270
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "slot_index": 1
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "target_image.png",
+        "image"
+      ]
+    },
+    {
+      "id": 20,
+      "type": "FaceDetect",
+      "pos": [
+        1100,
+        500
+      ],
+      "size": [
+        350,
+        200
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 50
+        }
+      ],
+      "outputs": [
+        {
+          "name": "face_bbox",
+          "type": "BBOX",
+          "slot_index": 0
+        },
+        {
+          "name": "face_landmarks",
+          "type": "LANDMARKS",
+          "slot_index": 1
+        },
+        {
+          "name": "face_image",
+          "type": "IMAGE",
+          "slot_index": 2
+        },
+        {
+          "name": "face_mask",
+          "type": "MASK",
+          "slot_index": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FaceDetect"
+      },
+      "widgets_values": [
+        "yoloface_v8n",
+        0.5,
+        "largest"
+      ]
+    },
+    {
+      "id": 21,
+      "type": "IPAdapter",
+      "pos": [
+        1100,
+        730
+      ],
+      "size": [
+        400,
+        250
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 51
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 52
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "IPAdapter"
+      },
+      "widgets_values": [
+        "plus",
+        "linear",
+        0.7,
+        0,
+        0.3,
+        "vitalize_plus",
+        0
+      ]
+    },
+    {
+      "id": 22,
+      "type": "FaceSwap",
+      "pos": [
+        1500,
+        500
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source_image",
+          "type": "IMAGE",
+          "link": 53
+        },
+        {
+          "name": "target_image",
+          "type": "IMAGE",
+          "link": 54
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FaceSwap"
+      },
+      "widgets_values": [
+        "inswapper_128",
+        0.8,
+        "blend"
+      ]
+    },
+    {
+      "id": 30,
+      "type": "EmptyLatentImage",
+      "pos": [
+        50,
+        850
+      ],
+      "size": [
+        315,
+        262
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptyLatentImage"
+      },
+      "widgets_values": [
+        1024,
+        1024,
+        1,
+        42
+      ]
+    },
+    {
+      "id": 31,
+      "type": "CLIPTextEncode",
+      "pos": [
+        400,
+        850
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 100
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "photo of beautiful woman, detailed face, professional lighting, studio background, high quality, masterpiece, 8k uhd, dslr, soft lighting, high detail, sharp focus"
+      ]
+    },
+    {
+      "id": 32,
+      "type": "CLIPTextEncode",
+      "pos": [
+        850,
+        850
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 101
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "deformed, blurry, bad anatomy, extra limbs, low quality, worst quality, bad hands, missing fingers, poorly drawn face, mutation, watermark, signature, text, username"
+      ]
+    },
+    {
+      "id": 33,
+      "type": "KSampler",
+      "pos": [
+        1300,
+        850
+      ],
+      "size": [
+        315,
+        262
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 102
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 103
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 104
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 105
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        42,
+        "fixed",
+        25,
+        5.0,
+        "euler",
+        "normal",
+        "simple",
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "id": 34,
+      "type": "VAEDecode",
+      "pos": [
+        1650,
+        850
+      ],
+      "size": [
+        210,
+        46
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 106
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 107
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      }
+    },
+    {
+      "id": 50,
+      "type": "LauraOutpainter",
+      "pos": [
+        1550,
+        1200
+      ],
+      "size": [
+        450,
+        250
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 140
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 141
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 142
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 143
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "slot_index": 0
+        },
+        {
+          "name": "new_width",
+          "type": "INT",
+          "slot_index": 1
+        },
+        {
+          "name": "new_height",
+          "type": "INT",
+          "slot_index": 2
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LauraOutpainter"
+      },
+      "widgets_values": [
+        "all",
+        256,
+        "photo of woman, detailed background, professional studio, high quality",
+        "deformed, blurry, artifacts",
+        42,
+        35,
+        7.0,
+        "gaussian",
+        64,
+        ""
+      ]
+    },
+    {
+      "id": 60,
+      "type": "RMBG",
+      "pos": [
+        50,
+        1850
+      ],
+      "size": [
+        315,
+        270
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 150
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "slot_index": 1
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RMBG"
+      },
+      "widgets_values": [
+        0.5
+      ]
+    },
+    {
+      "id": 62,
+      "type": "PortraitBokeh",
+      "pos": [
+        800,
+        1850
+      ],
+      "size": [
+        350,
+        150
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 154
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 155
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PortraitBokeh"
+      },
+      "widgets_values": [
+        20,
+        "circle",
+        "high"
+      ]
+    },
+    {
+      "id": 70,
+      "type": "Upscale2K",
+      "pos": [
+        50,
+        2150
+      ],
+      "size": [
+        350,
+        150
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 160
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Upscale2K"
+      },
+      "widgets_values": [
+        "ultrasharp",
+        0.2,
+        512,
+        32
+      ]
+    },
+    {
+      "id": 71,
+      "type": "Upscale4K",
+      "pos": [
+        450,
+        2150
+      ],
+      "size": [
+        350,
+        150
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 161
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Upscale4K"
+      },
+      "widgets_values": [
+        "ultrasharp",
+        0.15,
+        512,
+        32,
+        true
+      ]
+    },
+    {
+      "id": 72,
+      "type": "Upscale8K",
+      "pos": [
+        850,
+        2150
+      ],
+      "size": [
+        350,
+        150
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 162
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Upscale8K"
+      },
+      "widgets_values": [
+        "chain_8x",
+        0.1,
+        512,
+        64,
+        3
+      ]
+    },
+    {
+      "id": 73,
+      "type": "DetailEnhancer",
+      "pos": [
+        1250,
+        2150
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 28,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 163
+        },
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 164
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 165
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 166
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DetailEnhancer"
+      },
+      "widgets_values": [
+        0.3,
+        42,
+        "both",
+        5.0
+      ]
+    },
+    {
+      "id": 80,
+      "type": "VirtualDresser",
+      "pos": [
+        800,
+        1500
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 30,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 180
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 181
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 182
+        },
+        {
+          "name": "source_image",
+          "type": "IMAGE",
+          "link": 183
+        },
+        {
+          "name": "inpaint_mask",
+          "type": "MASK",
+          "link": 184
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VirtualDresser"
+      },
+      "widgets_values": [
+        "top",
+        "elegant designer blouse, silk material, high quality fabric",
+        42,
+        30,
+        7.0,
+        0.8,
+        true,
+        true
+      ]
+    },
+    {
+      "id": 100,
+      "type": "SaveImage",
+      "pos": [
+        50,
+        2500
+      ],
+      "size": [
+        315,
+        270
+      ],
+      "flags": {},
+      "order": 36,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 200
+        }
+      ],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "enhanced_master_output"
+      ]
+    },
+    {
+      "id": 101,
+      "type": "SaveImage",
+      "pos": [
+        400,
+        2500
+      ],
+      "size": [
+        315,
+        270
+      ],
+      "flags": {},
+      "order": 37,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 201
+        }
+      ],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "upscaled_2k_output"
+      ]
+    },
+    {
+      "id": 120,
+      "type": "FaceEnhancer",
+      "pos": [
+        1650,
+        1500
+      ],
+      "size": [
+        350,
+        150
+      ],
+      "flags": {},
+      "order": 43,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 220
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FaceEnhancer"
+      },
+      "widgets_values": [
+        0.5,
+        "medium"
+      ]
+    },
+    {
+      "id": 200,
+      "type": "FluxFillLoader",
+      "pos": [
+        50,
+        3000
+      ],
+      "size": [
+        400,
+        180
+      ],
+      "flags": {},
+      "order": 50,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "flux_fill_pipe",
+          "type": "FLUX_TOOL_PIPE",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FluxFillLoader"
+      },
+      "widgets_values": [
+        "flux1-dev.safetensors",
+        "auto",
+        "auto"
+      ]
+    },
+    {
+      "id": 201,
+      "type": "FluxFillGenerator",
+      "pos": [
+        500,
+        3000
+      ],
+      "size": [
+        450,
+        280
+      ],
+      "flags": {},
+      "order": 51,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "flux_fill_pipe",
+          "type": "FLUX_TOOL_PIPE",
+          "link": 800
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 801
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 802
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "slot_index": 0
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "slot_index": 1
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FluxFillGenerator"
+      },
+      "widgets_values": [
+        "Professional portrait, clean detailed fill, studio lighting, 8k quality",
+        0,
+        28,
+        30.0,
+        1.0,
+        ""
+      ]
+    },
+    {
+      "id": 202,
+      "type": "FluxDepthLoader",
+      "pos": [
+        50,
+        3350
+      ],
+      "size": [
+        400,
+        180
+      ],
+      "flags": {},
+      "order": 52,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "flux_depth_pipe",
+          "type": "FLUX_TOOL_PIPE",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FluxDepthLoader"
+      },
+      "widgets_values": [
+        "flux1-dev.safetensors",
+        "control_v3p_flux_depth.safetensors",
+        0.85
+      ]
+    },
+    {
+      "id": 203,
+      "type": "FluxDepthGenerator",
+      "pos": [
+        500,
+        3350
+      ],
+      "size": [
+        450,
+        280
+      ],
+      "flags": {},
+      "order": 53,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "flux_depth_pipe",
+          "type": "FLUX_TOOL_PIPE",
+          "link": 810
+        },
+        {
+          "name": "depth_map",
+          "type": "IMAGE",
+          "link": 811
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "slot_index": 0
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "slot_index": 1
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FluxDepthGenerator"
+      },
+      "widgets_values": [
+        "Beautiful architectural interior, warm natural lighting, detailed textures, 8k",
+        0,
+        28,
+        10.0,
+        1024,
+        1024,
+        "",
+        -1.0
+      ]
+    },
+    {
+      "id": 204,
+      "type": "FluxCannyLoader",
+      "pos": [
+        50,
+        3700
+      ],
+      "size": [
+        400,
+        180
+      ],
+      "flags": {},
+      "order": 54,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "flux_canny_pipe",
+          "type": "FLUX_TOOL_PIPE",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FluxCannyLoader"
+      },
+      "widgets_values": [
+        "flux1-dev.safetensors",
+        "control_v3p_flux_canny.safetensors",
+        0.9
+      ]
+    },
+    {
+      "id": 205,
+      "type": "FluxCannyGenerator",
+      "pos": [
+        500,
+        3700
+      ],
+      "size": [
+        450,
+        320
+      ],
+      "flags": {},
+      "order": 55,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "flux_canny_pipe",
+          "type": "FLUX_TOOL_PIPE",
+          "link": 820
+        },
+        {
+          "name": "canny_image",
+          "type": "IMAGE",
+          "link": 821
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "slot_index": 0
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "slot_index": 1
+        },
+        {
+          "name": "canny_edges",
+          "type": "IMAGE",
+          "slot_index": 2
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FluxCannyGenerator"
+      },
+      "widgets_values": [
+        "Detailed illustration following the edge map, vibrant colors, professional art",
+        0,
+        28,
+        10.0,
+        1024,
+        1024,
+        "",
+        -1.0,
+        100,
+        200,
+        false
+      ]
+    },
+    {
+      "id": 206,
+      "type": "FluxReduxLoader",
+      "pos": [
+        50,
+        4100
+      ],
+      "size": [
+        400,
+        180
+      ],
+      "flags": {},
+      "order": 56,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "flux_redux_pipe",
+          "type": "FLUX_TOOL_PIPE",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FluxReduxLoader"
+      },
+      "widgets_values": [
+        "flux1-dev.safetensors",
+        "auto",
+        0.75
+      ]
+    },
+    {
+      "id": 207,
+      "type": "FluxReduxGenerator",
+      "pos": [
+        500,
+        4100
+      ],
+      "size": [
+        450,
+        280
+      ],
+      "flags": {},
+      "order": 57,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "flux_redux_pipe",
+          "type": "FLUX_TOOL_PIPE",
+          "link": 830
+        },
+        {
+          "name": "reference_image",
+          "type": "IMAGE",
+          "link": 831
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "slot_index": 0
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "slot_index": 1
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FluxReduxGenerator"
+      },
+      "widgets_values": [
+        "Variation of the reference with cinematic color grading, same composition, professional quality",
+        0,
+        28,
+        4.0,
+        1024,
+        1024,
+        "",
+        -1.0,
+        0.75
+      ]
+    },
+    {
+      "id": 210,
+      "type": "CogVideoXLoader",
+      "pos": [
+        50,
+        4550
+      ],
+      "size": [
+        400,
+        180
+      ],
+      "flags": {},
+      "order": 60,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "slot_index": 0
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "slot_index": 1
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "slot_index": 2
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CogVideoXLoader"
+      },
+      "widgets_values": [
+        "cogvideox_5b.safetensors",
+        "5B",
+        "bf16"
+      ]
+    },
+    {
+      "id": 211,
+      "type": "CogVideoXGenerator",
+      "pos": [
+        500,
+        4550
+      ],
+      "size": [
+        450,
+        280
+      ],
+      "flags": {},
+      "order": 61,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 840
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 841
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 842
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video_frames",
+          "type": "IMAGE",
+          "slot_index": 0
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "slot_index": 1
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CogVideoXGenerator"
+      },
+      "widgets_values": [
+        "Laura exploring a vibrant Tokyo street at night, detailed neon reflections, cinematic",
+        "blurry, low quality, static, deformed",
+        720,
+        480,
+        49,
+        0,
+        50,
+        6.0
+      ]
+    },
+    {
+      "id": 212,
+      "type": "HunyuanVideoLoader",
+      "pos": [
+        50,
+        4900
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 62,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "slot_index": 0
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "slot_index": 1
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "slot_index": 2
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HunyuanVideoLoader"
+      },
+      "widgets_values": [
+        "hunyuanvideo_720.safetensors",
+        "HunyuanVideo",
+        "bf16",
+        "llava-llama-3-8b",
+        true
+      ]
+    },
+    {
+      "id": 213,
+      "type": "HunyuanVideoGenerator",
+      "pos": [
+        500,
+        4900
+      ],
+      "size": [
+        450,
+        320
+      ],
+      "flags": {},
+      "order": 63,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 850
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 851
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 852
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video_frames",
+          "type": "IMAGE",
+          "slot_index": 0
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "slot_index": 1
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HunyuanVideoGenerator"
+      },
+      "widgets_values": [
+        "Cinematic drone shot over mountain range at sunrise, golden light, volumetric fog, 4K",
+        "blurry, low quality, static, watermark, deformed, jittery",
+        1280,
+        720,
+        129,
+        24,
+        0,
+        50,
+        7.0,
+        6.0,
+        1.0
+      ]
+    },
+    {
+      "id": 214,
+      "type": "WanFunCtrlKeypoints",
+      "pos": [
+        50,
+        5300
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 64,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "trajectory",
+          "type": "WAN_FUNCTRL_TRAJ",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WanFunCtrlKeypoints"
+      },
+      "widgets_values": [
+        "# frame, x, y  (normalised 0-1)\n0, 0.3, 0.5\n20, 0.5, 0.4\n40, 0.7, 0.5\n60, 0.5, 0.6\n80, 0.3, 0.5",
+        "linear",
+        false
+      ]
+    },
+    {
+      "id": 215,
+      "type": "LauraVRAMCleaner",
+      "pos": [
+        1000,
+        4550
+      ],
+      "size": [
+        300,
+        100
+      ],
+      "flags": {},
+      "order": 65,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "any_input",
+          "type": "*",
+          "link": 860
+        }
+      ],
+      "outputs": [
+        {
+          "name": "status",
+          "type": "STRING",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LauraVRAMCleaner"
+      },
+      "widgets_values": [
+        "Extreme (GC + Unload)"
+      ]
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "MODEL"
+    ],
+    [
+      2,
+      1,
+      1,
+      2,
+      1,
+      "CLIP"
+    ],
+    [
+      3,
+      2,
+      0,
+      3,
+      0,
+      "MODEL"
+    ],
+    [
+      4,
+      2,
+      1,
+      3,
+      1,
+      "CLIP"
+    ],
+    [
+      50,
+      10,
+      0,
+      20,
+      0,
+      "IMAGE"
+    ],
+    [
+      51,
+      3,
+      0,
+      21,
+      0,
+      "MODEL"
+    ],
+    [
+      52,
+      10,
+      0,
+      21,
+      1,
+      "IMAGE"
+    ],
+    [
+      53,
+      10,
+      0,
+      22,
+      0,
+      "IMAGE"
+    ],
+    [
+      54,
+      12,
+      0,
+      22,
+      1,
+      "IMAGE"
+    ],
+    [
+      100,
+      3,
+      1,
+      31,
+      0,
+      "CLIP"
+    ],
+    [
+      101,
+      3,
+      1,
+      32,
+      0,
+      "CLIP"
+    ],
+    [
+      102,
+      3,
+      0,
+      33,
+      0,
+      "MODEL"
+    ],
+    [
+      103,
+      31,
+      0,
+      33,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      104,
+      32,
+      0,
+      33,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      105,
+      30,
+      0,
+      33,
+      3,
+      "LATENT"
+    ],
+    [
+      106,
+      33,
+      0,
+      34,
+      0,
+      "LATENT"
+    ],
+    [
+      107,
+      1,
+      2,
+      34,
+      1,
+      "VAE"
+    ],
+    [
+      140,
+      3,
+      0,
+      50,
+      0,
+      "MODEL"
+    ],
+    [
+      141,
+      3,
+      1,
+      50,
+      1,
+      "CLIP"
+    ],
+    [
+      142,
+      1,
+      2,
+      50,
+      2,
+      "VAE"
+    ],
+    [
+      143,
+      34,
+      0,
+      50,
+      3,
+      "IMAGE"
+    ],
+    [
+      150,
+      34,
+      0,
+      60,
+      0,
+      "IMAGE"
+    ],
+    [
+      154,
+      34,
+      0,
+      62,
+      0,
+      "IMAGE"
+    ],
+    [
+      155,
+      60,
+      1,
+      62,
+      1,
+      "MASK"
+    ],
+    [
+      160,
+      34,
+      0,
+      70,
+      0,
+      "IMAGE"
+    ],
+    [
+      161,
+      34,
+      0,
+      71,
+      0,
+      "IMAGE"
+    ],
+    [
+      162,
+      34,
+      0,
+      72,
+      0,
+      "IMAGE"
+    ],
+    [
+      163,
+      34,
+      0,
+      73,
+      0,
+      "IMAGE"
+    ],
+    [
+      164,
+      3,
+      0,
+      73,
+      1,
+      "MODEL"
+    ],
+    [
+      165,
+      1,
+      1,
+      73,
+      2,
+      "CLIP"
+    ],
+    [
+      166,
+      1,
+      2,
+      73,
+      3,
+      "VAE"
+    ],
+    [
+      180,
+      3,
+      0,
+      80,
+      0,
+      "MODEL"
+    ],
+    [
+      181,
+      3,
+      1,
+      80,
+      1,
+      "CLIP"
+    ],
+    [
+      182,
+      1,
+      2,
+      80,
+      2,
+      "VAE"
+    ],
+    [
+      183,
+      12,
+      0,
+      80,
+      3,
+      "IMAGE"
+    ],
+    [
+      200,
+      34,
+      0,
+      100,
+      0,
+      "IMAGE"
+    ],
+    [
+      201,
+      70,
+      0,
+      101,
+      0,
+      "IMAGE"
+    ],
+    [
+      220,
+      34,
+      0,
+      120,
+      0,
+      "IMAGE"
+    ],
+    [
+      800,
+      200,
+      0,
+      201,
+      0,
+      "FLUX_TOOL_PIPE"
+    ],
+    [
+      801,
+      12,
+      0,
+      201,
+      1,
+      "IMAGE"
+    ],
+    [
+      802,
+      12,
+      1,
+      201,
+      2,
+      "MASK"
+    ],
+    [
+      810,
+      202,
+      0,
+      203,
+      0,
+      "FLUX_TOOL_PIPE"
+    ],
+    [
+      811,
+      12,
+      0,
+      203,
+      1,
+      "IMAGE"
+    ],
+    [
+      820,
+      204,
+      0,
+      205,
+      0,
+      "FLUX_TOOL_PIPE"
+    ],
+    [
+      821,
+      12,
+      0,
+      205,
+      1,
+      "IMAGE"
+    ],
+    [
+      830,
+      206,
+      0,
+      207,
+      0,
+      "FLUX_TOOL_PIPE"
+    ],
+    [
+      831,
+      12,
+      0,
+      207,
+      1,
+      "IMAGE"
+    ],
+    [
+      840,
+      210,
+      0,
+      211,
+      0,
+      "MODEL"
+    ],
+    [
+      841,
+      210,
+      1,
+      211,
+      1,
+      "CLIP"
+    ],
+    [
+      842,
+      210,
+      2,
+      211,
+      2,
+      "VAE"
+    ],
+    [
+      850,
+      212,
+      0,
+      213,
+      0,
+      "MODEL"
+    ],
+    [
+      851,
+      212,
+      1,
+      213,
+      1,
+      "CLIP"
+    ],
+    [
+      852,
+      212,
+      2,
+      213,
+      2,
+      "VAE"
+    ],
+    [
+      860,
+      211,
+      0,
+      215,
+      0,
+      "*"
+    ]
+  ],
+  "groups": [
+    {
+      "title": "[PHASE 1] MODEL LOADING & CONFIGURATION",
+      "bounding": [
+        20,
+        10,
+        1400,
+        270
+      ],
+      "color": "#600000",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "[v0.9] FP8 QUANTIZATION CONFIG",
+      "bounding": [
+        20,
+        280,
+        500,
+        180
+      ],
+      "color": "#604000",
+      "font_size": 20,
+      "locked": false
+    },
+    {
+      "title": "[PHASE 2] CORE GENERATION & TEXT PROMPTS",
+      "bounding": [
+        20,
+        810,
+        1900,
+        320
+      ],
+      "color": "#006000",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "[PHASE 3] FACE & CHARACTER",
+      "bounding": [
+        20,
+        470,
+        2000,
+        310
+      ],
+      "color": "#000060",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "[PHASE 4] DRESSING, INPAINT & OUTPAINT",
+      "bounding": [
+        20,
+        1150,
+        2000,
+        600
+      ],
+      "color": "#606000",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "[PHASE 5] BACKGROUND & BOKEH",
+      "bounding": [
+        20,
+        1800,
+        1500,
+        320
+      ],
+      "color": "#600060",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "[PHASE 6] PRO UPSCALE & DETAIL (2K/4K/8K)",
+      "bounding": [
+        20,
+        2100,
+        2000,
+        350
+      ],
+      "color": "#603000",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "[v0.9] FLUX.1 TOOLS (Fill/Depth/Canny/Redux)",
+      "bounding": [
+        20,
+        2950,
+        1000,
+        1400
+      ],
+      "color": "#400060",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "[v0.9] VIDEO ENGINES (CogVideoX + HunyuanVideo + FunCtrl)",
+      "bounding": [
+        20,
+        4500,
+        1400,
+        1100
+      ],
+      "color": "#004060",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "INFO & SETUP",
+      "bounding": [
+        1600,
+        10,
+        400,
+        300
+      ],
+      "color": "#333333",
+      "font_size": 18,
+      "locked": false
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.4,
+      "offset": [
+        0,
+        0
+      ]
+    }
+  },
+  "version": 0.9,
+  "description": "ENHANCED MASTER WORKFLOW v0.9 \u2014 Complete production pipeline with SDXL generation, LoRA loading, Face/Character operations, Virtual Dressing, Inpainting/Outpainting, Background editing, 2K/4K/8K Upscaling, PLUS v0.9 features: FP8 Transformer Config, FLUX.1 Tools (Fill/Depth/Canny/Redux), multi-engine video (CogVideoX, HunyuanVideo 2.0), Wan FunCtrl trajectory control, and intelligent VRAM management.",
+  "models": [
+    {
+      "name": "flux1-dev.safetensors",
+      "url": "https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors",
+      "directory": "checkpoints",
+      "size": 24000000000
+    }
+  ]
+}

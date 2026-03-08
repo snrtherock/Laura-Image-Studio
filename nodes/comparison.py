@@ -4,9 +4,11 @@ Nodes for side-by-side comparison and professional background presets
 """
 
 import torch
-import numpy as np
-from PIL import Image
-import folder_paths
+import torch.nn.functional as F
+from .models import LauraLogger
+
+NODE_CLASS_MAPPINGS = {}
+NODE_DISPLAY_NAME_MAPPINGS = {}
 
 
 class MultiModelComparison:
@@ -34,6 +36,7 @@ class MultiModelComparison:
     RETURN_NAMES = ("comparison_grid",)
     FUNCTION = "compare"
     CATEGORY = "Laura Studio/Excellence"
+    DESCRIPTION = "Compare outputs from multiple models in a side-by-side grid"
 
     def compare(
         self,
@@ -48,25 +51,70 @@ class MultiModelComparison:
         label_4="Model D",
     ):
         images = [image_1, image_2]
+        labels = [label_1, label_2]
         if image_3 is not None:
             images.append(image_3)
+            labels.append(label_3)
         if image_4 is not None:
             images.append(image_4)
+            labels.append(label_4)
 
         # Ensure all images are the same size for the grid
         target_h = image_1.shape[1]
         target_w = image_1.shape[2]
 
         processed_images = []
-        for img in images:
+        for idx, img in enumerate(images):
             if img.shape[1] != target_h or img.shape[2] != target_w:
-                # Simple resize if needed (ComfyUI typically handles this via other nodes, but we'll be safe)
-                import torch.nn.functional as F
-
                 img = img.permute(0, 3, 1, 2)
-                img = F.interpolate(img, size=(target_h, target_w), mode="bilinear")
+                img = F.interpolate(
+                    img, size=(target_h, target_w), mode="bilinear", align_corners=False
+                )
                 img = img.permute(0, 2, 3, 1)
-            processed_images.append(img)
+
+            # Draw label bar at the top of each image
+            label_text = labels[idx]
+            label_height = max(24, target_h // 20)  # ~5% of image height
+
+            # Render label text using PIL for readable text
+            try:
+                from PIL import Image as PILImage, ImageDraw, ImageFont
+
+                label_pil = PILImage.new("RGB", (target_w, label_height), (30, 30, 30))
+                draw = ImageDraw.Draw(label_pil)
+                try:
+                    font = ImageFont.truetype("arial.ttf", max(12, label_height - 8))
+                except Exception:
+                    font = ImageFont.load_default()
+                # Center text
+                bbox = draw.textbbox((0, 0), label_text, font=font)
+                tw = bbox[2] - bbox[0]
+                th = bbox[3] - bbox[1]
+                tx = max(0, (target_w - tw) // 2)
+                ty = max(0, (label_height - th) // 2)
+                draw.text((tx, ty), label_text, fill=(255, 255, 255), font=font)
+                import numpy as np
+
+                label_np = np.array(label_pil).astype(np.float32) / 255.0
+                label_bar = torch.from_numpy(label_np).unsqueeze(0).to(img.device)
+                # Match channels if needed
+                if img.shape[3] == 4:
+                    alpha = torch.ones(
+                        (1, label_height, target_w, 1),
+                        device=img.device,
+                        dtype=img.dtype,
+                    )
+                    label_bar = torch.cat([label_bar, alpha], dim=3)
+            except Exception as e:
+                # Fallback: dark bar with a white separator line (PIL rendering failed)
+                LauraLogger.warn(f"PIL label rendering failed: {e}, using fallback bar")
+                label_bar = torch.zeros(
+                    (1, label_height, target_w, img.shape[3]), device=img.device
+                )
+                label_bar[:, -1:, :, :] = 0.3
+
+            img_with_label = torch.cat([label_bar, img], dim=1)
+            processed_images.append(img_with_label)
 
         if layout == "horizontal":
             grid = torch.cat(processed_images, dim=2)
@@ -122,6 +170,7 @@ class ProfessionalBackgroundLibrary:
     RETURN_NAMES = ("background_prompt",)
     FUNCTION = "get_preset"
     CATEGORY = "Laura Studio/Excellence"
+    DESCRIPTION = "Professional background presets with lighting and style modifiers"
 
     def get_preset(self, preset, custom_modifiers, lighting_preset):
         base_prompt = self.PRESETS.get(preset, "")
@@ -133,18 +182,20 @@ class ProfessionalBackgroundLibrary:
             "neon": "vibrant neon lighting, colorful glows",
         }
 
-        final_prompt = (
-            f"{base_prompt} {lighting_map[lighting_preset]}. {custom_modifiers}"
-        )
+        final_prompt = f"{base_prompt} {lighting_map.get(lighting_preset, 'natural sunlight, realistic shadows')}. {custom_modifiers}"
         return (final_prompt,)
 
 
-NODE_CLASS_MAPPINGS = {
-    "MultiModelComparison": MultiModelComparison,
-    "ProfessionalBackgroundLibrary": ProfessionalBackgroundLibrary,
-}
+NODE_CLASS_MAPPINGS.update(
+    {
+        "MultiModelComparison": MultiModelComparison,
+        "ProfessionalBackgroundLibrary": ProfessionalBackgroundLibrary,
+    }
+)
 
-NODE_DISPLAY_NAME_MAPPINGS = {
-    "MultiModelComparison": "Multi-Model Comparison Grid",
-    "ProfessionalBackgroundLibrary": "Professional Background Presets",
-}
+NODE_DISPLAY_NAME_MAPPINGS.update(
+    {
+        "MultiModelComparison": "Multi-Model Comparison Grid",
+        "ProfessionalBackgroundLibrary": "Professional Background Presets",
+    }
+)

@@ -4,11 +4,10 @@ Text-to-image and image-to-image generation with Laura character
 """
 
 import torch
-from PIL import Image
-import numpy as np
 import folder_paths
 
-from .models import NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS
+NODE_CLASS_MAPPINGS = {}
+NODE_DISPLAY_NAME_MAPPINGS = {}
 
 
 # ============== LAURA SDXL GENERATOR ==============
@@ -177,7 +176,8 @@ class LauraPromptBuilder:
             },
         }
 
-    RETURN_TYPES = ("STRING",)
+    RETURN_TYPES = ("STRING", "STRING")
+    RETURN_NAMES = ("positive_prompt", "negative_prompt")
     FUNCTION = "build_prompt"
     CATEGORY = "Laura Studio/Generation"
     DESCRIPTION = "Build optimized prompts for Laura generation"
@@ -288,6 +288,7 @@ class SeedControl:
         }
 
     RETURN_TYPES = ("INT",)
+    RETURN_NAMES = ("seed",)
     FUNCTION = "control_seed"
     CATEGORY = "Laura Studio/Generation"
     DESCRIPTION = "Control seed for reproducible generation"
@@ -338,6 +339,7 @@ class LauraImageToImage:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "img2img"
     CATEGORY = "Laura Studio/Generation"
     DESCRIPTION = "Image to image with Laura preservation"
@@ -400,6 +402,7 @@ class LauraNegativePrompts:
         }
 
     RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("negative_prompt",)
     FUNCTION = "get_negative"
     CATEGORY = "Laura Studio/Generation"
     DESCRIPTION = "Get quality negative prompts"

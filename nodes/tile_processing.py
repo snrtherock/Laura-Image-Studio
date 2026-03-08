@@ -35,7 +35,7 @@ class TileSplitter:
 
     def split_tiles(self, image, tile_size, overlap):
         B, H, W, C = image.shape
-        stride = tile_size - overlap
+        stride = max(1, tile_size - overlap)
 
         # Calculate padding needed to fit tiles
         pad_h = (
@@ -57,8 +57,8 @@ class TileSplitter:
         tiles = []
         new_h, new_w = padded_image.shape[1], padded_image.shape[2]
 
-        for y in range(0, new_h - overlap, stride):
-            for x in range(0, new_w - overlap, stride):
+        for y in range(0, max(1, new_h - tile_size + 1), stride):
+            for x in range(0, max(1, new_w - tile_size + 1), stride):
                 tile = padded_image[:, y : y + tile_size, x : x + tile_size, :]
                 tiles.append(tile)
 
@@ -68,8 +68,8 @@ class TileSplitter:
             "tile_size": tile_size,
             "overlap": overlap,
             "stride": stride,
-            "tiles_x": (new_w - overlap) // stride,
-            "tiles_y": (new_h - overlap) // stride,
+            "tiles_x": len(range(0, max(1, new_w - tile_size + 1), stride)),
+            "tiles_y": len(range(0, max(1, new_h - tile_size + 1), stride)),
         }
 
         return (torch.cat(tiles, dim=0), tile_data)
@@ -89,6 +89,7 @@ class TileMerger:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "merge_tiles"
     CATEGORY = "Laura Studio/Tiles"
     DESCRIPTION = "Merge processed tiles back into one image"
@@ -115,8 +116,8 @@ class TileMerger:
             mask[:, :, -overlap:, :] *= fade.flip(0).view(1, 1, overlap, 1)
 
         tile_idx = 0
-        for y in range(0, new_h - overlap, stride):
-            for x in range(0, new_w - overlap, stride):
+        for y in range(0, max(1, new_h - tile_size + 1), stride):
+            for x in range(0, max(1, new_w - tile_size + 1), stride):
                 tile = tiles[tile_idx : tile_idx + 1]
                 merged[:, y : y + tile_size, x : x + tile_size, :] += tile * mask
                 weights[:, y : y + tile_size, x : x + tile_size, :] += mask
@@ -129,7 +130,7 @@ class TileMerger:
         return (merged[:, :H, :W, :],)
 
 
-# ============== TILE INPAINTER (MOCK) ==============
+# ============== TILE INPAINTER ==============
 class TileInpainter:
     """Specialized inpainting for tiled regions"""
 
@@ -147,15 +148,58 @@ class TileInpainter:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("tiles",)
     FUNCTION = "inpaint_tiles"
     CATEGORY = "Laura Studio/Tiles"
+    DESCRIPTION = "Refine tiled regions with inpainting at low denoise"
 
     def inpaint_tiles(self, model, clip, vae, tiles, prompt, denoise):
-        # This node would iterate over the tiles and apply low-denoise diffusion
-        # to add high-frequency details. This is an advanced concept
-        # that typically delegates back to UniversalGenerator or similar.
-        # Here we mock the behavior by assuming it returns the tiles.
-        return (tiles,)
+        from nodes import VAEEncode, KSampler, VAEDecode, CLIPTextEncode
+        import random
+
+        num_tiles = tiles.shape[0]
+
+        # If denoise is 0 or prompt is empty, skip processing
+        if denoise <= 0.0 or not prompt.strip():
+            return (tiles,)
+
+        # Encode prompts once (shared across all tiles)
+        positive = CLIPTextEncode().encode(clip, prompt)[0]
+        negative = CLIPTextEncode().encode(
+            clip, "blurry, low quality, artifacts, noise"
+        )[0]
+
+        vae_encoder = VAEEncode()
+        vae_decoder = VAEDecode()
+        seed = random.randint(0, 0xFFFFFFFFFFFFFFFF)
+
+        processed_tiles = []
+        for i in range(num_tiles):
+            tile = tiles[i : i + 1]
+
+            # VAEEncode the tile -> latent space
+            encoded = vae_encoder.encode(vae, tile)[0]
+            latent = {"samples": encoded["samples"]}
+
+            # KSampler with low denoise to refine details without destroying content
+            sampled = KSampler().sample(
+                model,
+                seed + i,
+                20,
+                7.0,
+                "euler",
+                "normal",
+                positive,
+                negative,
+                latent,
+                denoise=denoise,
+            )[0]
+
+            # VAEDecode back to pixel space
+            result = vae_decoder.decode(vae, sampled)[0]
+            processed_tiles.append(result)
+
+        return (torch.cat(processed_tiles, dim=0),)
 
 
 NODE_CLASS_MAPPINGS.update(

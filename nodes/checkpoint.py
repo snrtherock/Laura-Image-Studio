@@ -32,7 +32,7 @@ class CheckpointSaver:
                 "latent": ("LATENT",),
                 "mask": ("MASK",),
                 "metadata": ("STRING", {"default": ""}),
-            }
+            },
         }
 
     RETURN_TYPES = ("IMAGE", "LATENT", "MASK", "STRING")
@@ -41,8 +41,16 @@ class CheckpointSaver:
     CATEGORY = "Laura Studio/Checkpoint"
     DESCRIPTION = "Save intermediate state for crash recovery"
 
-    def save_checkpoint(self, image, checkpoint_name, save_path, enabled,
-                        latent=None, mask=None, metadata=""):
+    def save_checkpoint(
+        self,
+        image,
+        checkpoint_name,
+        save_path,
+        enabled,
+        latent=None,
+        mask=None,
+        metadata="",
+    ):
         checkpoint_dir = ""
 
         if enabled:
@@ -58,7 +66,9 @@ class CheckpointSaver:
             # Save latent as torch tensor
             latent_path = ""
             if latent is not None:
-                latent_path = os.path.join(checkpoint_dir, f"{checkpoint_name}_latent.pt")
+                latent_path = os.path.join(
+                    checkpoint_dir, f"{checkpoint_name}_latent.pt"
+                )
                 torch.save(latent, latent_path)
 
             # Save mask as torch tensor
@@ -78,10 +88,17 @@ class CheckpointSaver:
                 "image_shape": list(image.shape),
                 "metadata": metadata,
             }
-            manifest_path = os.path.join(checkpoint_dir, f"{checkpoint_name}_manifest.json")
+            manifest_path = os.path.join(
+                checkpoint_dir, f"{checkpoint_name}_manifest.json"
+            )
             with open(manifest_path, "w") as f:
                 json.dump(manifest, f, indent=2)
 
+        # Provide safe defaults for optional outputs
+        if latent is None:
+            latent = {"samples": torch.zeros(1, 4, 8, 8)}
+        if mask is None:
+            mask = torch.zeros(1, 64, 64)
         return (image, latent, mask, checkpoint_dir)
 
 
@@ -100,7 +117,7 @@ class PipelineCheckpointLoader:
                 "fallback_image": ("IMAGE",),
                 "fallback_latent": ("LATENT",),
                 "fallback_mask": ("MASK",),
-            }
+            },
         }
 
     RETURN_TYPES = ("IMAGE", "LATENT", "MASK", "BOOLEAN", "STRING")
@@ -109,15 +126,31 @@ class PipelineCheckpointLoader:
     CATEGORY = "Laura Studio/Checkpoint"
     DESCRIPTION = "Load saved checkpoint for resume"
 
-    def load_checkpoint(self, checkpoint_name, load_path,
-                        fallback_image=None, fallback_latent=None, fallback_mask=None):
+    def load_checkpoint(
+        self,
+        checkpoint_name,
+        load_path,
+        fallback_image=None,
+        fallback_latent=None,
+        fallback_mask=None,
+    ):
         output_dir = folder_paths.get_output_directory()
         checkpoint_dir = os.path.join(output_dir, load_path)
         manifest_path = os.path.join(checkpoint_dir, f"{checkpoint_name}_manifest.json")
 
         if not os.path.exists(manifest_path):
             info = f"Checkpoint '{checkpoint_name}' not found, using fallback"
-            return (fallback_image, fallback_latent, fallback_mask, False, info)
+            # Provide safe defaults when fallbacks are None
+            out_image = fallback_image
+            out_latent = fallback_latent
+            out_mask = fallback_mask
+            if out_image is None:
+                out_image = torch.zeros(1, 64, 64, 3)
+            if out_latent is None:
+                out_latent = {"samples": torch.zeros(1, 4, 8, 8)}
+            if out_mask is None:
+                out_mask = torch.zeros(1, 64, 64)
+            return (out_image, out_latent, out_mask, False, info)
 
         with open(manifest_path, "r") as f:
             manifest = json.load(f)
@@ -141,6 +174,14 @@ class PipelineCheckpointLoader:
 
         saved_time = manifest.get("timestamp_human", "unknown")
         info = f"Loaded checkpoint '{checkpoint_name}' saved at {saved_time}"
+
+        # Provide safe defaults if files were missing and fallbacks were None
+        if image is None:
+            image = torch.zeros(1, 64, 64, 3)
+        if latent is None:
+            latent = {"samples": torch.zeros(1, 4, 8, 8)}
+        if mask is None:
+            mask = torch.zeros(1, 64, 64)
 
         return (image, latent, mask, True, info)
 
@@ -173,20 +214,26 @@ class CheckpointManager:
             return (f"Checkpoint directory not found: {checkpoint_dir}",)
 
         if action == "list":
-            manifests = [f for f in os.listdir(checkpoint_dir) if f.endswith("_manifest.json")]
+            manifests = [
+                f for f in os.listdir(checkpoint_dir) if f.endswith("_manifest.json")
+            ]
             if not manifests:
                 return ("No checkpoints found.",)
             lines = []
             for m in sorted(manifests):
                 with open(os.path.join(checkpoint_dir, m), "r") as f:
                     data = json.load(f)
-                lines.append(f"- {data['checkpoint_name']} ({data.get('timestamp_human', 'unknown')})")
+                lines.append(
+                    f"- {data['checkpoint_name']} ({data.get('timestamp_human', 'unknown')})"
+                )
             return ("\n".join(lines),)
 
         elif action == "clean_old":
             cutoff = time.time() - (max_age_hours * 3600)
             removed = 0
-            manifests = [f for f in os.listdir(checkpoint_dir) if f.endswith("_manifest.json")]
+            manifests = [
+                f for f in os.listdir(checkpoint_dir) if f.endswith("_manifest.json")
+            ]
             for m in manifests:
                 mpath = os.path.join(checkpoint_dir, m)
                 with open(mpath, "r") as f:
@@ -218,8 +265,12 @@ class CheckpointManager:
                     total_size += os.path.getsize(fpath)
                     file_count += 1
             size_mb = total_size / (1024 * 1024)
-            manifests = [f for f in os.listdir(checkpoint_dir) if f.endswith("_manifest.json")]
-            return (f"Checkpoints: {len(manifests)}, Files: {file_count}, Size: {size_mb:.1f} MB",)
+            manifests = [
+                f for f in os.listdir(checkpoint_dir) if f.endswith("_manifest.json")
+            ]
+            return (
+                f"Checkpoints: {len(manifests)}, Files: {file_count}, Size: {size_mb:.1f} MB",
+            )
 
         return ("Unknown action.",)
 
@@ -233,14 +284,24 @@ class AutoCheckpoint:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "stage": (["post_generation", "post_face", "post_dressing", "post_inpainting",
-                           "post_background", "pre_upscale", "post_upscale", "final"],),
+                "stage": (
+                    [
+                        "post_generation",
+                        "post_face",
+                        "post_dressing",
+                        "post_inpainting",
+                        "post_background",
+                        "pre_upscale",
+                        "post_upscale",
+                        "final",
+                    ],
+                ),
                 "enabled": ("BOOLEAN", {"default": True}),
                 "workflow_id": ("STRING", {"default": "default"}),
             },
             "optional": {
                 "latent": ("LATENT",),
-            }
+            },
         }
 
     RETURN_TYPES = ("IMAGE", "LATENT")
@@ -266,7 +327,9 @@ class AutoCheckpoint:
             # Save latent
             latent_path = ""
             if latent is not None:
-                latent_path = os.path.join(checkpoint_dir, f"{checkpoint_name}_latent.pt")
+                latent_path = os.path.join(
+                    checkpoint_dir, f"{checkpoint_name}_latent.pt"
+                )
                 torch.save(latent, latent_path)
 
             # Write manifest
@@ -280,14 +343,20 @@ class AutoCheckpoint:
                 "latent_path": latent_path,
                 "image_shape": list(image.shape),
             }
-            manifest_path = os.path.join(checkpoint_dir, f"{checkpoint_name}_manifest.json")
+            manifest_path = os.path.join(
+                checkpoint_dir, f"{checkpoint_name}_manifest.json"
+            )
             with open(manifest_path, "w") as f:
                 json.dump(manifest, f, indent=2)
 
+        if latent is None:
+            latent = {"samples": torch.zeros(1, 4, 8, 8)}
         return (image, latent)
 
 
 # ============== RESUME FROM CHECKPOINT ==============
+
+
 class ResumeFromCheckpoint:
     """Resume workflow from last successful checkpoint"""
 
@@ -303,7 +372,7 @@ class ResumeFromCheckpoint:
             "optional": {
                 "specific_checkpoint": ("STRING", {"default": ""}),
                 "fresh_latent": ("LATENT",),
-            }
+            },
         }
 
     RETURN_TYPES = ("IMAGE", "LATENT", "STRING", "BOOLEAN")
@@ -312,8 +381,18 @@ class ResumeFromCheckpoint:
     CATEGORY = "Laura Studio/Checkpoint"
     DESCRIPTION = "Resume from crash or start fresh"
 
-    def resume(self, mode, fresh_image, checkpoint_path, workflow_id,
-               specific_checkpoint="", fresh_latent=None):
+    def resume(
+        self,
+        mode,
+        fresh_image,
+        checkpoint_path,
+        workflow_id,
+        specific_checkpoint="",
+        fresh_latent=None,
+    ):
+        # Ensure latent is never None for downstream consumers
+        if fresh_latent is None:
+            fresh_latent = {"samples": torch.zeros(1, 4, 8, 8)}
 
         if mode == "fresh_start":
             return (fresh_image, fresh_latent, "fresh_start", False)
@@ -322,9 +401,13 @@ class ResumeFromCheckpoint:
         checkpoint_dir = os.path.join(output_dir, checkpoint_path)
 
         if mode == "resume_specific" and specific_checkpoint:
-            manifest_path = os.path.join(checkpoint_dir, f"{specific_checkpoint}_manifest.json")
+            manifest_path = os.path.join(
+                checkpoint_dir, f"{specific_checkpoint}_manifest.json"
+            )
             if os.path.exists(manifest_path):
-                return self._load_from_manifest(manifest_path, fresh_image, fresh_latent)
+                return self._load_from_manifest(
+                    manifest_path, fresh_image, fresh_latent
+                )
 
         if mode == "resume_latest":
             if not os.path.exists(checkpoint_dir):
@@ -366,22 +449,28 @@ class ResumeFromCheckpoint:
             latent = torch.load(manifest["latent_path"], weights_only=True)
 
         checkpoint_name = manifest.get("checkpoint_name", "unknown")
+        if latent is None:
+            latent = {"samples": torch.zeros(1, 4, 8, 8)}
         return (image, latent, checkpoint_name, True)
 
 
 # Register all nodes
-NODE_CLASS_MAPPINGS.update({
-    "CheckpointSaver": CheckpointSaver,
-    "PipelineCheckpointLoader": PipelineCheckpointLoader,
-    "CheckpointManager": CheckpointManager,
-    "AutoCheckpoint": AutoCheckpoint,
-    "ResumeFromCheckpoint": ResumeFromCheckpoint,
-})
+NODE_CLASS_MAPPINGS.update(
+    {
+        "CheckpointSaver": CheckpointSaver,
+        "PipelineCheckpointLoader": PipelineCheckpointLoader,
+        "CheckpointManager": CheckpointManager,
+        "AutoCheckpoint": AutoCheckpoint,
+        "ResumeFromCheckpoint": ResumeFromCheckpoint,
+    }
+)
 
-NODE_DISPLAY_NAME_MAPPINGS.update({
-    "CheckpointSaver": "Checkpoint Saver",
-    "PipelineCheckpointLoader": "Pipeline Checkpoint Loader",
-    "CheckpointManager": "Checkpoint Manager",
-    "AutoCheckpoint": "Auto Checkpoint (Stage)",
-    "ResumeFromCheckpoint": "Resume From Checkpoint",
-})
+NODE_DISPLAY_NAME_MAPPINGS.update(
+    {
+        "CheckpointSaver": "Checkpoint Saver",
+        "PipelineCheckpointLoader": "Pipeline Checkpoint Loader",
+        "CheckpointManager": "Checkpoint Manager",
+        "AutoCheckpoint": "Auto Checkpoint (Stage)",
+        "ResumeFromCheckpoint": "Resume From Checkpoint",
+    }
+)

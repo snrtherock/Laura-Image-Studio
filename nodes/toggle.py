@@ -3,8 +3,6 @@ Laura Image Studio - Toggle/Bypass Nodes
 Conditional pass-through nodes for enabling/disabling pipeline stages
 """
 
-import torch
-
 NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
 
@@ -225,6 +223,20 @@ class PipelineToggle:
             out_image = input_image
             out_latent = input_latent
             out_mask = input_mask
+
+        # Provide safe defaults when outputs would be None to prevent downstream crashes
+        if out_image is None:
+            import torch
+
+            out_image = torch.zeros(1, 64, 64, 3)
+        if out_latent is None:
+            import torch
+
+            out_latent = {"samples": torch.zeros(1, 4, 8, 8)}
+        if out_mask is None:
+            import torch
+
+            out_mask = torch.zeros(1, 64, 64)
 
         return (out_image, out_latent, out_mask, enabled, stage_name)
 

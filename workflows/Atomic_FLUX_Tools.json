@@ -1,0 +1,220 @@
+{
+  "last_node_id": 30,
+  "last_link_id": 30,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "FluxFillLoader",
+      "pos": [
+        10,
+        10
+      ],
+      "widgets_values": [
+        "flux1-dev.safetensors",
+        "auto",
+        "auto"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "FluxFillGenerator",
+      "pos": [
+        400,
+        10
+      ],
+      "widgets_values": [
+        "Professional product photo on clean white background, studio lighting, 8k",
+        0,
+        28,
+        30.0,
+        1.0,
+        ""
+      ]
+    },
+    {
+      "id": 5,
+      "type": "FluxDepthLoader",
+      "pos": [
+        10,
+        250
+      ],
+      "widgets_values": [
+        "flux1-dev.safetensors",
+        "control_v3p_flux_depth.safetensors",
+        0.85
+      ]
+    },
+    {
+      "id": 6,
+      "type": "FluxDepthGenerator",
+      "pos": [
+        400,
+        250
+      ],
+      "widgets_values": [
+        "Beautiful architectural interior, warm lighting, detailed textures, 8k",
+        0,
+        28,
+        10.0,
+        1024,
+        1024,
+        "",
+        -1.0
+      ]
+    },
+    {
+      "id": 9,
+      "type": "FluxCannyLoader",
+      "pos": [
+        10,
+        500
+      ],
+      "widgets_values": [
+        "flux1-dev.safetensors",
+        "control_v3p_flux_canny.safetensors",
+        0.9
+      ]
+    },
+    {
+      "id": 10,
+      "type": "FluxCannyGenerator",
+      "pos": [
+        400,
+        500
+      ],
+      "widgets_values": [
+        "Detailed illustration following the edge map, vibrant colors, professional art",
+        0,
+        28,
+        10.0,
+        1024,
+        1024,
+        "",
+        -1.0,
+        100,
+        200,
+        false
+      ]
+    },
+    {
+      "id": 13,
+      "type": "FluxReduxLoader",
+      "pos": [
+        10,
+        750
+      ],
+      "widgets_values": [
+        "flux1-dev.safetensors",
+        "auto",
+        0.75
+      ]
+    },
+    {
+      "id": 14,
+      "type": "FluxReduxGenerator",
+      "pos": [
+        400,
+        750
+      ],
+      "widgets_values": [
+        "Variation of the reference image with a different color palette, same composition",
+        0,
+        28,
+        4.0,
+        1024,
+        1024,
+        "",
+        -1.0,
+        0.75
+      ]
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "FLUX_TOOL_PIPE"
+    ],
+    [
+      5,
+      5,
+      0,
+      6,
+      0,
+      "FLUX_TOOL_PIPE"
+    ],
+    [
+      9,
+      9,
+      0,
+      10,
+      0,
+      "FLUX_TOOL_PIPE"
+    ],
+    [
+      13,
+      13,
+      0,
+      14,
+      0,
+      "FLUX_TOOL_PIPE"
+    ]
+  ],
+  "groups": [
+    {
+      "title": "FLUX Fill (Inpainting)",
+      "bounding": [
+        0,
+        0,
+        900,
+        200
+      ],
+      "color": "#332222"
+    },
+    {
+      "title": "FLUX Depth (Depth-Guided)",
+      "bounding": [
+        0,
+        240,
+        900,
+        200
+      ],
+      "color": "#223322"
+    },
+    {
+      "title": "FLUX Canny (Edge-Guided)",
+      "bounding": [
+        0,
+        490,
+        900,
+        200
+      ],
+      "color": "#222233"
+    },
+    {
+      "title": "FLUX Redux (Image Variation)",
+      "bounding": [
+        0,
+        740,
+        900,
+        200
+      ],
+      "color": "#332233"
+    }
+  ],
+  "config": {},
+  "extra": {},
+  "version": 0.9,
+  "description": "FLUX.1 Tools Atomic Workflow \u2014 Demonstrates all 4 FLUX Tool pipelines: Fill (inpainting), Depth (depth-guided generation), Canny (edge-guided generation), and Redux (image variation). Each pipeline is independent \u2014 connect your images/masks to the generators.",
+  "models": [
+    {
+      "name": "flux1-dev.safetensors",
+      "url": "https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors",
+      "directory": "checkpoints",
+      "size": 24000000000
+    }
+  ]
+}
