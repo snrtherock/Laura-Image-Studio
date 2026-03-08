@@ -25,6 +25,10 @@ def _check_dependencies():
     try:
         # sys.executable ensures we use the EXACT python that ComfyUI is currently using
         # This handles Portable (python_embeded) vs Conda vs System Python automatically.
+        # --only-binary :all: prevents pip from trying to build packages from source,
+        # which fails on Portable Python (no compiler / meson / build tools).
+        # If a wheel isn't available, that package is simply skipped rather than
+        # crashing the entire install with a mesonpy/compiler error.
         subprocess.check_call(
             [
                 sys.executable,
@@ -35,13 +39,41 @@ def _check_dependencies():
                 _req_file,
                 "--quiet",
                 "--no-warn-script-location",
+                "--only-binary",
+                ":all:",
             ]
         )
         os.environ["LAURA_STUDIO_REQS_CHECKED"] = "1"
         print("## [snrtherock/Laura Studio] All dependencies verified/installed.")
+    except subprocess.CalledProcessError:
+        # Wheel-only install failed (some packages lack wheels for this platform).
+        # Fall back to a normal install — if user has build tools it'll work,
+        # otherwise the warning below tells them what to do.
+        try:
+            subprocess.check_call(
+                [
+                    sys.executable,
+                    "-m",
+                    "pip",
+                    "install",
+                    "-r",
+                    _req_file,
+                    "--quiet",
+                    "--no-warn-script-location",
+                ]
+            )
+            os.environ["LAURA_STUDIO_REQS_CHECKED"] = "1"
+            print("## [snrtherock/Laura Studio] All dependencies verified/installed.")
+        except Exception as e:
+            os.environ["LAURA_STUDIO_REQS_CHECKED"] = "1"  # Don't retry every restart
+            print(f"## [snrtherock/Laura Studio] AUTO-INSTALL WARNING: {e}")
+            print("## This is usually harmless if deps are already installed.")
+            print("## Manual install if needed: pip install -r requirements.txt")
     except Exception as e:
+        os.environ["LAURA_STUDIO_REQS_CHECKED"] = "1"  # Don't retry every restart
         print(f"## [snrtherock/Laura Studio] AUTO-INSTALL WARNING: {e}")
-        print("## Manual install may be required: pip install -r requirements.txt")
+        print("## This is usually harmless if deps are already installed.")
+        print("## Manual install if needed: pip install -r requirements.txt")
 
 
 # Run dependency check BEFORE loading any nodes
