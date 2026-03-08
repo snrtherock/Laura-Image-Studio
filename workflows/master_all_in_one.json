@@ -1,5 +1,5 @@
 {
-  "last_node_id": 1006,
+  "last_node_id": 1007,
   "last_link_id": 700,
   "nodes": [
     {
@@ -21,53 +21,6 @@
       "properties": {},
       "widgets_values": [
         "LAURA IMAGE STUDIO v0.9 - MASTER ALL-IN-ONE WORKFLOW\n\nThis workflow demonstrates ALL 121 Laura Image Studio nodes.\nOrganized into functional groups:\n\n1. MODEL LOADING & OPTIMIZATION (Row 1)\n2. GENERATION & PROMPT CONTROL (Row 2)\n3. FLUX.1 TOOLS - Fill/Depth/Canny/Redux (Row 3)\n4. IMG2IMG, INPAINTING & OUTPAINTING (Row 4)\n5. BACKGROUND & DRESSING (Row 5)\n6. FACE PROCESSING (Row 6)\n7. UPSCALING PIPELINE (Row 7)\n8. VIDEO ENGINES (Row 8)\n9. BATCH & TILE PROCESSING (Row 9)\n10. VRAM MANAGEMENT & OUTPUT (Row 10)\n\nGPU REQUIREMENTS:\n- 24GB+: Run everything\n- 16GB: Use FP8 + sequential groups\n- 12GB: FP8 + Extreme offload\n- 8GB: FP8 + skip 4K+/video"
-      ]
-    },
-    {
-      "id": 1,
-      "type": "UniversalModelLoader",
-      "pos": [
-        50,
-        50
-      ],
-      "size": [
-        450,
-        200
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "slot_index": 0
-        },
-        {
-          "name": "clip",
-          "type": "CLIP",
-          "slot_index": 1
-        },
-        {
-          "name": "vae",
-          "type": "VAE",
-          "slot_index": 2
-        },
-        {
-          "name": "detected_type",
-          "type": "STRING",
-          "slot_index": 3
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "UniversalModelLoader"
-      },
-      "widgets_values": [
-        "juggernaut_xl_v8.safetensors",
-        "auto",
-        1024,
-        1024
       ]
     },
     {
@@ -138,7 +91,7 @@
         {
           "name": "model",
           "type": "MODEL",
-          "link": 1
+          "link": null
         }
       ],
       "outputs": [
@@ -252,7 +205,7 @@
         {
           "name": "clip",
           "type": "CLIP",
-          "link": 5
+          "link": null
         }
       ],
       "outputs": [
@@ -278,56 +231,6 @@
       ]
     },
     {
-      "id": 6,
-      "type": "MultiLoraStack",
-      "pos": [
-        500,
-        400
-      ],
-      "size": [
-        450,
-        220
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 6
-        },
-        {
-          "name": "clip",
-          "type": "CLIP",
-          "link": 7
-        }
-      ],
-      "outputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "slot_index": 0
-        },
-        {
-          "name": "clip",
-          "type": "CLIP",
-          "slot_index": 1
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "MultiLoraStack"
-      },
-      "widgets_values": [
-        "None",
-        0.7,
-        "None",
-        0.5,
-        "None",
-        0.3
-      ]
-    },
-    {
       "id": 7,
       "type": "CharacterLoRALoader",
       "pos": [
@@ -345,12 +248,12 @@
         {
           "name": "model",
           "type": "MODEL",
-          "link": 8
+          "link": null
         },
         {
           "name": "clip",
           "type": "CLIP",
-          "link": 9
+          "link": null
         }
       ],
       "outputs": [
@@ -509,7 +412,7 @@
         {
           "name": "vae",
           "type": "VAE",
-          "link": 14
+          "link": null
         }
       ],
       "outputs": [
@@ -607,7 +510,7 @@
         {
           "name": "vae",
           "type": "VAE",
-          "link": 18
+          "link": null
         }
       ],
       "outputs": [
@@ -1216,7 +1119,7 @@
         {
           "name": "vae",
           "type": "VAE",
-          "link": 42
+          "link": null
         },
         {
           "name": "image",
@@ -1272,7 +1175,7 @@
         {
           "name": "vae",
           "type": "VAE",
-          "link": 46
+          "link": null
         },
         {
           "name": "image",
@@ -1411,7 +1314,7 @@
         {
           "name": "vae",
           "type": "VAE",
-          "link": 52
+          "link": null
         },
         {
           "name": "image",
@@ -1471,7 +1374,7 @@
         {
           "name": "vae",
           "type": "VAE",
-          "link": 57
+          "link": null
         },
         {
           "name": "image",
@@ -1531,7 +1434,7 @@
         {
           "name": "vae",
           "type": "VAE",
-          "link": 62
+          "link": null
         },
         {
           "name": "image",
@@ -1647,7 +1550,7 @@
         {
           "name": "vae",
           "type": "VAE",
-          "link": 69
+          "link": null
         },
         {
           "name": "image",
@@ -1708,7 +1611,7 @@
         {
           "name": "vae",
           "type": "VAE",
-          "link": 74
+          "link": null
         },
         {
           "name": "image",
@@ -1848,7 +1751,7 @@
         {
           "name": "vae",
           "type": "VAE",
-          "link": 82
+          "link": null
         }
       ],
       "outputs": [
@@ -2057,7 +1960,7 @@
         {
           "name": "vae",
           "type": "VAE",
-          "link": 91
+          "link": null
         },
         {
           "name": "source_image",
@@ -2249,7 +2152,7 @@
         {
           "name": "vae",
           "type": "VAE",
-          "link": 101
+          "link": null
         },
         {
           "name": "source_image",
@@ -2312,7 +2215,7 @@
         {
           "name": "vae",
           "type": "VAE",
-          "link": 106
+          "link": null
         },
         {
           "name": "source_image",
@@ -2369,7 +2272,7 @@
         {
           "name": "vae",
           "type": "VAE",
-          "link": 110
+          "link": null
         },
         {
           "name": "source_image",
@@ -2725,7 +2628,7 @@
         {
           "name": "vae",
           "type": "VAE",
-          "link": 129
+          "link": null
         }
       ],
       "outputs": [
@@ -3061,7 +2964,7 @@
         {
           "name": "vae",
           "type": "VAE",
-          "link": 142
+          "link": null
         }
       ],
       "outputs": [
@@ -4011,7 +3914,7 @@
         {
           "name": "vae",
           "type": "VAE",
-          "link": 181
+          "link": null
         }
       ],
       "outputs": [
@@ -4066,7 +3969,7 @@
         {
           "name": "vae",
           "type": "VAE",
-          "link": 185
+          "link": null
         }
       ],
       "outputs": [
@@ -4617,7 +4520,7 @@
         {
           "name": "vae",
           "type": "VAE",
-          "link": 208
+          "link": null
         }
       ],
       "outputs": [
@@ -5155,7 +5058,7 @@
         {
           "name": "vae",
           "type": "VAE",
-          "link": 221
+          "link": null
         },
         {
           "name": "tiles",
@@ -5266,78 +5169,6 @@
       ]
     },
     {
-      "id": 117,
-      "type": "VRAMAutoDetector",
-      "pos": [
-        50,
-        8480
-      ],
-      "size": [
-        350,
-        120
-      ],
-      "flags": {},
-      "order": 116,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "vram_gb",
-          "type": "FLOAT",
-          "slot_index": 0
-        },
-        {
-          "name": "tier",
-          "type": "STRING",
-          "slot_index": 1
-        },
-        {
-          "name": "report",
-          "type": "STRING",
-          "slot_index": 2
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "VRAMAutoDetector"
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 118,
-      "type": "QuantizationSelector",
-      "pos": [
-        450,
-        8480
-      ],
-      "size": [
-        350,
-        120
-      ],
-      "flags": {},
-      "order": 117,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "vram_gb",
-          "type": "FLOAT",
-          "link": 226
-        }
-      ],
-      "outputs": [
-        {
-          "name": "quant_config",
-          "type": "STRING",
-          "slot_index": 0
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "QuantizationSelector"
-      },
-      "widgets_values": [
-        "auto"
-      ]
-    },
-    {
       "id": 119,
       "type": "ResolutionScaler",
       "pos": [
@@ -5355,7 +5186,7 @@
         {
           "name": "vram_gb",
           "type": "FLOAT",
-          "link": 227
+          "link": null
         }
       ],
       "outputs": [
@@ -5377,67 +5208,6 @@
         1024,
         1024,
         "auto"
-      ]
-    },
-    {
-      "id": 120,
-      "type": "ModelOffloadConfig",
-      "pos": [
-        1250,
-        8480
-      ],
-      "size": [
-        350,
-        120
-      ],
-      "flags": {},
-      "order": 119,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "config",
-          "type": "STRING",
-          "slot_index": 0
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "ModelOffloadConfig"
-      },
-      "widgets_values": [
-        "auto",
-        true
-      ]
-    },
-    {
-      "id": 121,
-      "type": "QuantizationConfig",
-      "pos": [
-        1650,
-        8480
-      ],
-      "size": [
-        350,
-        120
-      ],
-      "flags": {},
-      "order": 120,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "config",
-          "type": "STRING",
-          "slot_index": 0
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "QuantizationConfig"
-      },
-      "widgets_values": [
-        "auto",
-        true,
-        true
       ]
     },
     {
@@ -5494,205 +5264,6 @@
       "properties": {},
       "widgets_values": [
         "laura_master_v09_output"
-      ]
-    },
-    {
-      "id": 1000,
-      "type": "LauraModelLinks",
-      "pos": [
-        2000,
-        50
-      ],
-      "size": [
-        400,
-        200
-      ],
-      "flags": {},
-      "order": 123,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "model_links",
-          "type": "STRING",
-          "slot_index": 0
-        },
-        {
-          "name": "directory_tree",
-          "type": "STRING",
-          "slot_index": 1
-        },
-        {
-          "name": "download_urls_json",
-          "type": "STRING",
-          "slot_index": 2
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LauraModelLinks"
-      },
-      "widgets_values": [
-        "z_image_turbo"
-      ]
-    },
-    {
-      "id": 1001,
-      "type": "LauraModelManager",
-      "pos": [
-        2000,
-        350
-      ],
-      "size": [
-        400,
-        250
-      ],
-      "flags": {},
-      "order": 124,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "model_info",
-          "type": "STRING",
-          "slot_index": 0
-        },
-        {
-          "name": "recommended_quant",
-          "type": "STRING",
-          "slot_index": 1
-        },
-        {
-          "name": "install_status",
-          "type": "STRING",
-          "slot_index": 2
-        },
-        {
-          "name": "model_key",
-          "type": "STRING",
-          "slot_index": 3
-        },
-        {
-          "name": "total_size_gb",
-          "type": "FLOAT",
-          "slot_index": 4
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LauraModelManager"
-      },
-      "widgets_values": [
-        "flux1_dev",
-        true,
-        "high"
-      ]
-    },
-    {
-      "id": 1002,
-      "type": "LauraAutoConfig",
-      "pos": [
-        2000,
-        650
-      ],
-      "size": [
-        400,
-        200
-      ],
-      "flags": {},
-      "order": 125,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "auto_config",
-          "type": "STRING",
-          "slot_index": 0
-        },
-        {
-          "name": "recommended_model",
-          "type": "STRING",
-          "slot_index": 1
-        },
-        {
-          "name": "recommended_quant",
-          "type": "STRING",
-          "slot_index": 2
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LauraAutoConfig"
-      },
-      "widgets_values": [
-        "image_gen",
-        true,
-        false
-      ]
-    },
-    {
-      "id": 1003,
-      "type": "LauraQuantizationAdvisor",
-      "pos": [
-        2000,
-        950
-      ],
-      "size": [
-        400,
-        150
-      ],
-      "flags": {},
-      "order": 126,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "recommendation",
-          "type": "STRING",
-          "slot_index": 0
-        },
-        {
-          "name": "all_variants",
-          "type": "STRING",
-          "slot_index": 1
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LauraQuantizationAdvisor"
-      },
-      "widgets_values": [
-        "flux1_dev"
-      ]
-    },
-    {
-      "id": 1004,
-      "type": "LauraModelDownloadHelper",
-      "pos": [
-        2000,
-        1250
-      ],
-      "size": [
-        400,
-        150
-      ],
-      "flags": {},
-      "order": 127,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "download_info",
-          "type": "STRING",
-          "slot_index": 0
-        },
-        {
-          "name": "urls_json",
-          "type": "STRING",
-          "slot_index": 1
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LauraModelDownloadHelper"
-      },
-      "widgets_values": [
-        "flux1_dev"
       ]
     },
     {
@@ -5763,18 +5334,100 @@
         true,
         false
       ]
+    },
+    {
+      "id": 1007,
+      "type": "LauraControlCenter",
+      "pos": [
+        50,
+        50
+      ],
+      "size": [
+        400,
+        600
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "properties": {
+        "Node name for S&R": "LauraControlCenter"
+      },
+      "widgets_values": [
+        "z_image_turbo",
+        "none",
+        "none",
+        "none",
+        "None",
+        1.0,
+        "None",
+        1.0,
+        "None",
+        1.0,
+        true,
+        "high",
+        true,
+        false,
+        1024,
+        1024
+      ],
+      "title": "Laura Control Center",
+      "color": "#226",
+      "bgcolor": "#337",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [],
+          "slot_index": 0
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "links": [],
+          "slot_index": 1
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "links": [],
+          "slot_index": 2
+        },
+        {
+          "name": "detected_type",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 3
+        },
+        {
+          "name": "default_width",
+          "type": "INT",
+          "links": [],
+          "slot_index": 4
+        },
+        {
+          "name": "default_height",
+          "type": "INT",
+          "links": [],
+          "slot_index": 5
+        },
+        {
+          "name": "status_report",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 6
+        },
+        {
+          "name": "config_json",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 7
+        }
+      ]
     }
   ],
   "links": [
     [
-      1,
-      1,
-      0,
-      2,
-      0,
-      "MODEL"
-    ],
-    [
       2,
       2,
       0,
@@ -5797,46 +5450,6 @@
       5,
       0,
       "MODEL"
-    ],
-    [
-      5,
-      1,
-      1,
-      5,
-      1,
-      "CLIP"
-    ],
-    [
-      6,
-      5,
-      0,
-      6,
-      0,
-      "MODEL"
-    ],
-    [
-      7,
-      5,
-      1,
-      6,
-      1,
-      "CLIP"
-    ],
-    [
-      8,
-      6,
-      0,
-      7,
-      0,
-      "MODEL"
-    ],
-    [
-      9,
-      6,
-      1,
-      7,
-      1,
-      "CLIP"
     ],
     [
       10,
@@ -5869,14 +5482,6 @@
       11,
       1,
       "CLIP"
-    ],
-    [
-      14,
-      1,
-      2,
-      11,
-      2,
-      "VAE"
     ],
     [
       15,
@@ -5901,14 +5506,6 @@
       13,
       1,
       "CLIP"
-    ],
-    [
-      18,
-      1,
-      2,
-      13,
-      2,
-      "VAE"
     ],
     [
       19,
@@ -6095,14 +5692,6 @@
       "CLIP"
     ],
     [
-      42,
-      1,
-      2,
-      26,
-      2,
-      "VAE"
-    ],
-    [
       43,
       11,
       0,
@@ -6125,14 +5714,6 @@
       27,
       1,
       "CLIP"
-    ],
-    [
-      46,
-      1,
-      2,
-      27,
-      2,
-      "VAE"
     ],
     [
       47,
@@ -6175,14 +5756,6 @@
       "CLIP"
     ],
     [
-      52,
-      1,
-      2,
-      30,
-      2,
-      "VAE"
-    ],
-    [
       53,
       11,
       0,
@@ -6215,14 +5788,6 @@
       "CLIP"
     ],
     [
-      57,
-      1,
-      2,
-      31,
-      2,
-      "VAE"
-    ],
-    [
       58,
       11,
       0,
@@ -6253,14 +5818,6 @@
       32,
       1,
       "CLIP"
-    ],
-    [
-      62,
-      1,
-      2,
-      32,
-      2,
-      "VAE"
     ],
     [
       63,
@@ -6311,14 +5868,6 @@
       "CLIP"
     ],
     [
-      69,
-      1,
-      2,
-      34,
-      2,
-      "VAE"
-    ],
-    [
       70,
       11,
       0,
@@ -6349,14 +5898,6 @@
       35,
       1,
       "CLIP"
-    ],
-    [
-      74,
-      1,
-      2,
-      35,
-      2,
-      "VAE"
     ],
     [
       75,
@@ -6413,14 +5954,6 @@
       38,
       1,
       "CLIP"
-    ],
-    [
-      82,
-      1,
-      2,
-      38,
-      2,
-      "VAE"
     ],
     [
       83,
@@ -6485,14 +6018,6 @@
       43,
       1,
       "CLIP"
-    ],
-    [
-      91,
-      1,
-      2,
-      43,
-      2,
-      "VAE"
     ],
     [
       92,
@@ -6567,14 +6092,6 @@
       "CLIP"
     ],
     [
-      101,
-      1,
-      2,
-      47,
-      2,
-      "VAE"
-    ],
-    [
       102,
       11,
       0,
@@ -6607,14 +6124,6 @@
       "CLIP"
     ],
     [
-      106,
-      1,
-      2,
-      48,
-      2,
-      "VAE"
-    ],
-    [
       107,
       11,
       0,
@@ -6637,14 +6146,6 @@
       49,
       1,
       "CLIP"
-    ],
-    [
-      110,
-      1,
-      2,
-      49,
-      2,
-      "VAE"
     ],
     [
       111,
@@ -6791,14 +6292,6 @@
       "CLIP"
     ],
     [
-      129,
-      1,
-      2,
-      57,
-      3,
-      "VAE"
-    ],
-    [
       130,
       11,
       0,
@@ -6893,14 +6386,6 @@
       65,
       2,
       "CLIP"
-    ],
-    [
-      142,
-      1,
-      2,
-      65,
-      3,
-      "VAE"
     ],
     [
       143,
@@ -7183,14 +6668,6 @@
       "CLIP"
     ],
     [
-      181,
-      1,
-      2,
-      86,
-      3,
-      "VAE"
-    ],
-    [
       182,
       86,
       0,
@@ -7213,14 +6690,6 @@
       87,
       2,
       "CLIP"
-    ],
-    [
-      185,
-      1,
-      2,
-      87,
-      3,
-      "VAE"
     ],
     [
       186,
@@ -7319,14 +6788,6 @@
       "CLIP"
     ],
     [
-      208,
-      1,
-      2,
-      101,
-      2,
-      "VAE"
-    ],
-    [
       209,
       11,
       0,
@@ -7423,14 +6884,6 @@
       "CLIP"
     ],
     [
-      221,
-      1,
-      2,
-      114,
-      2,
-      "VAE"
-    ],
-    [
       222,
       112,
       0,
@@ -7461,22 +6914,6 @@
       115,
       1,
       "IMAGE"
-    ],
-    [
-      226,
-      117,
-      0,
-      118,
-      0,
-      "FLOAT"
-    ],
-    [
-      227,
-      117,
-      0,
-      119,
-      0,
-      "FLOAT"
     ],
     [
       228,

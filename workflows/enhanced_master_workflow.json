@@ -1,5 +1,5 @@
 {
-  "last_node_id": 1006,
+  "last_node_id": 1007,
   "last_link_id": 900,
   "nodes": [
     {
@@ -1718,205 +1718,6 @@
       ]
     },
     {
-      "id": 1000,
-      "type": "LauraModelLinks",
-      "pos": [
-        2000,
-        50
-      ],
-      "size": [
-        400,
-        200
-      ],
-      "flags": {},
-      "order": 101,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "model_links",
-          "type": "STRING",
-          "slot_index": 0
-        },
-        {
-          "name": "directory_tree",
-          "type": "STRING",
-          "slot_index": 1
-        },
-        {
-          "name": "download_urls_json",
-          "type": "STRING",
-          "slot_index": 2
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LauraModelLinks"
-      },
-      "widgets_values": [
-        "z_image_turbo"
-      ]
-    },
-    {
-      "id": 1001,
-      "type": "LauraModelManager",
-      "pos": [
-        2000,
-        350
-      ],
-      "size": [
-        400,
-        250
-      ],
-      "flags": {},
-      "order": 102,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "model_info",
-          "type": "STRING",
-          "slot_index": 0
-        },
-        {
-          "name": "recommended_quant",
-          "type": "STRING",
-          "slot_index": 1
-        },
-        {
-          "name": "install_status",
-          "type": "STRING",
-          "slot_index": 2
-        },
-        {
-          "name": "model_key",
-          "type": "STRING",
-          "slot_index": 3
-        },
-        {
-          "name": "total_size_gb",
-          "type": "FLOAT",
-          "slot_index": 4
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LauraModelManager"
-      },
-      "widgets_values": [
-        "flux1_dev",
-        true,
-        "high"
-      ]
-    },
-    {
-      "id": 1002,
-      "type": "LauraAutoConfig",
-      "pos": [
-        2000,
-        840
-      ],
-      "size": [
-        400,
-        200
-      ],
-      "flags": {},
-      "order": 103,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "auto_config",
-          "type": "STRING",
-          "slot_index": 0
-        },
-        {
-          "name": "recommended_model",
-          "type": "STRING",
-          "slot_index": 1
-        },
-        {
-          "name": "recommended_quant",
-          "type": "STRING",
-          "slot_index": 2
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LauraAutoConfig"
-      },
-      "widgets_values": [
-        "image_gen",
-        true,
-        false
-      ]
-    },
-    {
-      "id": 1003,
-      "type": "LauraQuantizationAdvisor",
-      "pos": [
-        2000,
-        950
-      ],
-      "size": [
-        400,
-        150
-      ],
-      "flags": {},
-      "order": 104,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "recommendation",
-          "type": "STRING",
-          "slot_index": 0
-        },
-        {
-          "name": "all_variants",
-          "type": "STRING",
-          "slot_index": 1
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LauraQuantizationAdvisor"
-      },
-      "widgets_values": [
-        "flux1_dev"
-      ]
-    },
-    {
-      "id": 1004,
-      "type": "LauraModelDownloadHelper",
-      "pos": [
-        2000,
-        1590
-      ],
-      "size": [
-        400,
-        150
-      ],
-      "flags": {},
-      "order": 105,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "download_info",
-          "type": "STRING",
-          "slot_index": 0
-        },
-        {
-          "name": "urls_json",
-          "type": "STRING",
-          "slot_index": 1
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LauraModelDownloadHelper"
-      },
-      "widgets_values": [
-        "flux1_dev"
-      ]
-    },
-    {
       "id": 1005,
       "type": "LauraCompatibilityChecker",
       "pos": [
@@ -1983,6 +1784,96 @@
         true,
         true,
         false
+      ]
+    },
+    {
+      "id": 1007,
+      "type": "LauraControlCenter",
+      "pos": [
+        50,
+        50
+      ],
+      "size": [
+        400,
+        600
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "properties": {
+        "Node name for S&R": "LauraControlCenter"
+      },
+      "widgets_values": [
+        "z_image_turbo",
+        "none",
+        "none",
+        "none",
+        "None",
+        1.0,
+        "None",
+        1.0,
+        "None",
+        1.0,
+        true,
+        "high",
+        true,
+        false,
+        1024,
+        1024
+      ],
+      "title": "Laura Control Center",
+      "color": "#226",
+      "bgcolor": "#337",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [],
+          "slot_index": 0
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "links": [],
+          "slot_index": 1
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "links": [],
+          "slot_index": 2
+        },
+        {
+          "name": "detected_type",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 3
+        },
+        {
+          "name": "default_width",
+          "type": "INT",
+          "links": [],
+          "slot_index": 4
+        },
+        {
+          "name": "default_height",
+          "type": "INT",
+          "links": [],
+          "slot_index": 5
+        },
+        {
+          "name": "status_report",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 6
+        },
+        {
+          "name": "config_json",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 7
+        }
       ]
     }
   ],
