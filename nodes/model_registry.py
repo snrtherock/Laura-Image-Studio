@@ -1640,3 +1640,33 @@ def detect_model_key_from_filename(filename):
                 return model_key
 
     return None
+
+
+def get_image_model_choices():
+    """Return sorted list of registry keys for image generation and editing models."""
+    return sorted(
+        k for k, v in MODEL_REGISTRY.items()
+        if v.get("category") in ("image_gen", "image_edit")
+    )
+
+
+def get_video_model_choices():
+    """Return sorted list of registry keys for video generation models."""
+    return sorted(
+        k for k, v in MODEL_REGISTRY.items()
+        if v.get("category") == "video_gen"
+    )
+
+
+def get_upscale_model_choices():
+    """Return sorted list of registry keys for upscale models."""
+    return sorted(
+        k for k, v in MODEL_REGISTRY.items()
+        if v.get("category") == "upscale"
+    )
+
+
+def get_model_display_name(key):
+    """Return human-readable display name for a registry key."""
+    entry = MODEL_REGISTRY.get(key, {})
+    return entry.get("display_name", key)
