@@ -1,43 +1,71 @@
 [
   {
+    "name": "z_image_turbo_bf16.safetensors",
+    "type": "diffusion_models",
+    "base": "Z-Image Turbo",
+    "description": "Z-Image Turbo 6B - 8-step generation, no CFG (16GB VRAM bf16, 6GB GGUF Q4)",
+    "url": "https://huggingface.co/Tongyi-MAI/Z-Image-Turbo/resolve/main/z_image_turbo_bf16.safetensors"
+  },
+  {
+    "name": "z_image_bf16.safetensors",
+    "type": "diffusion_models",
+    "base": "Z-Image",
+    "description": "Z-Image 6B - Full quality with LoRA/ControlNet support (16GB VRAM bf16)",
+    "url": "https://huggingface.co/Tongyi-MAI/Z-Image/resolve/main/z_image_bf16.safetensors"
+  },
+  {
+    "name": "qwen_3_4b.safetensors",
+    "type": "text_encoders",
+    "base": "Z-Image",
+    "description": "Qwen 3 4B text encoder - Required for Z-Image Turbo and Z-Image",
+    "url": "https://huggingface.co/Tongyi-MAI/Z-Image-Turbo/resolve/main/qwen_3_4b.safetensors"
+  },
+  {
+    "name": "flux2-dev.safetensors",
+    "type": "checkpoints",
+    "base": "FLUX.2 Dev",
+    "description": "FLUX.2 Dev 32B - SOTA image gen (48GB bf16, 24GB FP8, 8GB BnB 4-bit)",
+    "url": "https://huggingface.co/black-forest-labs/FLUX.2-dev/resolve/main/flux2-dev.safetensors"
+  },
+  {
     "name": "flux1-dev.safetensors",
     "type": "checkpoints",
-    "base": "Flux.1 Dev",
-    "description": "FLUX.1 Dev - High-quality guidance-distilled model (12GB+ VRAM recommended)",
+    "base": "FLUX.1 Dev",
+    "description": "FLUX.1 Dev 12B - High-quality model (24GB bf16, 12GB FP8, 8GB GGUF Q8)",
     "url": "https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors"
   },
   {
     "name": "flux1-schnell.safetensors",
     "type": "checkpoints",
-    "base": "Flux.1 Schnell",
-    "description": "FLUX.1 Schnell - Fast 4-step distilled model (8GB+ VRAM)",
+    "base": "FLUX.1 Schnell",
+    "description": "FLUX.1 Schnell - Fast 4-step model, Apache-2.0 (8GB+ VRAM)",
     "url": "https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/flux1-schnell.safetensors"
   },
   {
     "name": "ae.safetensors",
     "type": "vae",
-    "base": "Flux.1",
-    "description": "FLUX.1 VAE (autoencoder) - Required for all FLUX.1 models",
+    "base": "FLUX / Z-Image",
+    "description": "FLUX VAE - Required for FLUX.1, FLUX.2, and Z-Image models",
     "url": "https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/ae.safetensors"
   },
   {
     "name": "clip_l.safetensors",
     "type": "clip",
-    "base": "Flux.1",
+    "base": "FLUX.1",
     "description": "CLIP-L text encoder for FLUX.1",
     "url": "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors"
   },
   {
     "name": "t5xxl_fp16.safetensors",
     "type": "clip",
-    "base": "Flux.1",
+    "base": "FLUX.1",
     "description": "T5-XXL text encoder for FLUX.1 (FP16, ~9.5GB)",
     "url": "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors"
   },
   {
     "name": "t5xxl_fp8_e4m3fn.safetensors",
     "type": "clip",
-    "base": "Flux.1",
+    "base": "FLUX.1",
     "description": "T5-XXL text encoder for FLUX.1 (FP8, ~4.9GB, low VRAM)",
     "url": "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors"
   },
@@ -45,7 +73,7 @@
     "name": "sd3.5_medium.safetensors",
     "type": "checkpoints",
     "base": "SD 3.5 Medium",
-    "description": "Stable Diffusion 3.5 Medium - High prompt adherence (8GB+ VRAM)",
+    "description": "Stable Diffusion 3.5 Medium - Beginner-friendly (6-8GB VRAM)",
     "url": "https://huggingface.co/stabilityai/stable-diffusion-3.5-medium/resolve/main/sd3.5_medium.safetensors"
   },
   {
@@ -63,31 +91,52 @@
     "url": "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors"
   },
   {
+    "name": "flux1-kontext-dev.safetensors",
+    "type": "checkpoints",
+    "base": "Flux Kontext",
+    "description": "Flux Kontext - Context-aware image editing, native ComfyUI (12GB+ FP8)",
+    "url": "https://huggingface.co/black-forest-labs/FLUX.1-Kontext-dev/resolve/main/flux1-kontext-dev.safetensors"
+  },
+  {
+    "name": "FireRed-Image-Edit-1.1-transformer-q4_k_m.gguf",
+    "type": "diffusion_models",
+    "base": "FireRed Edit 1.1",
+    "description": "FireRed Image Edit 1.1 GGUF Q4 - SOTA editing, low VRAM (10GB)",
+    "url": "https://huggingface.co/FireRedTeam/FireRed-Image-Edit-1.1-ComfyUI/resolve/main/FireRed-Image-Edit-1.1-transformer-q4_k_m.gguf"
+  },
+  {
+    "name": "FireRed-Image-Edit-1.1-Lightning-8steps.safetensors",
+    "type": "loras",
+    "base": "FireRed Edit 1.1",
+    "description": "FireRed Lightning LoRA - 8-step fast editing",
+    "url": "https://huggingface.co/FireRedTeam/FireRed-Image-Edit-1.1-ComfyUI/resolve/main/FireRed-Image-Edit-1.1-Lightning-8steps.safetensors"
+  },
+  {
     "name": "wan2.2_t2v_14b_720p.safetensors",
     "type": "checkpoints",
     "base": "Wan 2.2 14B T2V",
-    "description": "Wan 2.2 14B Text-to-Video - SOTA open-source video (12GB+ VRAM with FP8)",
+    "description": "Wan 2.2 14B Text-to-Video - SOTA video, Apache-2.0 (14GB FP8)",
     "url": "https://huggingface.co/Wan-AI/Wan2.2-T2V-14B/resolve/main/wan2.2_t2v_14b_720p.safetensors"
   },
   {
     "name": "wan2.2_i2v_14b_720p.safetensors",
     "type": "checkpoints",
     "base": "Wan 2.2 14B I2V",
-    "description": "Wan 2.2 14B Image-to-Video 720P (12GB+ VRAM with FP8)",
+    "description": "Wan 2.2 14B Image-to-Video 720P, Apache-2.0 (14GB FP8)",
     "url": "https://huggingface.co/Wan-AI/Wan2.2-I2V-14B-720P/resolve/main/wan2.2_i2v_14b_720p.safetensors"
   },
   {
     "name": "wan2.2_t2v_1.3b_480p.safetensors",
     "type": "checkpoints",
     "base": "Wan 2.2 1.3B T2V",
-    "description": "Wan 2.2 1.3B Text-to-Video - Low VRAM variant (6GB+ VRAM)",
+    "description": "Wan 2.2 1.3B T2V - Low VRAM video, Apache-2.0 (6-8GB VRAM)",
     "url": "https://huggingface.co/Wan-AI/Wan2.2-T2V-1.3B/resolve/main/wan2.2_t2v_1.3b_480p.safetensors"
   },
   {
     "name": "wan2.2_i2v_1.3b_480p.safetensors",
     "type": "checkpoints",
     "base": "Wan 2.2 1.3B I2V",
-    "description": "Wan 2.2 1.3B Image-to-Video - Low VRAM variant (6GB+ VRAM)",
+    "description": "Wan 2.2 1.3B I2V - Low VRAM video, Apache-2.0 (6-8GB VRAM)",
     "url": "https://huggingface.co/Wan-AI/Wan2.2-I2V-1.3B-480P/resolve/main/wan2.2_i2v_1.3b_480p.safetensors"
   },
   {
@@ -112,18 +161,32 @@
     "url": "https://huggingface.co/Wan-AI/Wan2.2-T2V-14B/resolve/main/models_t5_umt5-xxl-enc-bf16.safetensors"
   },
   {
+    "name": "ltx-video-2b-v0.9.5.safetensors",
+    "type": "diffusion_models",
+    "base": "LTX-Video 2B",
+    "description": "LTX-Video 2B - Built into ComfyUI core, fast video (8GB Q8, 12GB bf16)",
+    "url": "https://huggingface.co/Lightricks/LTX-Video/resolve/main/ltx-video-2b-v0.9.5.safetensors"
+  },
+  {
     "name": "cogvideox_5b.safetensors",
     "type": "checkpoints",
     "base": "CogVideoX 5B",
-    "description": "CogVideoX 5B - High-quality video generation (12GB+ VRAM)",
+    "description": "CogVideoX 5B - Efficient video gen, Apache-2.0 (8GB FP8, 12GB bf16)",
     "url": "https://huggingface.co/THUDM/CogVideoX-5b/resolve/main/cogvideox_5b.safetensors"
   },
   {
     "name": "cogvideox_2b.safetensors",
     "type": "checkpoints",
     "base": "CogVideoX 2B",
-    "description": "CogVideoX 2B - Efficient video generation (8GB+ VRAM)",
+    "description": "CogVideoX 2B - Low VRAM video generation (8GB+ VRAM)",
     "url": "https://huggingface.co/THUDM/CogVideoX-2b/resolve/main/cogvideox_2b.safetensors"
+  },
+  {
+    "name": "seedvr2_ema_7b_fp8_e4m3fn.safetensors",
+    "type": "upscale_models",
+    "base": "SeedVR2",
+    "description": "SeedVR2 7B FP8 - One-step AI upscaler, Apache-2.0 (10GB VRAM)",
+    "url": "https://huggingface.co/numz/SeedVR2_comfyUI/resolve/main/seedvr2_ema_7b_fp8_e4m3fn.safetensors"
   },
   {
     "name": "liveportrait_model.safetensors",
@@ -157,7 +220,7 @@
     "name": "RealESRGAN_x4plus.pth",
     "type": "upscale_models",
     "base": "RealESRGAN",
-    "description": "RealESRGAN x4 Plus - General-purpose 4x upscaler",
+    "description": "RealESRGAN x4 Plus - General-purpose 4x upscaler (2GB VRAM)",
     "url": "https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth"
   },
   {
@@ -178,7 +241,7 @@
     "name": "inswapper_128.onnx",
     "type": "insightface",
     "base": "ReActor",
-    "description": "InsightFace inswapper - Face swap model for ReActor",
+    "description": "InsightFace inswapper - Face swap model for ReActor (1GB VRAM)",
     "url": "https://huggingface.co/ezioruan/inswapper_128.onnx/resolve/main/inswapper_128.onnx"
   },
   {

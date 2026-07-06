@@ -1,0 +1,386 @@
+{
+  "last_node_id": 18,
+  "last_link_id": 22,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LauraHardwareProfiler",
+      "pos": [50, 50],
+      "size": [300, 120],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {"name": "VRAM_TIER", "type": "STRING", "links": [1], "slot_index": 0},
+        {"name": "VRAM_GB", "type": "FLOAT", "links": [2], "slot_index": 1},
+        {"name": "GPU_NAME", "type": "STRING", "links": [], "slot_index": 2},
+        {"name": "PROFILE", "type": "STRING", "links": [], "slot_index": 3}
+      ],
+      "properties": {},
+      "widgets_values": ["auto"]
+    },
+    {
+      "id": 2,
+      "type": "LauraModelRecommender",
+      "pos": [50, 250],
+      "size": [300, 150],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {"name": "vram_tier", "type": "STRING", "link": 1},
+        {"name": "vram_gb", "type": "FLOAT", "link": 2}
+      ],
+      "outputs": [
+        {"name": "MODEL_NAME", "type": "STRING", "links": [], "slot_index": 0},
+        {"name": "RECOMMENDATIONS", "type": "STRING", "links": [22], "slot_index": 1}
+      ],
+      "properties": {},
+      "widgets_values": ["image_gen"]
+    },
+    {
+      "id": 3,
+      "type": "Note",
+      "pos": [50, 480],
+      "size": [300, 200],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": ["LAURA VIRTUAL DRESSING ROOM v2.0\n\nFully self-contained — no external packs needed.\n\n1. Load your SDXL/FLUX checkpoint\n2. Upload a FACE reference photo\n3. Upload a PERSON image (body to dress)\n4. Upload CLOTHING images (top, bottom, shoes)\n5. Clothing segmentation auto-detects regions\n6. IPAdapter transfers clothing appearance\n7. Face swap preserves your identity\n8. Background removal + replacement\n9. Final output saved via TerminalSave\n\nAll nodes are Laura Studio native."]
+    },
+    {
+      "id": 4,
+      "type": "CheckpointLoaderSimple",
+      "pos": [450, 50],
+      "size": [300, 100],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {"name": "MODEL", "type": "MODEL", "links": [3], "slot_index": 0},
+        {"name": "CLIP", "type": "CLIP", "links": [4, 5], "slot_index": 1},
+        {"name": "VAE", "type": "VAE", "links": [6], "slot_index": 2}
+      ],
+      "properties": {},
+      "widgets_values": [""]
+    },
+    {
+      "id": 5,
+      "type": "LoadImage",
+      "pos": [450, 220],
+      "size": [300, 250],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {"name": "IMAGE", "type": "IMAGE", "links": [7], "slot_index": 0},
+        {"name": "MASK", "type": "MASK", "links": [], "slot_index": 1}
+      ],
+      "properties": {},
+      "widgets_values": ["[drag face reference photo here]"],
+      "title": "Face Reference"
+    },
+    {
+      "id": 6,
+      "type": "LoadImage",
+      "pos": [450, 530],
+      "size": [300, 250],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {"name": "IMAGE", "type": "IMAGE", "links": [8], "slot_index": 0},
+        {"name": "MASK", "type": "MASK", "links": [], "slot_index": 1}
+      ],
+      "properties": {},
+      "widgets_values": ["[drag person/model image here]"],
+      "title": "Person Image (Body to Dress)"
+    },
+    {
+      "id": 7,
+      "type": "LoadImage",
+      "pos": [850, 50],
+      "size": [250, 200],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {"name": "IMAGE", "type": "IMAGE", "links": [9], "slot_index": 0},
+        {"name": "MASK", "type": "MASK", "links": [], "slot_index": 1}
+      ],
+      "properties": {},
+      "widgets_values": ["[drag TOP clothing here]"],
+      "title": "TOP (Shirt/Blouse)"
+    },
+    {
+      "id": 8,
+      "type": "LoadImage",
+      "pos": [850, 310],
+      "size": [250, 200],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {"name": "IMAGE", "type": "IMAGE", "links": [10], "slot_index": 0},
+        {"name": "MASK", "type": "MASK", "links": [], "slot_index": 1}
+      ],
+      "properties": {},
+      "widgets_values": ["[drag BOTTOM clothing here]"],
+      "title": "BOTTOM (Pants/Skirt)"
+    },
+    {
+      "id": 9,
+      "type": "LoadImage",
+      "pos": [850, 570],
+      "size": [250, 200],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {"name": "IMAGE", "type": "IMAGE", "links": [11], "slot_index": 0},
+        {"name": "MASK", "type": "MASK", "links": [], "slot_index": 1}
+      ],
+      "properties": {},
+      "widgets_values": ["[drag SHOES image here]"],
+      "title": "SHOES"
+    },
+    {
+      "id": 10,
+      "type": "ClothingSegmentor",
+      "pos": [1200, 50],
+      "size": [300, 200],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {"name": "image", "type": "IMAGE", "link": 8}
+      ],
+      "outputs": [
+        {"name": "MASK", "type": "MASK", "links": [12], "slot_index": 0},
+        {"name": "IMAGE", "type": "IMAGE", "links": [], "slot_index": 1}
+      ],
+      "properties": {},
+      "widgets_values": [],
+      "title": "Segment Clothing Regions"
+    },
+    {
+      "id": 11,
+      "type": "OutfitCombinator",
+      "pos": [1200, 320],
+      "size": [300, 250],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {"name": "top", "type": "IMAGE", "link": 9},
+        {"name": "bottom", "type": "IMAGE", "link": 10},
+        {"name": "shoes", "type": "IMAGE", "link": 11},
+        {"name": "mask", "type": "MASK", "link": 12}
+      ],
+      "outputs": [
+        {"name": "IMAGE", "type": "IMAGE", "links": [13], "slot_index": 0}
+      ],
+      "properties": {},
+      "widgets_values": [],
+      "title": "Combine Outfit"
+    },
+    {
+      "id": 12,
+      "type": "VirtualDresser",
+      "pos": [1600, 50],
+      "size": [300, 250],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {"name": "person", "type": "IMAGE", "link": 8},
+        {"name": "outfit", "type": "IMAGE", "link": 13}
+      ],
+      "outputs": [
+        {"name": "IMAGE", "type": "IMAGE", "links": [14], "slot_index": 0}
+      ],
+      "properties": {},
+      "widgets_values": [],
+      "title": "Virtual Dresser (Apply Outfit)"
+    },
+    {
+      "id": 13,
+      "type": "LauraStageSwitch",
+      "pos": [1600, 370],
+      "size": [300, 200],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {"name": "image", "type": "IMAGE", "link": 14}
+      ],
+      "outputs": [
+        {"name": "IMAGE", "type": "IMAGE", "links": [15], "slot_index": 0}
+      ],
+      "properties": {},
+      "widgets_values": [true, "Face Swap Stage"]
+    },
+    {
+      "id": 14,
+      "type": "FaceSwapper",
+      "pos": [2000, 50],
+      "size": [300, 200],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {"name": "image", "type": "IMAGE", "link": 15},
+        {"name": "reference", "type": "IMAGE", "link": 7}
+      ],
+      "outputs": [
+        {"name": "IMAGE", "type": "IMAGE", "links": [16], "slot_index": 0}
+      ],
+      "properties": {},
+      "widgets_values": [],
+      "title": "Face Swap (Your Face)"
+    },
+    {
+      "id": 15,
+      "type": "FaceEnhancer",
+      "pos": [2000, 320],
+      "size": [300, 150],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {"name": "image", "type": "IMAGE", "link": 16}
+      ],
+      "outputs": [
+        {"name": "IMAGE", "type": "IMAGE", "links": [17], "slot_index": 0}
+      ],
+      "properties": {},
+      "widgets_values": [],
+      "title": "Enhance Face Quality"
+    },
+    {
+      "id": 16,
+      "type": "BackgroundRemover",
+      "pos": [2000, 530],
+      "size": [300, 150],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {"name": "image", "type": "IMAGE", "link": 17}
+      ],
+      "outputs": [
+        {"name": "IMAGE", "type": "IMAGE", "links": [18], "slot_index": 0},
+        {"name": "MASK", "type": "MASK", "links": [19], "slot_index": 1}
+      ],
+      "properties": {},
+      "widgets_values": [],
+      "title": "Remove Background"
+    },
+    {
+      "id": 17,
+      "type": "BackgroundReplacer",
+      "pos": [2400, 50],
+      "size": [300, 200],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {"name": "image", "type": "IMAGE", "link": 18},
+        {"name": "mask", "type": "MASK", "link": 19}
+      ],
+      "outputs": [
+        {"name": "IMAGE", "type": "IMAGE", "links": [20], "slot_index": 0}
+      ],
+      "properties": {},
+      "widgets_values": [],
+      "title": "Replace Background"
+    },
+    {
+      "id": 18,
+      "type": "LauraTerminalSave",
+      "pos": [2400, 320],
+      "size": [300, 200],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {"name": "images", "type": "IMAGE", "link": 20}
+      ],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": ["laura_dressing_room", "image", 24, "png", 95]
+    }
+  ],
+  "links": [
+    [1, 1, 0, 2, 0, "STRING"],
+    [2, 1, 1, 2, 1, "FLOAT"],
+    [3, 4, 0, 12, 0, "MODEL"],
+    [4, 4, 1, 4, 0, "CLIP"],
+    [5, 4, 1, 5, 0, "CLIP"],
+    [6, 4, 2, 12, 0, "VAE"],
+    [7, 5, 0, 14, 1, "IMAGE"],
+    [8, 6, 0, 12, 0, "IMAGE"],
+    [9, 7, 0, 11, 0, "IMAGE"],
+    [10, 8, 0, 11, 1, "IMAGE"],
+    [11, 9, 0, 11, 2, "IMAGE"],
+    [12, 10, 0, 11, 3, "MASK"],
+    [13, 11, 0, 12, 1, "IMAGE"],
+    [14, 12, 0, 13, 0, "IMAGE"],
+    [15, 13, 0, 14, 0, "IMAGE"],
+    [16, 14, 0, 15, 0, "IMAGE"],
+    [17, 15, 0, 16, 0, "IMAGE"],
+    [18, 16, 0, 17, 0, "IMAGE"],
+    [19, 16, 1, 17, 1, "MASK"],
+    [20, 17, 0, 18, 0, "IMAGE"],
+    [22, 2, 1, 3, 0, "STRING"]
+  ],
+  "groups": [
+    {
+      "title": "1. Hardware & Model Selection",
+      "bounding": [30, 10, 400, 710],
+      "color": "#3f789e"
+    },
+    {
+      "title": "2. Input Images",
+      "bounding": [430, 10, 400, 790],
+      "color": "#5e3f6a"
+    },
+    {
+      "title": "3. Clothing Segmentation & Outfit",
+      "bounding": [830, 10, 700, 600],
+      "color": "#6a5e3f"
+    },
+    {
+      "title": "4. Virtual Dressing",
+      "bounding": [1580, 10, 340, 600],
+      "color": "#3f6a5e"
+    },
+    {
+      "title": "5. Face & Background",
+      "bounding": [1980, 10, 340, 710],
+      "color": "#6a3f4a"
+    },
+    {
+      "title": "6. Output",
+      "bounding": [2380, 10, 340, 550],
+      "color": "#4a5e3f"
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.65
+    }
+  },
+  "version": 0.4
+}

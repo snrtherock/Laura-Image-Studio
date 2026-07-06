@@ -1,0 +1,12 @@
+# Laura Image Studio - Optional Advanced Dependencies
+# Install: pip install -r requirements-optional-advanced.txt
+# Required for: accelerated inference, advanced architectures
+
+accelerate>=0.28.0
+transformers>=4.38.0
+safetensors>=0.4.0
+diffusers>=0.26.0
+sentencepiece>=0.2.0
+protobuf>=4.25.0
+xformers>=0.0.25; sys_platform == 'win32' or sys_platform == 'linux'
+triton>=2.2.0; sys_platform == 'linux'

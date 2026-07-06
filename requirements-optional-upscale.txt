@@ -1,0 +1,7 @@
+# Laura Image Studio - Optional Upscale Dependencies
+# Install: pip install -r requirements-optional-upscale.txt
+# Required for: SUPIR, cinema-grade upscaling
+
+spandrel>=0.3.0
+kornia>=0.7.1
+open-clip-torch>=2.24.0

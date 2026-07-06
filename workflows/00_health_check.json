@@ -1,0 +1,139 @@
+{
+  "last_node_id": 6,
+  "last_link_id": 5,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LauraHardwareProfiler",
+      "pos": [50, 50],
+      "size": [350, 180],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {"name": "vram_tier", "type": "STRING", "links": [3], "slot_index": 0},
+        {"name": "vram_gb", "type": "FLOAT", "links": [1, 4], "slot_index": 1},
+        {"name": "gpu_name", "type": "STRING", "links": [], "slot_index": 2},
+        {"name": "profile_report", "type": "STRING", "links": [], "slot_index": 3}
+      ],
+      "properties": {"Node name for S&R": "LauraHardwareProfiler"},
+      "widgets_values": ["auto"],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 2,
+      "type": "LauraWorkflowHealthCheck",
+      "pos": [50, 350],
+      "size": [350, 180],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {"name": "health_status", "type": "STRING", "links": [], "slot_index": 0},
+        {"name": "health_report", "type": "STRING", "links": [2], "slot_index": 1},
+        {"name": "module_count", "type": "INT", "links": [], "slot_index": 2}
+      ],
+      "properties": {"Node name for S&R": "LauraWorkflowHealthCheck"},
+      "widgets_values": ["run"],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 3,
+      "type": "LauraModelCatalog",
+      "pos": [450, 50],
+      "size": [350, 200],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {"name": "vram_filter", "type": "FLOAT", "link": 1}
+      ],
+      "outputs": [
+        {"name": "catalog_text", "type": "STRING", "links": [], "slot_index": 0},
+        {"name": "model_count", "type": "INT", "links": [], "slot_index": 1},
+        {"name": "model_keys", "type": "STRING", "links": [], "slot_index": 2}
+      ],
+      "properties": {"Node name for S&R": "LauraModelCatalog"},
+      "widgets_values": ["all", "vram_min"],
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 4,
+      "type": "LauraModelRecommender",
+      "pos": [450, 350],
+      "size": [350, 220],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {"name": "vram_tier", "type": "STRING", "link": 3},
+        {"name": "vram_gb", "type": "FLOAT", "link": 4}
+      ],
+      "outputs": [
+        {"name": "recommended_model", "type": "STRING", "links": [], "slot_index": 0},
+        {"name": "recommended_quant", "type": "STRING", "links": [], "slot_index": 1},
+        {"name": "recommendation_report", "type": "STRING", "links": [5], "slot_index": 2}
+      ],
+      "properties": {"Node name for S&R": "LauraModelRecommender"},
+      "widgets_values": ["image_gen", false],
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 5,
+      "type": "LauraShowText",
+      "pos": [850, 50],
+      "size": [500, 300],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {"name": "text", "type": "STRING", "link": 2}
+      ],
+      "outputs": [
+        {"name": "text", "type": "STRING", "links": [], "slot_index": 0}
+      ],
+      "properties": {"Node name for S&R": "LauraShowText"},
+      "widgets_values": [""],
+      "color": "#332",
+      "bgcolor": "#553"
+    },
+    {
+      "id": 6,
+      "type": "LauraShowText",
+      "pos": [850, 400],
+      "size": [500, 300],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {"name": "text", "type": "STRING", "link": 5}
+      ],
+      "outputs": [
+        {"name": "text", "type": "STRING", "links": [], "slot_index": 0}
+      ],
+      "properties": {"Node name for S&R": "LauraShowText"},
+      "widgets_values": [""],
+      "color": "#332",
+      "bgcolor": "#553"
+    }
+  ],
+  "links": [
+    [1, 1, 1, 3, 0, "FLOAT"],
+    [2, 2, 1, 5, 0, "STRING"],
+    [3, 1, 0, 4, 0, "STRING"],
+    [4, 1, 1, 4, 1, "FLOAT"],
+    [5, 4, 2, 6, 0, "STRING"]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {"scale": 1, "offset": [0, 0]}
+  },
+  "version": 0.4
+}

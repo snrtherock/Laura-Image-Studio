@@ -1,0 +1,8 @@
+# Laura Image Studio - Optional Video Dependencies
+# Install: pip install -r requirements-optional-video.txt
+# Required for: video generation, video upscaling, frame interpolation
+
+av>=12.0.0
+ffmpeg-python>=0.2.0
+imageio>=2.33.0
+imageio-ffmpeg>=0.4.9

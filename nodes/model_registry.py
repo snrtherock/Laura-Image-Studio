@@ -14,7 +14,7 @@ import os
 # REGISTRY VERSION
 # =============================================================================
 
-_REGISTRY_VERSION = "1.0.0-2026.03.08"
+_REGISTRY_VERSION = "2.0.0-2026.07.05"
 
 
 def get_registry_version():
@@ -103,6 +103,18 @@ CATEGORIES = {
         "label": "ControlNet",
         "description": "Conditional control models for guided generation",
     },
+    "audio": {
+        "label": "Audio Generation",
+        "description": "Text-to-speech, video-to-audio, and music generation models",
+    },
+    "virtual_tryon": {
+        "label": "Virtual Try-On",
+        "description": "Clothing swap and fashion try-on models",
+    },
+    "face": {
+        "label": "Face / Identity",
+        "description": "Face swap, restoration, and animation models",
+    },
 }
 
 
@@ -113,7 +125,7 @@ CATEGORIES = {
 MODEL_REGISTRY = {
 
     # =========================================================================
-    # IMAGE GENERATION (9 models)
+    # IMAGE GENERATION (13 models)
     # =========================================================================
 
     "z_image_turbo": {
@@ -271,11 +283,13 @@ MODEL_REGISTRY = {
         "architecture": "S3-DiT",
         "status": "pending_release",
         "files": {
-            # TBD — repo not yet public as of March 2026.
-            # Z-Image-Edit is announced but weights have not been released.
-            # Expected to follow Z-Image-Turbo/Base pattern with ~12 GB diffusion model.
+            "checkpoint": {
+                "folder": "diffusion_models",
+                "filename": "z_image_edit.safetensors",
+                "size_gb": 12.0,
+            },
         },
-        "total_size_gb": 0,
+        "total_size_gb": 12.0,
         "quantization_variants": {
             "bf16": {"vram_gb": 16, "quality": "reference", "speed": "1x"},
             "fp8": {"vram_gb": 8, "quality": "near-lossless", "speed": "1.2x"},
@@ -710,8 +724,246 @@ MODEL_REGISTRY = {
         "comfyui_type": "checkpoints",
     },
 
+    "qwen_image_2_0": {
+        "display_name": "Qwen-Image-2.0",
+        "family": "qwen",
+        "category": "image_gen",
+        "repo": "Qwen/Qwen-Image-2.0",
+        "homepage": "https://huggingface.co/Qwen/Qwen-Image-2.0",
+        "license": "Check model card",
+        "params": "20B",
+        "architecture": "MMDiT",
+        "status": "released",
+        "files": {
+            "diffusion_model": {
+                "folder": "diffusion_models",
+                "filename": "qwen_image_2_0_bf16.safetensors",
+                "size_gb": 40.0,
+                "alt_repo": "Comfy-Org/Qwen-Image_ComfyUI",
+            },
+        },
+        "total_size_gb": 40.0,
+        "quantization_variants": {
+            "bf16": {"vram_gb": 48, "quality": "reference", "speed": "1x"},
+            "fp8": {"vram_gb": 24, "quality": "near-lossless", "speed": "1.2x"},
+            "gguf_q4": {"vram_gb": 16, "quality": "good", "speed": "1.3x"},
+        },
+        "quantization_recommendation": {
+            "ultra_low": "gguf_q4",
+            "low": "gguf_q4",
+            "medium": "gguf_q4",
+            "high": "gguf_q4",
+            "very_high": "fp8",
+            "ultra": "fp8",
+            "extreme": "bf16",
+            "hpc": "bf16",
+        },
+        "inference": {
+            "steps": 50,
+            "cfg": True,
+            "cfg_scale": 4.0,
+            "resolution_range": {"min": 512, "max": 2048},
+            "default_resolution": {"width": 1024, "height": 1024},
+        },
+        "compatibility": {
+            "lora": True,
+            "controlnet": False,
+            "controlnet_models": [],
+            "ipadapter": False,
+            "negative_prompt": False,
+            "multi_reference": False,
+            "image_editing": True,
+            "lora_zoo": None,
+            "lora_zoo_models": [],
+        },
+        "quality_score": {
+            "elo_rank": None,
+            "strengths": ["Unified gen + edit model", "Native ComfyUI support", "Excellent text rendering"],
+            "weaknesses": ["Very large VRAM requirement at bf16"],
+        },
+        "module_dependency": "generation",
+        "comfyui_type": "diffusion_models",
+    },
+
+    "hidream": {
+        "display_name": "HiDream",
+        "family": "hidream",
+        "category": "image_gen",
+        "repo": "HiDream-ai/HiDream-I1-Full",
+        "homepage": "https://huggingface.co/HiDream-ai/HiDream-I1-Full",
+        "license": "Check model card",
+        "params": None,
+        "architecture": "DiT",
+        "status": "released",
+        "files": {
+            "checkpoint": {
+                "folder": "checkpoints",
+                "filename": "hidream_i1_full.safetensors",
+                "size_gb": 12.0,
+            },
+        },
+        "total_size_gb": 12.0,
+        "quantization_variants": {
+            "bf16": {"vram_gb": 16, "quality": "reference", "speed": "1x"},
+            "fp8": {"vram_gb": 10, "quality": "near-lossless", "speed": "1.2x"},
+        },
+        "quantization_recommendation": {
+            "ultra_low": "fp8",
+            "low": "fp8",
+            "medium": "fp8",
+            "high": "fp8",
+            "very_high": "bf16",
+            "ultra": "bf16",
+            "extreme": "bf16",
+            "hpc": "bf16",
+        },
+        "inference": {
+            "steps": 28,
+            "cfg": True,
+            "cfg_scale": 5.0,
+            "resolution_range": {"min": 512, "max": 2048},
+            "default_resolution": {"width": 1024, "height": 1024},
+        },
+        "compatibility": {
+            "lora": False,
+            "controlnet": False,
+            "controlnet_models": [],
+            "ipadapter": False,
+            "negative_prompt": True,
+            "multi_reference": False,
+            "image_editing": False,
+            "lora_zoo": None,
+            "lora_zoo_models": [],
+        },
+        "quality_score": {
+            "elo_rank": None,
+            "strengths": ["Native ComfyUI support", "Good quality"],
+            "weaknesses": ["Limited ecosystem"],
+        },
+        "module_dependency": "generation",
+        "comfyui_type": "checkpoints",
+    },
+
+    "lumina_image_2": {
+        "display_name": "Lumina Image 2.0",
+        "family": "lumina",
+        "category": "image_gen",
+        "repo": "Alpha-VLLM/Lumina-Image-2.0",
+        "homepage": "https://huggingface.co/Alpha-VLLM/Lumina-Image-2.0",
+        "license": "Check model card",
+        "params": None,
+        "architecture": "DiT",
+        "status": "released",
+        "files": {
+            "checkpoint": {
+                "folder": "checkpoints",
+                "filename": "lumina_image_2_0.safetensors",
+                "size_gb": 10.0,
+            },
+        },
+        "total_size_gb": 10.0,
+        "quantization_variants": {
+            "bf16": {"vram_gb": 12, "quality": "reference", "speed": "1x"},
+            "fp8": {"vram_gb": 8, "quality": "near-lossless", "speed": "1.2x"},
+        },
+        "quantization_recommendation": {
+            "ultra_low": "fp8",
+            "low": "fp8",
+            "medium": "fp8",
+            "high": "bf16",
+            "very_high": "bf16",
+            "ultra": "bf16",
+            "extreme": "bf16",
+            "hpc": "bf16",
+        },
+        "inference": {
+            "steps": 30,
+            "cfg": True,
+            "cfg_scale": 4.0,
+            "resolution_range": {"min": 512, "max": 2048},
+            "default_resolution": {"width": 1024, "height": 1024},
+        },
+        "compatibility": {
+            "lora": False,
+            "controlnet": False,
+            "controlnet_models": [],
+            "ipadapter": False,
+            "negative_prompt": True,
+            "multi_reference": False,
+            "image_editing": False,
+            "lora_zoo": None,
+            "lora_zoo_models": [],
+        },
+        "quality_score": {
+            "elo_rank": None,
+            "strengths": ["Native ComfyUI support", "DiT-based"],
+            "weaknesses": ["Smaller community"],
+        },
+        "module_dependency": "generation",
+        "comfyui_type": "checkpoints",
+    },
+
+    "hunyuan_image_2_1": {
+        "display_name": "HunyuanImage 2.1",
+        "family": "hunyuan",
+        "category": "image_gen",
+        "repo": "tencent/HunyuanImage-2.1",
+        "homepage": "https://huggingface.co/tencent/HunyuanImage-2.1",
+        "license": "Tencent Hunyuan License",
+        "params": None,
+        "architecture": "MoE DiT",
+        "status": "released",
+        "files": {
+            "checkpoint": {
+                "folder": "checkpoints",
+                "filename": "hunyuan_image_2_1.safetensors",
+                "size_gb": 30.0,
+            },
+        },
+        "total_size_gb": 30.0,
+        "quantization_variants": {
+            "bf16": {"vram_gb": 48, "quality": "reference", "speed": "1x"},
+            "fp8": {"vram_gb": 24, "quality": "near-lossless", "speed": "1.2x"},
+        },
+        "quantization_recommendation": {
+            "ultra_low": "fp8",
+            "low": "fp8",
+            "medium": "fp8",
+            "high": "fp8",
+            "very_high": "fp8",
+            "ultra": "fp8",
+            "extreme": "bf16",
+            "hpc": "bf16",
+        },
+        "inference": {
+            "steps": 50,
+            "cfg": True,
+            "cfg_scale": 5.0,
+            "resolution_range": {"min": 512, "max": 2048},
+            "default_resolution": {"width": 1024, "height": 1024},
+        },
+        "compatibility": {
+            "lora": False,
+            "controlnet": False,
+            "controlnet_models": [],
+            "ipadapter": False,
+            "negative_prompt": True,
+            "multi_reference": False,
+            "image_editing": False,
+            "lora_zoo": None,
+            "lora_zoo_models": [],
+        },
+        "quality_score": {
+            "elo_rank": None,
+            "strengths": ["MoE architecture", "Extremely high quality", "Native ComfyUI"],
+            "weaknesses": ["Very large VRAM", "Tencent license restrictions"],
+        },
+        "module_dependency": "generation",
+        "comfyui_type": "checkpoints",
+    },
+
     # =========================================================================
-    # IMAGE EDITING (1 model)
+    # IMAGE EDITING (5 models)
     # =========================================================================
 
     "firered_edit_1_1": {
@@ -802,8 +1054,187 @@ MODEL_REGISTRY = {
         "comfyui_type": "diffusion_models",
     },
 
+    "omnigen2": {
+        "display_name": "OmniGen 2",
+        "family": "omnigen",
+        "category": "image_edit",
+        "repo": "Shitao/OmniGen2",
+        "homepage": "https://huggingface.co/Shitao/OmniGen2",
+        "license": "Check model card",
+        "params": None,
+        "architecture": "Multi-modal DiT",
+        "status": "released",
+        "files": {
+            "checkpoint": {
+                "folder": "checkpoints",
+                "filename": "omnigen2.safetensors",
+                "size_gb": 12.0,
+            },
+        },
+        "total_size_gb": 12.0,
+        "quantization_variants": {
+            "bf16": {"vram_gb": 16, "quality": "reference", "speed": "1x"},
+            "fp8": {"vram_gb": 10, "quality": "near-lossless", "speed": "1.2x"},
+            "gguf_q8": {"vram_gb": 8, "quality": "high", "speed": "1.1x"},
+        },
+        "quantization_recommendation": {
+            "ultra_low": "gguf_q8",
+            "low": "gguf_q8",
+            "medium": "gguf_q8",
+            "high": "fp8",
+            "very_high": "bf16",
+            "ultra": "bf16",
+            "extreme": "bf16",
+            "hpc": "bf16",
+        },
+        "inference": {
+            "steps": 30,
+            "cfg": True,
+            "cfg_scale": 3.5,
+            "resolution_range": {"min": 512, "max": 2048},
+            "default_resolution": {"width": 1024, "height": 1024},
+        },
+        "compatibility": {
+            "lora": False,
+            "controlnet": False,
+            "controlnet_models": [],
+            "ipadapter": False,
+            "negative_prompt": False,
+            "multi_reference": True,
+            "image_editing": True,
+            "lora_zoo": None,
+            "lora_zoo_models": [],
+        },
+        "quality_score": {
+            "elo_rank": None,
+            "strengths": ["Multi-modal gen + edit", "Native ComfyUI", "Multi-image reference input"],
+            "weaknesses": ["Newer model, limited community testing"],
+        },
+        "module_dependency": "inpainting",
+        "comfyui_type": "checkpoints",
+    },
+
+    "flux_kontext": {
+        "display_name": "Flux Kontext",
+        "family": "flux",
+        "category": "image_edit",
+        "repo": "black-forest-labs/FLUX.1-Kontext-dev",
+        "homepage": "https://huggingface.co/black-forest-labs/FLUX.1-Kontext-dev",
+        "license": "FLUX Non-Commercial License",
+        "params": "12B",
+        "architecture": "Rectified Flow Transformer",
+        "status": "released",
+        "files": {
+            "checkpoint": {
+                "folder": "checkpoints",
+                "filename": "flux1-kontext-dev.safetensors",
+                "size_gb": 24.0,
+            },
+        },
+        "total_size_gb": 24.0,
+        "quantization_variants": {
+            "bf16": {"vram_gb": 24, "quality": "reference", "speed": "1x"},
+            "fp8": {"vram_gb": 12, "quality": "near-lossless", "speed": "1.2x"},
+            "gguf_q8": {"vram_gb": 8, "quality": "high", "speed": "1.1x"},
+        },
+        "quantization_recommendation": {
+            "ultra_low": "gguf_q8",
+            "low": "gguf_q8",
+            "medium": "gguf_q8",
+            "high": "fp8",
+            "very_high": "fp8",
+            "ultra": "bf16",
+            "extreme": "bf16",
+            "hpc": "bf16",
+        },
+        "inference": {
+            "steps": 30,
+            "cfg": True,
+            "cfg_scale": 3.5,
+            "resolution_range": {"min": 512, "max": 2048},
+            "default_resolution": {"width": 1024, "height": 1024},
+        },
+        "compatibility": {
+            "lora": True,
+            "controlnet": False,
+            "controlnet_models": [],
+            "ipadapter": False,
+            "negative_prompt": True,
+            "multi_reference": True,
+            "image_editing": True,
+            "lora_zoo": None,
+            "lora_zoo_models": [],
+        },
+        "quality_score": {
+            "elo_rank": None,
+            "strengths": ["Context-aware editing", "Native ComfyUI", "FLUX ecosystem LoRA compatible"],
+            "weaknesses": ["Non-commercial license"],
+        },
+        "module_dependency": "inpainting",
+        "comfyui_type": "checkpoints",
+    },
+
+    "hidream_e1_1": {
+        "display_name": "HiDream E1.1",
+        "family": "hidream",
+        "category": "image_edit",
+        "repo": "HiDream-ai/HiDream-E1.1",
+        "homepage": "https://huggingface.co/HiDream-ai/HiDream-E1.1",
+        "license": "Check model card",
+        "params": None,
+        "architecture": "DiT",
+        "status": "released",
+        "files": {
+            "checkpoint": {
+                "folder": "checkpoints",
+                "filename": "hidream_e1_1.safetensors",
+                "size_gb": 12.0,
+            },
+        },
+        "total_size_gb": 12.0,
+        "quantization_variants": {
+            "bf16": {"vram_gb": 16, "quality": "reference", "speed": "1x"},
+            "fp8": {"vram_gb": 10, "quality": "near-lossless", "speed": "1.2x"},
+        },
+        "quantization_recommendation": {
+            "ultra_low": "fp8",
+            "low": "fp8",
+            "medium": "fp8",
+            "high": "fp8",
+            "very_high": "bf16",
+            "ultra": "bf16",
+            "extreme": "bf16",
+            "hpc": "bf16",
+        },
+        "inference": {
+            "steps": 28,
+            "cfg": True,
+            "cfg_scale": 5.0,
+            "resolution_range": {"min": 512, "max": 2048},
+            "default_resolution": {"width": 1024, "height": 1024},
+        },
+        "compatibility": {
+            "lora": False,
+            "controlnet": False,
+            "controlnet_models": [],
+            "ipadapter": False,
+            "negative_prompt": True,
+            "multi_reference": False,
+            "image_editing": True,
+            "lora_zoo": None,
+            "lora_zoo_models": [],
+        },
+        "quality_score": {
+            "elo_rank": None,
+            "strengths": ["Native ComfyUI editing", "HiDream ecosystem"],
+            "weaknesses": ["Smaller community"],
+        },
+        "module_dependency": "inpainting",
+        "comfyui_type": "checkpoints",
+    },
+
     # =========================================================================
-    # VIDEO GENERATION (6 models)
+    # VIDEO GENERATION (10 models)
     # =========================================================================
 
     "helios_distilled": {
@@ -1051,7 +1482,7 @@ MODEL_REGISTRY = {
         "homepage": "https://huggingface.co/Wan-AI/Wan2.2-14B-T2V",
         "license": "Apache-2.0",
         "params": "14B",
-        "architecture": None,
+        "architecture": "MoE Diffusion Transformer",
         "status": "released",
         "files": {
             "checkpoint": {
@@ -1111,7 +1542,7 @@ MODEL_REGISTRY = {
         "homepage": "https://huggingface.co/tencent/HunyuanVideo",
         "license": "Tencent Hunyuan License",
         "params": "~13B",
-        "architecture": None,
+        "architecture": "DiT Video Transformer",
         "status": "released",
         "files": {
             "checkpoint": {
@@ -1234,6 +1665,249 @@ MODEL_REGISTRY = {
         "comfyui_type": "diffusion_models",
     },
 
+    "wan22_ti2v_5b": {
+        "display_name": "Wan 2.2 5B TI2V",
+        "family": "wan",
+        "category": "video_gen",
+        "repo": "Wan-AI/Wan2.2-T2V-5B",
+        "homepage": "https://huggingface.co/Wan-AI/Wan2.2-T2V-5B",
+        "license": "Apache-2.0",
+        "params": "5B",
+        "architecture": "Wan DiT",
+        "status": "released",
+        "files": {
+            "checkpoint": {
+                "folder": "diffusion_models",
+                "filename": "wan2.2_t2v_5b.safetensors",
+                "size_gb": 10.0,
+            },
+        },
+        "total_size_gb": 10.0,
+        "quantization_variants": {
+            "bf16": {"vram_gb": 12, "quality": "reference", "speed": "1x"},
+            "fp8": {"vram_gb": 8, "quality": "near-lossless", "speed": "1.2x"},
+            "gguf_q8": {"vram_gb": 6, "quality": "high", "speed": "1.1x"},
+        },
+        "quantization_recommendation": {
+            "ultra_low": "gguf_q8",
+            "low": "gguf_q8",
+            "medium": "gguf_q8",
+            "high": "fp8",
+            "very_high": "bf16",
+            "ultra": "bf16",
+            "extreme": "bf16",
+            "hpc": "bf16",
+        },
+        "inference": {
+            "steps": 30,
+            "cfg": True,
+            "cfg_scale": 5.0,
+            "resolution_range": "480p - 720p",
+            "default_resolution": "480p",
+        },
+        "compatibility": {
+            "lora": True,
+            "controlnet": True,
+            "controlnet_models": ["Wan Motion Control"],
+            "ipadapter": True,
+            "negative_prompt": True,
+            "multi_reference": False,
+            "image_editing": False,
+            "lora_zoo": None,
+            "lora_zoo_models": [],
+        },
+        "quality_score": {
+            "elo_rank": None,
+            "strengths": ["Sweet spot for 12GB GPUs", "T2V and I2V", "Apache-2.0", "Rich ecosystem"],
+            "weaknesses": ["Lower quality than 14B"],
+        },
+        "module_dependency": "video",
+        "comfyui_type": "diffusion_models",
+    },
+
+    "wan21_t2v_1_3b": {
+        "display_name": "Wan 2.1 1.3B T2V",
+        "family": "wan",
+        "category": "video_gen",
+        "repo": "Wan-AI/Wan2.1-T2V-1.3B",
+        "homepage": "https://huggingface.co/Wan-AI/Wan2.1-T2V-1.3B",
+        "license": "Apache-2.0",
+        "params": "1.3B",
+        "architecture": "Wan DiT",
+        "status": "released",
+        "files": {
+            "checkpoint": {
+                "folder": "diffusion_models",
+                "filename": "wan2.1_t2v_1.3b.safetensors",
+                "size_gb": 2.6,
+            },
+        },
+        "total_size_gb": 2.6,
+        "quantization_variants": {
+            "bf16": {"vram_gb": 8, "quality": "reference", "speed": "1x"},
+            "fp8": {"vram_gb": 6, "quality": "near-lossless", "speed": "1.2x"},
+        },
+        "quantization_recommendation": {
+            "ultra_low": "fp8",
+            "low": "fp8",
+            "medium": "bf16",
+            "high": "bf16",
+            "very_high": "bf16",
+            "ultra": "bf16",
+            "extreme": "bf16",
+            "hpc": "bf16",
+        },
+        "inference": {
+            "steps": 30,
+            "cfg": True,
+            "cfg_scale": 5.0,
+            "resolution_range": "480p",
+            "default_resolution": "480p",
+        },
+        "compatibility": {
+            "lora": True,
+            "controlnet": False,
+            "controlnet_models": [],
+            "ipadapter": False,
+            "negative_prompt": True,
+            "multi_reference": False,
+            "image_editing": False,
+            "lora_zoo": None,
+            "lora_zoo_models": [],
+        },
+        "quality_score": {
+            "elo_rank": None,
+            "strengths": ["Runs on 8GB GPU", "Apache-2.0", "Beginner-friendly"],
+            "weaknesses": ["480p only", "Lower quality"],
+        },
+        "module_dependency": "video",
+        "comfyui_type": "diffusion_models",
+    },
+
+    "ltx_video_2b": {
+        "display_name": "LTX-Video 2B",
+        "family": "ltx",
+        "category": "video_gen",
+        "repo": "Lightricks/LTX-Video",
+        "homepage": "https://huggingface.co/Lightricks/LTX-Video",
+        "license": "Check Lightricks terms",
+        "params": "2B",
+        "architecture": "Diffusion Transformer",
+        "status": "released",
+        "files": {
+            "checkpoint": {
+                "folder": "diffusion_models",
+                "filename": "ltx-video-2b-v0.9.5.safetensors",
+                "size_gb": 4.0,
+            },
+            "checkpoint_q8": {
+                "folder": "diffusion_models",
+                "filename": "ltx-video-2b-v0.9.5-q8.safetensors",
+                "size_gb": 2.5,
+                "note": "Q8 quantized, runs on 8GB GPUs",
+            },
+        },
+        "total_size_gb": 4.0,
+        "quantization_variants": {
+            "bf16": {"vram_gb": 12, "quality": "reference", "speed": "1x"},
+            "q8": {"vram_gb": 8, "quality": "near-lossless", "speed": "1.1x"},
+        },
+        "quantization_recommendation": {
+            "ultra_low": "q8",
+            "low": "q8",
+            "medium": "q8",
+            "high": "bf16",
+            "very_high": "bf16",
+            "ultra": "bf16",
+            "extreme": "bf16",
+            "hpc": "bf16",
+        },
+        "inference": {
+            "steps": 30,
+            "cfg": True,
+            "cfg_scale": 3.0,
+            "resolution_range": "480p - 720p",
+            "default_resolution": "720x480",
+        },
+        "compatibility": {
+            "lora": True,
+            "controlnet": False,
+            "controlnet_models": [],
+            "ipadapter": False,
+            "negative_prompt": False,
+            "multi_reference": False,
+            "image_editing": False,
+            "lora_zoo": None,
+            "lora_zoo_models": [],
+        },
+        "quality_score": {
+            "elo_rank": None,
+            "strengths": ["Built into ComfyUI core", "Runs on 8GB (Q8)", "Fast inference", "LoRA support"],
+            "weaknesses": ["Lower quality than larger models"],
+        },
+        "module_dependency": "video",
+        "comfyui_type": "diffusion_models",
+    },
+
+    "hunyuan_video_1_5": {
+        "display_name": "HunyuanVideo 1.5",
+        "family": "hunyuan",
+        "category": "video_gen",
+        "repo": "tencent/HunyuanVideo-1.5",
+        "homepage": "https://huggingface.co/tencent/HunyuanVideo-1.5",
+        "license": "Tencent Hunyuan License",
+        "params": "~13B",
+        "architecture": "Dual-stream DiT",
+        "status": "released",
+        "files": {
+            "checkpoint": {
+                "folder": "checkpoints",
+                "filename": "hunyuan_video_v1.5.safetensors",
+                "size_gb": 26.0,
+            },
+        },
+        "total_size_gb": 26.0,
+        "quantization_variants": {
+            "bf16": {"vram_gb": 80, "quality": "reference", "speed": "1x"},
+            "fp8": {"vram_gb": 45, "quality": "near-lossless", "speed": "1.2x"},
+        },
+        "quantization_recommendation": {
+            "ultra_low": "fp8",
+            "low": "fp8",
+            "medium": "fp8",
+            "high": "fp8",
+            "very_high": "fp8",
+            "ultra": "fp8",
+            "extreme": "fp8",
+            "hpc": "bf16",
+        },
+        "inference": {
+            "steps": 50,
+            "cfg": True,
+            "cfg_scale": 6.0,
+            "resolution_range": "540p - 720p",
+            "default_resolution": "720p",
+        },
+        "compatibility": {
+            "lora": False,
+            "controlnet": False,
+            "controlnet_models": [],
+            "ipadapter": False,
+            "negative_prompt": False,
+            "multi_reference": False,
+            "image_editing": False,
+            "lora_zoo": None,
+            "lora_zoo_models": [],
+        },
+        "quality_score": {
+            "elo_rank": None,
+            "strengths": ["Top-tier video quality", "Native ComfyUI", "720p 129-frame output"],
+            "weaknesses": ["Extremely high VRAM (45GB FP8)", "Tencent license"],
+        },
+        "module_dependency": "video",
+        "comfyui_type": "checkpoints",
+    },
+
     # =========================================================================
     # UPSCALE (1 model)
     # =========================================================================
@@ -1309,6 +1983,366 @@ MODEL_REGISTRY = {
         },
         "module_dependency": "upscaling",
         "comfyui_type": "upscale_models",
+    },
+
+    # =========================================================================
+    # AUDIO (4 models)
+    # =========================================================================
+
+    "mmaudio": {
+        "display_name": "MMAudio",
+        "family": "mmaudio",
+        "category": "audio",
+        "repo": "hkchengrex/MMAudio",
+        "homepage": "https://huggingface.co/hkchengrex/MMAudio",
+        "license": "Check model card",
+        "params": None,
+        "architecture": "Multi-modal Audio Transformer",
+        "status": "released",
+        "files": {
+            "checkpoint": {
+                "folder": "custom_nodes/MMAudio",
+                "filename": "mmaudio.safetensors",
+                "size_gb": 2.0,
+            },
+        },
+        "total_size_gb": 2.0,
+        "quantization_variants": {
+            "bf16": {"vram_gb": 8, "quality": "reference", "speed": "1x"},
+        },
+        "quantization_recommendation": {
+            "ultra_low": "bf16",
+            "low": "bf16",
+            "medium": "bf16",
+            "high": "bf16",
+            "very_high": "bf16",
+            "ultra": "bf16",
+            "extreme": "bf16",
+            "hpc": "bf16",
+        },
+        "inference": {
+            "steps": None,
+            "cfg": None,
+            "cfg_scale": None,
+            "resolution_range": None,
+            "default_resolution": None,
+        },
+        "compatibility": {
+            "lora": False,
+            "controlnet": False,
+            "controlnet_models": [],
+            "ipadapter": False,
+            "negative_prompt": False,
+            "multi_reference": False,
+            "image_editing": False,
+            "lora_zoo": None,
+            "lora_zoo_models": [],
+        },
+        "quality_score": {
+            "elo_rank": None,
+            "strengths": ["Video-to-audio generation", "Synced sound effects"],
+            "weaknesses": ["Requires video input"],
+        },
+        "module_dependency": None,
+        "comfyui_type": "custom_node",
+        "custom_node_repo": "https://github.com/hkchengrex/MMAudio",
+    },
+
+    "cosyvoice3": {
+        "display_name": "CosyVoice3",
+        "family": "cosyvoice",
+        "category": "audio",
+        "repo": "FunAudioLLM/CosyVoice3-0.5B",
+        "homepage": "https://huggingface.co/FunAudioLLM/CosyVoice3-0.5B",
+        "license": "Apache-2.0",
+        "params": "0.5B",
+        "architecture": "Audio LLM",
+        "status": "released",
+        "files": {
+            "checkpoint": {
+                "folder": "custom_nodes/TTS",
+                "filename": "cosyvoice3.safetensors",
+                "size_gb": 1.5,
+            },
+        },
+        "total_size_gb": 1.5,
+        "quantization_variants": {
+            "bf16": {"vram_gb": 4, "quality": "reference", "speed": "1x"},
+        },
+        "quantization_recommendation": {
+            "ultra_low": "bf16",
+            "low": "bf16",
+            "medium": "bf16",
+            "high": "bf16",
+            "very_high": "bf16",
+            "ultra": "bf16",
+            "extreme": "bf16",
+            "hpc": "bf16",
+        },
+        "inference": {
+            "steps": None,
+            "cfg": None,
+            "cfg_scale": None,
+            "resolution_range": None,
+            "default_resolution": None,
+        },
+        "compatibility": {
+            "lora": False,
+            "controlnet": False,
+            "controlnet_models": [],
+            "ipadapter": False,
+            "negative_prompt": False,
+            "multi_reference": False,
+            "image_editing": False,
+            "lora_zoo": None,
+            "lora_zoo_models": [],
+        },
+        "quality_score": {
+            "elo_rank": None,
+            "strengths": ["Apache-2.0 commercial safe", "Emotion control", "Voice cloning"],
+            "weaknesses": ["Requires TTS Audio Suite custom node"],
+        },
+        "module_dependency": None,
+        "comfyui_type": "custom_node",
+        "custom_node_repo": "https://github.com/ShmuelRonen/ComfyUI-TTS_Audio_Suite",
+    },
+
+    "qwen3_tts": {
+        "display_name": "Qwen3-TTS",
+        "family": "qwen",
+        "category": "audio",
+        "repo": "Qwen/Qwen3-TTS-0.6B",
+        "homepage": "https://huggingface.co/Qwen/Qwen3-TTS-0.6B",
+        "license": "Check model card",
+        "params": "0.6B",
+        "architecture": "Audio LLM",
+        "status": "released",
+        "files": {
+            "checkpoint": {
+                "folder": "custom_nodes/TTS",
+                "filename": "qwen3_tts_0.6b.safetensors",
+                "size_gb": 1.2,
+            },
+        },
+        "total_size_gb": 1.2,
+        "quantization_variants": {
+            "bf16": {"vram_gb": 3, "quality": "reference", "speed": "1x"},
+        },
+        "quantization_recommendation": {
+            "ultra_low": "bf16",
+            "low": "bf16",
+            "medium": "bf16",
+            "high": "bf16",
+            "very_high": "bf16",
+            "ultra": "bf16",
+            "extreme": "bf16",
+            "hpc": "bf16",
+        },
+        "inference": {
+            "steps": None,
+            "cfg": None,
+            "cfg_scale": None,
+            "resolution_range": None,
+            "default_resolution": None,
+        },
+        "compatibility": {
+            "lora": False,
+            "controlnet": False,
+            "controlnet_models": [],
+            "ipadapter": False,
+            "negative_prompt": False,
+            "multi_reference": False,
+            "image_editing": False,
+            "lora_zoo": None,
+            "lora_zoo_models": [],
+        },
+        "quality_score": {
+            "elo_rank": None,
+            "strengths": ["Very low VRAM (3GB)", "High quality TTS", "Emotion/speed control"],
+            "weaknesses": ["Requires TTS Audio Suite custom node"],
+        },
+        "module_dependency": None,
+        "comfyui_type": "custom_node",
+        "custom_node_repo": "https://github.com/ShmuelRonen/ComfyUI-TTS_Audio_Suite",
+    },
+
+    "ace_step_1_5": {
+        "display_name": "ACE-Step 1.5",
+        "family": "ace",
+        "category": "audio",
+        "repo": "ACE-Step/ACE-Step-v1-5",
+        "homepage": "https://huggingface.co/ACE-Step/ACE-Step-v1-5",
+        "license": "Check model card",
+        "params": None,
+        "architecture": "Music Generation Transformer",
+        "status": "released",
+        "files": {
+            "checkpoint": {
+                "folder": "custom_nodes/ACE-Step",
+                "filename": "ace_step_v1.5.safetensors",
+                "size_gb": 3.0,
+            },
+        },
+        "total_size_gb": 3.0,
+        "quantization_variants": {
+            "bf16": {"vram_gb": 8, "quality": "reference", "speed": "1x"},
+        },
+        "quantization_recommendation": {
+            "ultra_low": "bf16",
+            "low": "bf16",
+            "medium": "bf16",
+            "high": "bf16",
+            "very_high": "bf16",
+            "ultra": "bf16",
+            "extreme": "bf16",
+            "hpc": "bf16",
+        },
+        "inference": {
+            "steps": None,
+            "cfg": None,
+            "cfg_scale": None,
+            "resolution_range": None,
+            "default_resolution": None,
+        },
+        "compatibility": {
+            "lora": False,
+            "controlnet": False,
+            "controlnet_models": [],
+            "ipadapter": False,
+            "negative_prompt": False,
+            "multi_reference": False,
+            "image_editing": False,
+            "lora_zoo": None,
+            "lora_zoo_models": [],
+        },
+        "quality_score": {
+            "elo_rank": None,
+            "strengths": ["Music generation", "Lyrics-to-song", "Multiple genres"],
+            "weaknesses": ["Specialized use case"],
+        },
+        "module_dependency": None,
+        "comfyui_type": "custom_node",
+    },
+
+    # =========================================================================
+    # VIRTUAL TRY-ON (2 models)
+    # =========================================================================
+
+    "catvton": {
+        "display_name": "CatVTON",
+        "family": "catvton",
+        "category": "virtual_tryon",
+        "repo": "zhengchong/CatVTON",
+        "homepage": "https://huggingface.co/zhengchong/CatVTON",
+        "license": "Check model card (ICLR 2025)",
+        "params": None,
+        "architecture": "Lightweight try-on network",
+        "status": "released",
+        "files": {
+            "checkpoint": {
+                "folder": "custom_nodes/CatVTON",
+                "filename": "catvton.safetensors",
+                "size_gb": 2.0,
+            },
+        },
+        "total_size_gb": 2.0,
+        "quantization_variants": {
+            "bf16": {"vram_gb": 8, "quality": "reference", "speed": "1x"},
+        },
+        "quantization_recommendation": {
+            "ultra_low": "bf16",
+            "low": "bf16",
+            "medium": "bf16",
+            "high": "bf16",
+            "very_high": "bf16",
+            "ultra": "bf16",
+            "extreme": "bf16",
+            "hpc": "bf16",
+        },
+        "inference": {
+            "steps": 30,
+            "cfg": True,
+            "cfg_scale": 2.5,
+            "resolution_range": "768x1024",
+            "default_resolution": "768x1024",
+        },
+        "compatibility": {
+            "lora": False,
+            "controlnet": False,
+            "controlnet_models": [],
+            "ipadapter": False,
+            "negative_prompt": False,
+            "multi_reference": False,
+            "image_editing": False,
+            "lora_zoo": None,
+            "lora_zoo_models": [],
+        },
+        "quality_score": {
+            "elo_rank": None,
+            "strengths": ["<8GB VRAM at 1024x768", "ICLR 2025 paper", "ComfyUI node available"],
+            "weaknesses": ["Single garment at a time"],
+        },
+        "module_dependency": "dressing",
+        "comfyui_type": "custom_node",
+        "custom_node_repo": "https://github.com/chflame163/ComfyUI-CatVTON",
+    },
+
+    "idm_vton": {
+        "display_name": "IDM-VTON",
+        "family": "idm_vton",
+        "category": "virtual_tryon",
+        "repo": "yisol/IDM-VTON",
+        "homepage": "https://huggingface.co/yisol/IDM-VTON",
+        "license": "Check model card",
+        "params": None,
+        "architecture": "Dual-stream try-on network",
+        "status": "released",
+        "files": {
+            "checkpoint": {
+                "folder": "custom_nodes/IDM-VTON",
+                "filename": "idm_vton.safetensors",
+                "size_gb": 4.0,
+            },
+        },
+        "total_size_gb": 4.0,
+        "quantization_variants": {
+            "bf16": {"vram_gb": 12, "quality": "reference", "speed": "1x"},
+        },
+        "quantization_recommendation": {
+            "ultra_low": "bf16",
+            "low": "bf16",
+            "medium": "bf16",
+            "high": "bf16",
+            "very_high": "bf16",
+            "ultra": "bf16",
+            "extreme": "bf16",
+            "hpc": "bf16",
+        },
+        "inference": {
+            "steps": 30,
+            "cfg": True,
+            "cfg_scale": 2.5,
+            "resolution_range": "768x1024",
+            "default_resolution": "768x1024",
+        },
+        "compatibility": {
+            "lora": False,
+            "controlnet": False,
+            "controlnet_models": [],
+            "ipadapter": False,
+            "negative_prompt": False,
+            "multi_reference": False,
+            "image_editing": False,
+            "lora_zoo": None,
+            "lora_zoo_models": [],
+        },
+        "quality_score": {
+            "elo_rank": None,
+            "strengths": ["High fidelity try-on", "Good garment detail preservation"],
+            "weaknesses": ["Higher VRAM than CatVTON"],
+        },
+        "module_dependency": "dressing",
+        "comfyui_type": "custom_node",
     },
 
     # =========================================================================
@@ -1617,17 +2651,34 @@ def detect_model_key_from_filename(filename):
         "flux2_dev": ["flux2-dev", "flux2_dev"],
         "flux1_dev": ["flux1-dev", "flux1_dev"],
         "flux1_schnell": ["flux1-schnell", "flux1_schnell"],
-        "qwen_image_2512": ["qwen_image", "qwen-image"],
+        "qwen_image_2512": ["qwen_image_2512", "qwen-image-2512"],
+        "qwen_image_2_0": ["qwen_image_2_0", "qwen-image-2.0", "qwen_image_2.0"],
         "glm_image": ["glm_image", "glm-image"],
         "sd35_medium": ["sd3.5_medium", "sd35_medium"],
+        "hidream": ["hidream_i1", "hidream-i1"],
+        "lumina_image_2": ["lumina_image", "lumina-image"],
+        "hunyuan_image_2_1": ["hunyuan_image", "hunyuan-image"],
         "firered_edit_1_1": ["firered", "fire_red"],
+        "omnigen2": ["omnigen2", "omnigen_2"],
+        "flux_kontext": ["kontext", "flux1-kontext"],
+        "hidream_e1_1": ["hidream_e1", "hidream-e1"],
         "helios_distilled": ["helios_distilled", "helios-distilled"],
         "helios_base": ["helios_base", "helios-base"],
         "ltx_2_3": ["ltx_2.3", "ltx-2.3", "ltx_2_3"],
-        "wan22_14b": ["wan2.2", "wan22"],
-        "hunyuan_video": ["hunyuan_video", "hunyuan-video"],
+        "ltx_video_2b": ["ltx-video-2b", "ltx_video_2b"],
+        "wan22_14b": ["wan2.2-14b", "wan22_14b"],
+        "wan22_ti2v_5b": ["wan2.2_t2v_5b", "wan2.2-5b"],
+        "wan21_t2v_1_3b": ["wan2.1_t2v_1.3b", "wan2.1-1.3b"],
+        "hunyuan_video": ["hunyuan_video_v1.0", "hunyuan-video-v1.0"],
+        "hunyuan_video_1_5": ["hunyuan_video_v1.5", "hunyuan-video-v1.5"],
         "cogvideox_5b": ["cogvideox_5b", "cogvideox-5b", "cogvideox5b"],
         "seedvr2": ["seedvr2", "seedvr_2"],
+        "mmaudio": ["mmaudio"],
+        "cosyvoice3": ["cosyvoice3", "cosyvoice_3"],
+        "qwen3_tts": ["qwen3_tts", "qwen3-tts"],
+        "ace_step_1_5": ["ace_step", "ace-step"],
+        "catvton": ["catvton"],
+        "idm_vton": ["idm_vton", "idm-vton"],
         "qwen_text_encoder": ["qwen_3_4b"],
         "flux_vae": ["ae.safetensors"],
         "cosmos_vae": ["cosmos_vae"],
@@ -1666,7 +2717,60 @@ def get_upscale_model_choices():
     )
 
 
+def get_audio_model_choices():
+    """Return sorted list of registry keys for audio models."""
+    return sorted(
+        k for k, v in MODEL_REGISTRY.items()
+        if v.get("category") == "audio"
+    )
+
+
+def get_tryon_model_choices():
+    """Return sorted list of registry keys for virtual try-on models."""
+    return sorted(
+        k for k, v in MODEL_REGISTRY.items()
+        if v.get("category") == "virtual_tryon"
+    )
+
+
 def get_model_display_name(key):
     """Return human-readable display name for a registry key."""
     entry = MODEL_REGISTRY.get(key, {})
     return entry.get("display_name", key)
+
+
+def get_models_for_vram(vram_gb):
+    """Return models that can run at a given VRAM level.
+
+    Args:
+        vram_gb: Available VRAM in GB.
+
+    Returns:
+        Dict of {model_key: recommended_quantization} for runnable models.
+    """
+    tier = None
+    for tier_key, tier_info in VRAM_TIERS.items():
+        if tier_info["min_gb"] <= vram_gb < tier_info["max_gb"]:
+            tier = tier_key
+            break
+    if tier is None:
+        tier = "hpc"
+
+    result = {}
+    for model_key, entry in MODEL_REGISTRY.items():
+        rec = entry.get("quantization_recommendation", {})
+        quant = rec.get(tier)
+        if quant:
+            variant = entry.get("quantization_variants", {}).get(quant, {})
+            if variant and variant.get("vram_gb", 999) <= vram_gb:
+                result[model_key] = quant
+    return result
+
+
+def get_commercial_safe_models():
+    """Return model keys with Apache-2.0 or equivalent commercial licenses."""
+    safe_licenses = {"Apache-2.0", "MIT", "BSD"}
+    return sorted(
+        k for k, v in MODEL_REGISTRY.items()
+        if v.get("license") in safe_licenses
+    )
